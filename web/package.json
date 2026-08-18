@@ -18,10 +18,12 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@tanstack/react-table": "^8.21.3",
     "date-fns": "^4.4.0",
+    "i18next": "^26.3.6",
     "lucide-react": "^0.525.0",
     "react": "^19.2.8",
     "react-calendar": "^6.0.1",
     "react-dom": "^19.2.8",
+    "react-i18next": "^17.0.11",
     "react-router": "^8.1.0",
     "recharts": "^3.9.1"
   },

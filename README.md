@@ -1,7 +1,8 @@
 # Bench
 
 Four local-first apps behind one server. No login, no cloud - everything runs on your machine and
-your data lives in local SQLite files. Light and dark, one toggle for all four.
+your data lives in local SQLite files. Light and dark, English and Spanish, one toggle each
+for all four.
 
 |             |            |                                                                                                                     |
 | ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +102,7 @@ before anything appears**, which is normal, not a hang. Then open:
 **http://localhost:8100**
 
 The first run creates and seeds the three SQLite databases under `data/` with sample data. Click
-through all four apps and the theme toggle to confirm it works.
+through all four apps and the theme and language toggles to confirm it works.
 
 Stop the server with `Ctrl+C`.
 
@@ -176,7 +177,7 @@ npm run e2e
 ```
 
 Playwright drives a real Chromium through all four apps: the launcher, CRM, Space, Rolodex, Groove
-and the shared theme toggle. It takes about a minute.
+and the shared theme and language toggles. It takes about a minute.
 
 What it does under the hood, which explains the wait and the ports:
 
@@ -310,7 +311,8 @@ One npm workspace root with two workspaces, so a single install and a single set
 
 - `web/` - one Vite project with an HTML entry point per app: `index.html` (launcher), `crm/`,
   `space/`, `rolodex/`, `groove/`. Sources live in `web/src/<app>/`, with the shared navigation
-  strip and theme in `web/src/shared/`. Separate documents mean each app keeps its own global
+  strip, theme and language in `web/src/shared/`, and each app's two dictionaries in
+  `web/src/<app>/locales/`. Separate documents mean each app keeps its own global
   stylesheet without collisions.
 - `server/` - one Express app. `/api/crm/*`, `/api/space/*` and `/api/rolodex/*`, plus the built
   frontend with deep-link fallback. Groove has no backend.

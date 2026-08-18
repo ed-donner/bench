@@ -14,13 +14,13 @@ import {
 import { UsersRound } from "lucide-react";
 import { useStore } from "../store";
 import { api } from "../api";
-import type { Circle, PersonComputed } from "../types";
-import { CIRCLE_META } from "../types";
+import { CIRCLES, type Circle, type PersonComputed } from "../types";
 import { Avatar } from "../components/Avatar";
 import { StatusBadge } from "../components/Chips";
 import { EmptyState } from "../components/Modal";
 import { relativeDays } from "../format";
 import { useToast } from "../store";
+import { useTranslation } from "react-i18next";
 
 const CIRCLE_DOTS: Record<Circle, string> = {
   inner: "var(--purple)",
@@ -36,6 +36,7 @@ function PersonCard({
   person: PersonComputed;
   dragging?: boolean;
 }) {
+  const { t } = useTranslation("rolodex");
   return (
     <div className={`person-card${dragging ? " dragging" : ""}`}>
       <Avatar name={person.name} photo={person.photo} />
@@ -46,8 +47,10 @@ function PersonCard({
         </div>
         <div className="meta">
           {person.last_contacted
-            ? `contacted ${relativeDays(person.last_contacted)}`
-            : "never contacted"}
+            ? t("circles.contactedWhen", {
+                when: relativeDays(person.last_contacted),
+              })
+            : t("circles.neverContacted")}
         </div>
       </div>
     </div>
@@ -78,7 +81,7 @@ function Column({
   circle: Circle;
   people: PersonComputed[];
 }) {
-  const meta = CIRCLE_META[circle];
+  const { t } = useTranslation("rolodex");
   const { setNodeRef, isOver } = useDroppable({ id: `col-${circle}` });
   const overdue = people.filter((p) => p.status === "overdue").length;
 
@@ -95,14 +98,14 @@ function Column({
               display: "inline-block",
             }}
           />
-          {meta.label}
+          {t(`circle.${circle}`)}
           <span className="board-col-count">{people.length}</span>
         </div>
         <div className="board-col-meta">
-          <span>{meta.cadenceDescription.toLowerCase()}</span>
+          <span>{t(`cadence.${circle}`).toLowerCase()}</span>
           {overdue > 0 && (
             <span style={{ color: "var(--red)", fontWeight: 700 }}>
-              {overdue} overdue
+              {t("circles.overdueCount", { count: overdue })}
             </span>
           )}
         </div>
@@ -110,7 +113,7 @@ function Column({
       <div className="board-cards">
         {people.length === 0 ? (
           <div className="empty" style={{ padding: "18px 8px" }}>
-            Drop someone here
+            {t("circles.dropHere")}
           </div>
         ) : (
           people.map((p) => <DraggableCard key={p.id} person={p} />)
@@ -121,6 +124,7 @@ function Column({
 }
 
 export default function Circles() {
+  const { t } = useTranslation("rolodex");
   const { people, loaded, refresh } = useStore();
   const toast = useToast();
   const [activePerson, setActivePerson] = useState<PersonComputed | null>(null);
@@ -164,9 +168,12 @@ export default function Circles() {
     if (circle === person.circle) return;
     await api.updatePerson(person.id, { circle });
     await refresh();
-    const { label, cadenceDescription } = CIRCLE_META[circle];
     toast(
-      `${person.name.split(" ")[0]} moved to ${label} — check in ${cadenceDescription.toLowerCase()}`,
+      t("circles.moved", {
+        firstName: person.name.split(" ")[0],
+        circle: t(`circle.${circle}`),
+        cadence: t(`cadence.${circle}`).toLowerCase(),
+      }),
     );
   };
 
@@ -184,22 +191,19 @@ export default function Circles() {
             >
               <UsersRound size={19} />
             </span>
-            Circles
+            {t("circles.title")}
           </h1>
-          <p className="page-desc">
-            Drag a card between columns to change someone’s circle — the circle
-            sets how often you want to be in touch.
-          </p>
+          <p className="page-desc">{t("circles.desc")}</p>
         </div>
         <div className="page-actions">
           <Link className="btn" to="/people">
-            Open People table
+            {t("circles.openPeople")}
           </Link>
         </div>
       </div>
 
       {!loaded ? (
-        <div className="card card-pad muted">Loading…</div>
+        <div className="card card-pad muted">{t("circles.loading")}</div>
       ) : (
         <DndContext
           sensors={sensors}
@@ -207,7 +211,7 @@ export default function Circles() {
           onDragEnd={(e) => void onDragEnd(e)}
         >
           <div className="board">
-            {(["inner", "close", "wider", "distant"] as Circle[]).map((c) => (
+            {CIRCLES.map((c) => (
               <Column key={c} circle={c} people={byCircle[c]} />
             ))}
           </div>
@@ -225,7 +229,7 @@ export default function Circles() {
         className="row wrap"
         style={{ marginTop: 18, gap: 20, padding: "0 2px" }}
       >
-        {(["inner", "close", "wider", "distant"] as Circle[]).map((c) => (
+        {CIRCLES.map((c) => (
           <div key={c} className="row" style={{ gap: 8 }}>
             <span
               style={{
@@ -235,16 +239,14 @@ export default function Circles() {
                 background: CIRCLE_DOTS[c],
               }}
             />
-            <strong>{CIRCLE_META[c].label}</strong>
-            <span className="muted small">{CIRCLE_META[c].blurb}</span>
+            <strong>{t(`circle.${c}`)}</strong>
+            <span className="muted small">{t(`blurb.${c}`)}</span>
           </div>
         ))}
       </div>
 
       {loaded && people.length === 0 && (
-        <EmptyState icon={<UsersRound />}>
-          No people yet — add someone first.
-        </EmptyState>
+        <EmptyState icon={<UsersRound />}>{t("circles.noPeople")}</EmptyState>
       )}
     </div>
   );

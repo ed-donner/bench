@@ -11,6 +11,7 @@ import { StatusChip } from "../components/Chips";
 import { DealList } from "../components/RelatedLists";
 import PageHeader from "../components/PageHeader";
 import { IconContacts } from "../components/Icons";
+import { useTranslation } from "react-i18next";
 
 function ContactFacts({
   contact,
@@ -19,19 +20,20 @@ function ContactFacts({
   contact: Contact;
   org?: Organization;
 }) {
+  const { t } = useTranslation("crm");
   return (
     <dl className="props">
-      <dt>Status</dt>
+      <dt>{t("field.status")}</dt>
       <dd>
         <StatusChip status={contact.status} />
       </dd>
-      <dt>Email</dt>
+      <dt>{t("field.email")}</dt>
       <dd>{contact.email || "—"}</dd>
-      <dt>Phone</dt>
+      <dt>{t("field.phone")}</dt>
       <dd>{contact.phone || "—"}</dd>
-      <dt>Job title</dt>
+      <dt>{t("field.jobTitle")}</dt>
       <dd>{contact.job_title || "—"}</dd>
-      <dt>Organization</dt>
+      <dt>{t("field.organization")}</dt>
       <dd>
         {org ? (
           <Link className="entity-link" to={`/organizations/${org.id}`}>
@@ -46,6 +48,7 @@ function ContactFacts({
 }
 
 export default function ContactDetail() {
+  const { t } = useTranslation("crm");
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -72,36 +75,38 @@ export default function ContactDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/contacts">Contacts</Link> / {contact.name}
+        <Link to="/contacts">{t("contacts.title")}</Link> / {contact.name}
       </div>
       <PageHeader
         icon={<IconContacts size={20} />}
         title={contact.name}
-        sub={(contact.job_title || "Contact") + atOrg}
+        sub={(contact.job_title || t("empty.contactFallback")) + atOrg}
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("action.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("action.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("action.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("field.details")}</h2>
           <ContactFacts contact={contact} org={org} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {t("field.deals")} ({deals?.length ?? 0})
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
         <div className="card full">
-          <h2>Activity</h2>
+          <h2>{t("field.activity")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -125,8 +130,8 @@ export default function ContactDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete "${contact.name}"? This cannot be undone.`}
+          title={t("contacts.confirmTitle")}
+          message={t("contacts.confirmDetail", { name: contact.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

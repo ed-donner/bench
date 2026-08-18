@@ -103,3 +103,11 @@ export const IconMoon = (p: IconProps) => (
     <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.2 8.2 0 1 0 10.2 10.2Z" />
   </Stroke>
 );
+
+export const IconGlobe = (p: IconProps) => (
+  <Stroke {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z" />
+  </Stroke>
+);

@@ -10,7 +10,8 @@ import type {
 } from "../api";
 import Cell from "./cells";
 import type { DbActions } from "./DatabaseView";
-import { PROPERTY_TYPE_LABELS } from "./propertyTypes";
+import { PROPERTY_TYPES, propertyTypeLabel } from "./propertyTypes";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   data: DatabaseData;
@@ -27,16 +28,17 @@ function AddPropertyPopover({
   onAdd: (name: string, type: PropertyType) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("space");
   const [name, setName] = useState("");
   const [type, setType] = useState<PropertyType>("text");
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => inputRef.current?.focus(), []);
   return (
-    <div className="popover" role="dialog" aria-label="New property">
+    <div className="popover" role="dialog" aria-label={t("db.newProperty")}>
       <input
         ref={inputRef}
         className="popover-input"
-        placeholder="Property name"
+        placeholder={t("db.propertyName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
@@ -47,15 +49,15 @@ function AddPropertyPopover({
           if (e.key === "Escape") onClose();
         }}
       />
-      <div className="popover-label">Type</div>
+      <div className="popover-label">{t("db.type")}</div>
       <div className="type-list">
-        {(Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map((t) => (
+        {PROPERTY_TYPES.map((kind) => (
           <button
-            key={t}
-            className={`type-row${t === type ? " selected" : ""}`}
-            onClick={() => setType(t)}
+            key={kind}
+            className={`type-row${kind === type ? " selected" : ""}`}
+            onClick={() => setType(kind)}
           >
-            {PROPERTY_TYPE_LABELS[t]}
+            {propertyTypeLabel(kind)}
           </button>
         ))}
       </div>
@@ -82,6 +84,7 @@ function ColumnMenu({
   actions: DbActions;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("space");
   const [name, setName] = useState(property.name);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => inputRef.current?.select(), []);
@@ -93,12 +96,12 @@ function ColumnMenu({
     <div
       className="popover"
       role="dialog"
-      aria-label={`Property ${property.name}`}
+      aria-label={t("db.property", { name: property.name })}
     >
       <input
         ref={inputRef}
         className="popover-input"
-        aria-label="Property name"
+        aria-label={t("db.propertyName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={commit}
@@ -111,7 +114,7 @@ function ColumnMenu({
         }}
       />
       <div className="popover-label">
-        {PROPERTY_TYPE_LABELS[property.type]} · type is fixed
+        {t("db.typeFixed", { type: propertyTypeLabel(property.type) })}
       </div>
       <button
         className="menu-item danger"
@@ -120,13 +123,14 @@ function ColumnMenu({
           void actions.deleteProperty(property.id);
         }}
       >
-        Delete property
+        {t("db.deleteProperty")}
       </button>
     </div>
   );
 }
 
 export default function TableView({ data, actions, rows }: Props) {
+  const { t } = useTranslation("space");
   const navigate = useNavigate();
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -137,7 +141,7 @@ export default function TableView({ data, actions, rows }: Props) {
       <table className="db-table">
         <thead>
           <tr>
-            <th className="col-title">Name</th>
+            <th className="col-title">{t("db.name")}</th>
             {data.properties.map((p) => (
               <th key={p.id}>
                 <div className="th-wrap">
@@ -168,7 +172,7 @@ export default function TableView({ data, actions, rows }: Props) {
               <div className="th-wrap">
                 <button
                   className="th-btn add-prop"
-                  aria-label="Add property"
+                  aria-label={t("action.addProperty")}
                   onClick={() => setAdding((v) => !v)}
                 >
                   <Plus size={15} />
@@ -199,9 +203,11 @@ export default function TableView({ data, actions, rows }: Props) {
                 <div className="title-cell">
                   <input
                     className="cell-input cell-title"
-                    aria-label={`Title for row ${row.title || "Untitled"}`}
+                    aria-label={t("db.titleForRow", {
+                      title: row.title || t("untitled"),
+                    })}
                     value={row.title}
-                    placeholder="Untitled"
+                    placeholder={t("untitled")}
                     onChange={(e) =>
                       actions.setRowTitle(row.id, e.target.value)
                     }
@@ -209,15 +215,19 @@ export default function TableView({ data, actions, rows }: Props) {
                   <span className="title-actions">
                     <button
                       className="row-open"
-                      aria-label={`Open ${row.title || "Untitled"}`}
+                      aria-label={t("db.openRow", {
+                        title: row.title || t("untitled"),
+                      })}
                       onClick={() => void navigate(`/p/${row.id}`)}
                     >
                       <ArrowUpRight size={13} />
-                      open
+                      {t("db.open")}
                     </button>
                     <button
                       className="row-delete"
-                      aria-label={`Delete row ${row.title || "Untitled"}`}
+                      aria-label={t("db.deleteRow", {
+                        title: row.title || t("untitled"),
+                      })}
                       onClick={() => void actions.deleteRow(row.id)}
                     >
                       <Trash2 size={13} />
@@ -230,7 +240,7 @@ export default function TableView({ data, actions, rows }: Props) {
                   <Cell
                     property={p}
                     value={row.values[p.id]}
-                    rowLabel={row.title || "Untitled"}
+                    rowLabel={row.title || t("untitled")}
                     onChange={(v) => actions.setValue(row.id, p.id, v)}
                     onCreateOption={(name) => actions.createOption(p.id, name)}
                   />
@@ -243,7 +253,7 @@ export default function TableView({ data, actions, rows }: Props) {
             <td colSpan={data.properties.length + 2}>
               <button className="new-row" onClick={() => void actions.addRow()}>
                 <Plus size={14} />
-                New row
+                {t("db.newRow")}
               </button>
             </td>
           </tr>

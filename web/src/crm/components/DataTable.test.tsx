@@ -28,28 +28,54 @@ const names = () =>
 
 describe("DataTable", () => {
   it("renders the rows and counts them, pluralising the noun", () => {
-    render(<DataTable data={rows} columns={columns} noun="organization" />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="organization"
+        emptyMessage="No organizations yet."
+      />,
+    );
     expect(names()).toEqual(["Bluepeak", "Alderway", "Crestline"]);
     expect(screen.getByText("3 organizations")).toBeInTheDocument();
   });
 
   it("keeps the count singular for one row", () => {
-    render(<DataTable data={rows.slice(0, 1)} columns={columns} noun="deal" />);
+    render(
+      <DataTable
+        data={rows.slice(0, 1)}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+      />,
+    );
     expect(screen.getByText("1 deal")).toBeInTheDocument();
   });
 
   it("shows the empty message instead of a footer when there is no data", () => {
     render(
-      <DataTable data={[]} columns={columns} emptyMessage="No deals yet." />,
+      <DataTable
+        data={[]}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+      />,
     );
     expect(screen.getByText("No deals yet.")).toBeInTheDocument();
-    expect(screen.queryByText(/record/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/deal$/)).not.toBeInTheDocument();
   });
 
   // TanStack sorts a numeric column largest-first on the first click and a text column A-Z, which
   // is why these two run in opposite directions.
   it("sorts a numeric column, and says which way in aria-sort", async () => {
-    render(<DataTable data={rows} columns={columns} />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+      />,
+    );
     const header = screen.getByRole("columnheader", { name: /Value/ });
 
     await userEvent.click(header);
@@ -62,14 +88,29 @@ describe("DataTable", () => {
   });
 
   it("sorts a text column alphabetically", async () => {
-    render(<DataTable data={rows} columns={columns} />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+      />,
+    );
     await userEvent.click(screen.getByRole("columnheader", { name: /Name/ }));
     expect(names()).toEqual(["Alderway", "Bluepeak", "Crestline"]);
   });
 
   it("opens a row when it is clicked", async () => {
     const onRowClick = vi.fn();
-    render(<DataTable data={rows} columns={columns} onRowClick={onRowClick} />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+        onRowClick={onRowClick}
+      />,
+    );
     await userEvent.click(screen.getByText("Crestline"));
     expect(onRowClick).toHaveBeenCalledWith(rows[2]);
   });
@@ -82,6 +123,8 @@ describe("DataTable", () => {
       <DataTable
         data={rows}
         columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
         onRowClick={onRowClick}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -102,12 +145,27 @@ describe("DataTable", () => {
   });
 
   it("leaves out the actions column when nothing handles it", () => {
-    render(<DataTable data={rows} columns={columns} />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+      />,
+    );
     expect(screen.getAllByRole("columnheader")).toHaveLength(2);
   });
 
   it("shows a summary in the footer", () => {
-    render(<DataTable data={rows} columns={columns} summary="$60,000" />);
+    render(
+      <DataTable
+        data={rows}
+        columns={columns}
+        noun="deal"
+        emptyMessage="No deals yet."
+        summary="$60,000"
+      />,
+    );
     expect(screen.getByText("$60,000")).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import { IconSpace } from "../../shared/AppIcons";
 import { api, type TreeNode } from "../api";
 import TreeItem from "./TreeItem";
 import { subtreeContains } from "../tree";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   tree: TreeNode[];
@@ -23,6 +24,7 @@ function loadExpanded(): Set<string> {
 }
 
 export default function Sidebar({ tree, onChange, onSearch }: Props) {
+  const { t } = useTranslation("space");
   const navigate = useNavigate();
   const pageId = useMatch("/p/:pageId")?.params.pageId;
   const [expanded, setExpanded] = useState<Set<string>>(loadExpanded);
@@ -57,16 +59,16 @@ export default function Sidebar({ tree, onChange, onSearch }: Props) {
     <nav className="sidebar">
       <div className="brand">
         <IconSpace size={20} />
-        <span className="brand-name">Personal Space</span>
+        <span className="brand-name">{t("brand")}</span>
       </div>
       <div className="sidebar-top">
         <button className="sidebar-action" onClick={onSearch}>
           <Search size={15} />
-          Search
+          {t("action.search")}
           <kbd className="sidebar-kbd">⌘K</kbd>
         </button>
       </div>
-      <div className="tree" role="tree" aria-label="Pages">
+      <div className="tree" role="tree" aria-label={t("sidebar.pages")}>
         {tree.map((node) => (
           <TreeItem
             key={node.id}
@@ -88,14 +90,14 @@ export default function Sidebar({ tree, onChange, onSearch }: Props) {
           onClick={() => void createPage(null)}
         >
           <Plus size={16} />
-          New page
+          {t("action.newPage")}
         </button>
         <button
           className="sidebar-action"
           onClick={() => void createPage(null, "database")}
         >
           <Database size={15} />
-          New database
+          {t("action.newDatabase")}
         </button>
       </div>
     </nav>

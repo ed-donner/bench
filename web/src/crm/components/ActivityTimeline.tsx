@@ -2,6 +2,7 @@ import { api } from "../api";
 import { Activity } from "../types";
 import { formatDate, formatDateTime } from "../format";
 import ActivityIcon from "./ActivityIcon";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   activities: Activity[];
@@ -14,6 +15,7 @@ function isOverdue(activity: Activity): boolean {
 }
 
 export default function ActivityTimeline({ activities, onChanged }: Props) {
+  const { t } = useTranslation("crm");
   async function toggleDone(activity: Activity) {
     await api.patch(`/api/crm/activities/${activity.id}`, {
       done: !activity.done,
@@ -21,7 +23,7 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
     onChanged();
   }
 
-  if (!activities.length) return <p className="muted">No activity yet.</p>;
+  if (!activities.length) return <p className="muted">{t("empty.activity")}</p>;
 
   return (
     <div className="timeline">
@@ -31,12 +33,12 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
           <div className="timeline-body">
             <div>{a.description}</div>
             <div className="timeline-meta">
-              <span style={{ textTransform: "capitalize" }}>{a.type}</span>
+              <span>{t(`activityType.${a.type}`)}</span>
               <span>·</span>
               <span>{formatDateTime(a.occurred_at)}</span>
               {a.due_date && (
                 <span className={`due-chip${isOverdue(a) ? " overdue" : ""}`}>
-                  {isOverdue(a) ? "Overdue: " : "Due "}
+                  {isOverdue(a) ? t("due.overdue") : t("due.due")}
                   {formatDate(a.due_date)}
                 </span>
               )}
@@ -56,7 +58,7 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
                 checked={!!a.done}
                 onChange={() => void toggleDone(a)}
               />
-              Done
+              {t("action.done")}
             </label>
           )}
         </div>

@@ -106,3 +106,22 @@ adversarial suite. Left to judgement:
 - Each app should keep its own look below the strip: CRM light, Space light/dark, Groove dark. Any
   styling bleeding between them means the multi-page split has been broken.
 - Refresh on a deep link in **both** dev and prod.
+
+## Spanish
+
+`e2e/language.spec.ts` covers the toggle itself, `<html lang>`, that the choice travels between
+apps, and each app's own navigation. What it does not cover, and needs an eye:
+
+- **Every other screen.** The spec asserts on the navigation and a handful of headings, not on all
+  ~500 strings. A key that was missed shows up as itself on screen; `web/src/test/locales.test.ts`
+  catches one that exists in only one language, and the missing-key handler catches one that exists
+  in neither, but neither can see a string that never went into a bundle at all.
+- **Fit.** Spanish runs roughly 20% longer than English. Sidebars, table headers, the pipeline
+  cards and Groove's fixed-width readouts are where it will show, and only a look can tell you.
+  `e2e/tools/screenshots.mjs` in each language is the fastest way to compare.
+- **Groove's panel is untranslated on purpose** - CUTOFF, RESO, SAW, and the note names. Only its
+  tooltips and aria-labels are Spanish.
+- **Seeded data stays English.** Organization names, page content and the Rolodex people are data,
+  not chrome, so a Spanish screen is legitimately full of English nouns.
+- **The Spanish itself.** Nothing automated judges whether it reads well, and it has not been
+  reviewed by a native speaker.

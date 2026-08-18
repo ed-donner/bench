@@ -1,3 +1,5 @@
+import { locale } from "../shared/i18n";
+
 export const DEAL_STAGES = [
   "New",
   "Qualified",
@@ -128,7 +130,8 @@ export function moveDeal(
 }
 
 export interface FunnelRow {
-  name: DealStage;
+  /** The stage as it reads on screen, which is the language's business rather than the data's. */
+  name: string;
   /** Says the row covers this stage and everything past it, which the stage name alone does not. */
   label: string;
   value: number;
@@ -145,7 +148,11 @@ export interface FunnelRow {
  * since most of them close beyond that window. Lost deals never appear: a deal that dies overwrites
  * the stage it reached, so there is nothing to place it at.
  */
-export function pipelineFunnel(deals: Deal[], sinceMonth: string): FunnelRow[] {
+export function pipelineFunnel(
+  deals: Deal[],
+  sinceMonth: string,
+  stageLabel: (stage: DealStage) => string,
+): FunnelRow[] {
   const stages: DealStage[] = [...OPEN_STAGES, "Won"];
   const live = deals.filter(
     (d) =>
@@ -154,9 +161,10 @@ export function pipelineFunnel(deals: Deal[], sinceMonth: string): FunnelRow[] {
   return stages.map((stage, i) => {
     const reached = live.filter((d) => stages.indexOf(d.stage) >= i);
     return {
-      name: stage,
+      name: stageLabel(stage),
       // No space before the plus: recharts breaks a funnel label onto a second line at whitespace.
-      label: i === stages.length - 1 ? stage : `${stage}+`,
+      label:
+        i === stages.length - 1 ? stageLabel(stage) : `${stageLabel(stage)}+`,
       value: sumValue(reached),
       count: reached.length,
       inStage: live.filter((d) => d.stage === stage).length,
@@ -178,7 +186,7 @@ export function monthRange(from: Date, back: number, forward: number): Month[] {
     const d = new Date(from.getFullYear(), from.getMonth() + i, 1);
     months.push({
       key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleDateString("en-US", { month: "short" }),
+      label: d.toLocaleDateString(locale(), { month: "short" }),
       future: i > 0,
     });
   }

@@ -5,22 +5,22 @@ import { api, type ImportParsePayload, type ImportRow } from "../api";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
 import { errorMessage } from "../format";
+import { useTranslation } from "react-i18next";
 import { useStore } from "../store";
 
-const people = (n: number) => `${n} ${n === 1 ? "person" : "people"}`;
-
 const FIELDS = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "job_title", label: "Job title" },
-  { key: "company", label: "Company" },
-  { key: "city", label: "City" },
-  { key: "birthday", label: "Birthday" },
-  { key: "notes", label: "Notes" },
+  { key: "name", label: "name" },
+  { key: "email", label: "email" },
+  { key: "phone", label: "phone" },
+  { key: "job_title", label: "jobTitle" },
+  { key: "company", label: "company" },
+  { key: "city", label: "city" },
+  { key: "birthday", label: "birthday" },
+  { key: "notes", label: "notes" },
 ];
 
 export function ImportModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation("rolodex");
   const { refresh } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [parse, setParse] = useState<ImportParsePayload | null>(null);
@@ -128,7 +128,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       large
-      title="Import people"
+      title={t("importModal.title")}
       icon={
         <Upload size={17} className="lucide" style={{ color: "var(--blue)" }} />
       }
@@ -149,9 +149,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
       {!parse && !result && (
         <>
           <p className="muted" style={{ marginTop: 0 }}>
-            Bring in contacts from a CSV file or a vCard (.vcf) file. We’ll read
-            the file, let you check exactly what will be added, and flag anyone
-            who already seems to be in your Rolodex.
+            {t("importModal.intro")}
           </p>
           <button
             type="button"
@@ -161,18 +159,16 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
           >
             <FileUp size={26} />
             <div className="strong">
-              {busy ? "Reading file…" : "Choose a .csv or .vcf file"}
+              {busy ? t("importModal.reading") : t("importModal.choose")}
             </div>
-            <div className="small">
-              Everything stays on this machine — nothing is uploaded anywhere.
-            </div>
+            <div className="small">{t("importModal.localOnly")}</div>
           </button>
           <input
             ref={fileRef}
             type="file"
             accept=".csv,.vcf,text/csv,text/vcard"
             className="visually-hidden"
-            aria-label="File to import"
+            aria-label={t("importModal.fileLabel")}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void readAndParse(f);
@@ -189,14 +185,16 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
               <span className="step-dot on">1</span>
               <span style={{ fontWeight: 600 }}>{filename}</span>
               <span className="muted small">
-                {parse.format === "vcf" ? "vCard file" : "CSV file"} ·{" "}
-                {rows.length} contacts found
+                {parse.format === "vcf"
+                  ? t("importModal.vcfFile")
+                  : t("importModal.csvFile")}{" "}
+                · {t("importModal.contactsFound", { count: rows.length })}
               </span>
             </div>
             {dupCount > 0 && (
               <span className="dup-flag">
-                <AlertTriangle size={12} /> {dupCount} likely duplicate
-                {dupCount === 1 ? "" : "s"} — skipped
+                <AlertTriangle size={12} />{" "}
+                {t("importModal.duplicates", { count: dupCount })}
               </span>
             )}
           </div>
@@ -211,16 +209,16 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
               }}
             >
               <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                Map the columns
+                {t("importModal.mapColumns")}
               </div>
               <div className="form-grid">
                 {FIELDS.map((f) => (
-                  <Field label={f.label} key={f.key}>
+                  <Field label={t(`field.${f.label}`)} key={f.key}>
                     <select
                       value={mapping[f.key] ?? ""}
                       onChange={(e) => void remap(f.key, e.target.value)}
                     >
-                      <option value="">— not imported —</option>
+                      <option value="">{t("importModal.notImported")}</option>
                       {parse.headers!.map((h) => (
                         <option key={h} value={h}>
                           {h}
@@ -233,17 +231,19 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>Preview</div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>
+            {t("importModal.preview")}
+          </div>
           <div className="import-review">
             <table className="data">
               <thead>
                 <tr>
                   <th style={{ width: 30 }}></th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Company</th>
-                  <th>City</th>
-                  <th>Notes</th>
+                  <th>{t("field.name")}</th>
+                  <th>{t("field.email")}</th>
+                  <th>{t("field.company")}</th>
+                  <th>{t("field.city")}</th>
+                  <th>{t("field.notes")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,7 +259,9 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
                     <td>
                       <input
                         type="checkbox"
-                        aria-label={`Import ${r.person.name}`}
+                        aria-label={t("importModal.importRow", {
+                          name: r.person.name,
+                        })}
                         disabled={r.duplicate.isDuplicate}
                         checked={selected.has(r.index)}
                         onChange={(e) => {
@@ -274,14 +276,17 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
                       <div style={{ fontWeight: 600 }}>{r.person.name}</div>
                       {r.duplicate.isDuplicate && (
                         <span className="dup-flag">
-                          <AlertTriangle size={11} /> Already in your Rolodex:{" "}
+                          <AlertTriangle size={11} />{" "}
+                          {t("importModal.alreadyIn")}
                           <Link
                             to={`/people/${r.duplicate.duplicateOfId}`}
                             onClick={onClose}
                           >
                             {r.duplicate.duplicateOfName}
                           </Link>{" "}
-                          (matched by {r.duplicate.reason})
+                          {t("importModal.matchedBy", {
+                            reason: r.duplicate.reason,
+                          })}
                         </span>
                       )}
                     </td>
@@ -295,8 +300,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
             </table>
           </div>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            People already in your Rolodex are matched by email or exact name
-            and skipped by default — untick anyone you don’t want to add.
+            {t("importModal.dupNote")}
           </p>
         </>
       )}
@@ -324,23 +328,24 @@ function ImportFooter({
   onClose: () => void;
   onImport: () => void;
 }) {
+  const { t } = useTranslation("rolodex");
   if (result)
     return (
       <>
         <span className="import-done">
-          <CheckCircle2 size={15} /> Imported {people(result.added)}
+          <CheckCircle2 size={15} />{" "}
+          {t("importModal.imported", { count: result.added })}
           {result.skipped > 0 && (
             <span className="muted">
-              · {result.skipped} duplicate{result.skipped === 1 ? "" : "s"}{" "}
-              skipped
+              {t("importModal.skipped", { count: result.skipped })}
             </span>
           )}
         </span>
         <button className="btn" onClick={onReset}>
-          Import another file
+          {t("importModal.another")}
         </button>
         <button className="btn btn-primary" onClick={onClose}>
-          Done
+          {t("importModal.done")}
         </button>
       </>
     );
@@ -348,7 +353,7 @@ function ImportFooter({
   if (!started)
     return (
       <button className="btn" onClick={onClose}>
-        Cancel
+        {t("action.cancel")}
       </button>
     );
 
@@ -356,14 +361,16 @@ function ImportFooter({
     <>
       {error && <span className="form-error">{error}</span>}
       <button className="btn" onClick={onReset} disabled={busy}>
-        Start over
+        {t("importModal.startOver")}
       </button>
       <button
         className="btn btn-primary"
         onClick={onImport}
         disabled={busy || importCount === 0}
       >
-        {busy ? "Importing…" : `Import ${people(importCount)}`}
+        {busy
+          ? t("importModal.importing")
+          : t("importModal.importCount", { count: importCount })}
       </button>
     </>
   );

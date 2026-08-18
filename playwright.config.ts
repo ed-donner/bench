@@ -14,6 +14,9 @@ export default defineConfig({
     // The board's columns plus the sidebar need a desktop width; at Playwright's 1280 default a
     // card sits partly outside the viewport and drags never activate.
     viewport: { width: 1440, height: 900 },
+    // The first visit follows the browser's language, and the whole suite selects by English
+    // name. Pinning it keeps the run the same on a machine set to Spanish.
+    locale: "en-US",
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],

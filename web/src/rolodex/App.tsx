@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes } from "react-router";
+import { useTranslation } from "react-i18next";
 import {
   CalendarDays,
   History,
@@ -17,14 +18,15 @@ import CalendarPage from "./pages/CalendarPage";
 import TimelinePage from "./pages/TimelinePage";
 
 const NAV = [
-  { to: "/", label: "Today", end: true, Icon: LayoutDashboard },
-  { to: "/people", label: "People", Icon: Users },
-  { to: "/circles", label: "Circles", Icon: UsersRound },
-  { to: "/calendar", label: "Calendar", Icon: CalendarDays },
-  { to: "/timeline", label: "Timeline", Icon: History },
+  { to: "/", key: "today", end: true, Icon: LayoutDashboard },
+  { to: "/people", key: "people", Icon: Users },
+  { to: "/circles", key: "circles", Icon: UsersRound },
+  { to: "/calendar", key: "calendar", Icon: CalendarDays },
+  { to: "/timeline", key: "timeline", Icon: History },
 ];
 
 function Shell() {
+  const { t } = useTranslation("rolodex");
   return (
     <div className="app">
       <aside className="sidebar">
@@ -33,17 +35,17 @@ function Shell() {
           Rolodex
         </div>
         <nav>
-          {NAV.map(({ to, label, end, Icon }) => (
+          {NAV.map(({ to, key, end, Icon }) => (
             <NavLink key={to} to={to} end={end} className="nav-item">
               <Icon size={17} />
-              <span>{label}</span>
+              <span>{t(`nav.${key}`)}</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
-          Runs on your machine.
+          {t("footer.line1")}
           <br />
-          No accounts, no cloud.
+          {t("footer.line2")}
         </div>
       </aside>
       <main className="main">

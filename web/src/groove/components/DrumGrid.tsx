@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { DrumLane, DrumPattern } from "../types";
 import { DRUM_LANES, STEPS } from "../types";
+import { useTranslation } from "react-i18next";
 
 const LANE_LABEL: Record<DrumLane, string> = {
   kick: "KICK",
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function DrumGrid({ pattern, current, onSet }: Props) {
+  const { t } = useTranslation("groove");
   const paint = useRef<number | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -48,9 +50,12 @@ export function DrumGrid({ pattern, current, onSet }: Props) {
                   key={i}
                   type="button"
                   className={`pad v${v}${i === current ? " playing" : ""}${i % 4 === 0 ? " beat" : ""}`}
-                  aria-label={`${LANE_LABEL[lane]} step ${i + 1}`}
+                  aria-label={t("step", {
+                    unit: LANE_LABEL[lane],
+                    index: i + 1,
+                  })}
                   aria-pressed={v > 0}
-                  title="Click to cycle rest / hit / accent · drag across to paint"
+                  title={t("tip.drumPad")}
                   onPointerDown={() => {
                     const next = (v + 1) % 3;
                     paint.current = next;

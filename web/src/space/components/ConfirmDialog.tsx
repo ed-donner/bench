@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   title: string;
@@ -15,6 +16,7 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const { t } = useTranslation("space");
   // Focused on mount rather than through autoFocus, which fires before assistive technology has
   // been told the dialog opened.
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -33,7 +35,7 @@ export default function ConfirmDialog({
         <p>{message}</p>
         <div className="dialog-actions">
           <button ref={cancelRef} className="btn" onClick={onCancel}>
-            Cancel
+            {t("action.cancel")}
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
             {confirmLabel}

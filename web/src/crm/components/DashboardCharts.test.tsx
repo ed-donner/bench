@@ -84,7 +84,7 @@ describe("RevenueFunnel", () => {
       deal({ id: 2, stage: "Negotiation", value: 20000 }),
     ];
     const chart = show(
-      <RevenueFunnel data={pipelineFunnel(deals, "2026-01")} />,
+      <RevenueFunnel data={pipelineFunnel(deals, "2026-01", (s) => s)} />,
     );
 
     expect(chart.getByText("New+")).toBeInTheDocument();

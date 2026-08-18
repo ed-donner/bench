@@ -11,8 +11,10 @@ import { StageChip } from "../components/Chips";
 import { formatDate, formatMoney } from "../format";
 import PageHeader from "../components/PageHeader";
 import { IconDeals } from "../components/Icons";
+import { useTranslation } from "react-i18next";
 
 export default function DealDetail() {
+  const { t } = useTranslation("crm");
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -38,7 +40,7 @@ export default function DealDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/deals">Deals</Link> / {deal.name}
+        <Link to="/deals">{t("deals.title")}</Link> / {deal.name}
       </div>
       <PageHeader
         icon={<IconDeals size={20} />}
@@ -47,29 +49,29 @@ export default function DealDetail() {
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("action.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("action.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("action.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("field.details")}</h2>
           <dl className="props">
-            <dt>Stage</dt>
+            <dt>{t("field.stage")}</dt>
             <dd>
               <StageChip stage={deal.stage} />
             </dd>
-            <dt>Value</dt>
+            <dt>{t("field.value")}</dt>
             <dd>{formatMoney(deal.value)}</dd>
-            <dt>Close date</dt>
+            <dt>{t("field.closeDate")}</dt>
             <dd>{formatDate(deal.close_date)}</dd>
-            <dt>Organization</dt>
+            <dt>{t("field.organization")}</dt>
             <dd>
               {org ? (
                 <Link className="entity-link" to={`/organizations/${org.id}`}>
@@ -79,7 +81,7 @@ export default function DealDetail() {
                 "—"
               )}
             </dd>
-            <dt>Primary contact</dt>
+            <dt>{t("field.primaryContact")}</dt>
             <dd>
               {contact ? (
                 <Link className="entity-link" to={`/contacts/${contact.id}`}>
@@ -92,7 +94,7 @@ export default function DealDetail() {
           </dl>
         </div>
         <div className="card">
-          <h2>Activity</h2>
+          <h2>{t("field.activity")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -117,8 +119,8 @@ export default function DealDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete deal"
-          message={`Delete "${deal.name}"? This cannot be undone.`}
+          title={t("deals.confirmTitle")}
+          message={t("deals.confirmDetail", { name: deal.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

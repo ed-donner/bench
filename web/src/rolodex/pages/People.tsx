@@ -26,22 +26,28 @@ import { CircleChip, StatusBadge } from "../components/Chips";
 import { EmptyState } from "../components/Modal";
 import { PersonForm } from "../components/PersonForm";
 import { ImportModal } from "../components/ImportModal";
-import { CIRCLE_LABEL, fmtDate, relativeDays } from "../format";
-import type { Circle } from "../types";
+import { daysFrom, fmtDate, relativeDays } from "../format";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { CIRCLES, type Circle } from "../types";
 
 const col = createColumnHelper<PersonComputed>();
 
-/** How late a check-in is, in the table's own shorthand: "12d overdue", "due in 3 days". */
-function checkInText(p: PersonComputed): string | null {
-  if (p.status === "overdue")
-    return relativeDays(p.next_due)
-      .replace(" days ago", "d overdue")
-      .replace(" ago", " overdue");
-  if (p.status === "due_soon") return `due ${relativeDays(p.next_due)}`;
+/**
+ * How late a check-in is, in the table's own shorthand: "12d overdue", "due in 3 days". The
+ * overdue form counts the days itself rather than rewriting relativeDays' phrasing, which only
+ * ever worked in English.
+ */
+function checkInText(p: PersonComputed, t: TFunction): string | null {
+  if (p.status === "overdue" && p.next_due)
+    return t("people.overdueBy", { count: -daysFrom(p.next_due) });
+  if (p.status === "due_soon")
+    return t("people.dueWhen", { when: relativeDays(p.next_due) });
   return null;
 }
 
 export default function People() {
+  const { t } = useTranslation("rolodex");
   const { people, tags, loaded, refresh } = useStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -62,7 +68,7 @@ export default function People() {
   const columns = useMemo(
     () => [
       col.accessor("name", {
-        header: "Person",
+        header: t("field.person"),
         cell: (info) => (
           <div className="person-cell">
             <Avatar name={info.getValue()} photo={info.row.original.photo} />
@@ -77,7 +83,7 @@ export default function People() {
       }),
       col.accessor((p) => p.company ?? "", {
         id: "company",
-        header: "Company",
+        header: t("field.company"),
         cell: (info) => (
           <div>
             <div>
@@ -90,11 +96,11 @@ export default function People() {
         ),
       }),
       col.accessor("circle", {
-        header: "Circle",
+        header: t("field.circle"),
         cell: (info) => <CircleChip circle={info.getValue()} />,
       }),
       col.accessor("last_contacted", {
-        header: "Last contacted",
+        header: t("field.lastContacted"),
         cell: (info) => (
           <div>
             <div>{fmtDate(info.getValue())}</div>
@@ -105,10 +111,10 @@ export default function People() {
         ),
       }),
       col.accessor("status", {
-        header: "Check-in",
+        header: t("field.checkIn"),
         cell: (info) => {
           const p = info.row.original;
-          const when = checkInText(p);
+          const when = checkInText(p, t);
           return (
             <div className="row" style={{ gap: 7 }}>
               <StatusBadge status={p.status} />
@@ -119,7 +125,7 @@ export default function People() {
       }),
       col.accessor((p) => p.latest_news?.text ?? "", {
         id: "latest_news",
-        header: "Latest news",
+        header: t("field.latestNews"),
         cell: (info) =>
           info.row.original.latest_news ? (
             <div>
@@ -145,14 +151,14 @@ export default function People() {
           >
             <button
               className="icon-btn"
-              title="Edit"
+              title={t("action.edit")}
               onClick={() => setEditing(info.row.original)}
             >
               <Pencil size={15} />
             </button>
             <button
               className="icon-btn danger"
-              title="Delete"
+              title={t("action.delete")}
               onClick={() => setDeleting(info.row.original)}
             >
               <Trash2 size={15} />
@@ -161,7 +167,7 @@ export default function People() {
         ),
       }),
     ],
-    [],
+    [t],
   );
 
   // React Compiler cannot memoize what useReactTable() returns; see the same disable in CRM's
@@ -198,20 +204,23 @@ export default function People() {
             >
               <Users size={19} />
             </span>
-            People
+            {t("people.title")}
           </h1>
           <p className="page-desc">
             {loaded
-              ? `${people.length} people in your Rolodex — showing ${filtered.length}`
-              : "Loading…"}
+              ? t("people.count", {
+                  total: people.length,
+                  shown: filtered.length,
+                })
+              : t("people.loading")}
           </p>
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => setImporting(true)}>
-            <Upload size={15} /> Import
+            <Upload size={15} /> {t("action.import")}
           </button>
           <button className="btn btn-primary" onClick={() => setEditing("new")}>
-            <Plus size={15} /> Add person
+            <Plus size={15} /> {t("action.addPerson")}
           </button>
         </div>
       </div>
@@ -230,34 +239,34 @@ export default function People() {
           <div className="search-box">
             <Search />
             <input
-              placeholder="Search by name, company, email, city…"
+              placeholder={t("people.search")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <select
             className="filter-select"
-            aria-label="Circle"
+            aria-label={t("field.circle")}
             value={circle}
             onChange={(e) => setCircle(e.target.value as Circle | "all")}
           >
-            <option value="all">All circles</option>
-            {(Object.keys(CIRCLE_LABEL) as Circle[]).map((c) => (
+            <option value="all">{t("people.allCircles")}</option>
+            {CIRCLES.map((c) => (
               <option key={c} value={c}>
-                {CIRCLE_LABEL[c]}
+                {t(`circle.${c}`)}
               </option>
             ))}
           </select>
           <select
             className="filter-select"
-            aria-label="Tag"
+            aria-label={t("people.tag")}
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           >
-            <option value="all">All tags</option>
-            {tags.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="all">{t("people.allTags")}</option>
+            {tags.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </select>
@@ -270,16 +279,14 @@ export default function People() {
                 setTag("all");
               }}
             >
-              Clear
+              {t("action.clear")}
             </button>
           )}
         </div>
 
         {filtered.length === 0 ? (
           <EmptyState icon={<Users size={22} />}>
-            {loaded
-              ? "No people match — try clearing the search or filters."
-              : "Loading your people…"}
+            {loaded ? t("people.noMatch") : t("people.loadingPeople")}
           </EmptyState>
         ) : (
           <div className="table-wrap">
@@ -359,27 +366,27 @@ export default function People() {
             className="modal modal-confirm"
             role="dialog"
             aria-modal="true"
-            aria-label={`Delete ${deleting.name}?`}
+            aria-label={t("people.confirmTitle", { name: deleting.name })}
           >
             <div className="modal-header">
-              <h3>Delete {deleting.name}?</h3>
+              <h3>{t("people.confirmTitle", { name: deleting.name })}</h3>
             </div>
             <div className="modal-body">
               <p>
-                This removes {deleting.name.split(" ")[0]} and everything logged
-                about them — interactions, dates, facts, news, reminders, gifts
-                and connections. It can’t be undone.
+                {t("people.confirmBody", {
+                  firstName: deleting.name.split(" ")[0],
+                })}
               </p>
             </div>
             <div className="modal-footer">
               <button className="btn" onClick={() => setDeleting(null)}>
-                Cancel
+                {t("action.cancel")}
               </button>
               <button
                 className="btn btn-danger"
                 onClick={() => void confirmDelete()}
               >
-                Delete
+                {t("action.delete")}
               </button>
             </div>
           </div>

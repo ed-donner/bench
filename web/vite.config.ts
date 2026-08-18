@@ -47,7 +47,7 @@ export default defineConfig({
   preview: { port: 8102, strictPort: true },
   test: {
     environment: "jsdom",
-    setupFiles: ["src/space/test/setup.ts"],
+    setupFiles: ["src/space/test/setup.ts", "src/test/setup-i18n.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",

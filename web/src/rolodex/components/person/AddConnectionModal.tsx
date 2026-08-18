@@ -4,20 +4,22 @@ import { api } from "../../api";
 import type { ConnectionKind, PersonComputed } from "../../types";
 import { Modal } from "../Modal";
 import { Field, FieldGroup } from "../Field";
+import { useTranslation } from "react-i18next";
+import { translate } from "../../../shared/i18n";
 
-const KIND_OPTIONS: { value: ConnectionKind; label: string }[] = [
-  { value: "partner", label: "Partner of" },
-  { value: "parent_child", label: "Parent / child of" },
-  { value: "sibling", label: "Sibling of" },
-  { value: "colleague", label: "Colleague of" },
-  { value: "other", label: "Other" },
+const KIND_OPTIONS: ConnectionKind[] = [
+  "partner",
+  "parent_child",
+  "sibling",
+  "colleague",
+  "other",
 ];
 
 /** A free-text connection reads from one side only, so each side gets its own wording. */
 function sideLabel(text: string, otherName: string): string {
   return text.trim()
     ? `${text.trim()} ${otherName}`
-    : `Connected to ${otherName}`;
+    : translate("rolodex:addConnection.connectedTo", { name: otherName });
 }
 
 export default function AddConnectionModal({
@@ -31,6 +33,7 @@ export default function AddConnectionModal({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useTranslation("rolodex");
   const others = people.filter((p) => p.id !== person.id);
   const [otherId, setOtherId] = useState<number | "">("");
   const [kind, setKind] = useState<ConnectionKind>("partner");
@@ -45,7 +48,7 @@ export default function AddConnectionModal({
 
   const save = async () => {
     if (!otherId) {
-      setError("Pick a person to connect");
+      setError(t("addConnection.pickPerson"));
       return;
     }
     setBusy(true);
@@ -71,32 +74,32 @@ export default function AddConnectionModal({
   const firstName = person.name.split(" ")[0];
   return (
     <Modal
-      title={`Connect ${firstName} to someone`}
+      title={t("addConnection.connectTitle", { firstName })}
       icon={<Link2 size={17} className="modal-icon blue" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("action.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={busy}
           >
-            Save connection
+            {t("addConnection.save")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <Field label="Person" wide>
+        <Field label={t("field.person")} wide>
           <select
             value={otherId}
             onChange={(e) => setOtherId(Number(e.target.value) || "")}
           >
-            <option value="">— choose —</option>
+            <option value="">{t("addConnection.choose")}</option>
             {others.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -104,20 +107,20 @@ export default function AddConnectionModal({
             ))}
           </select>
         </Field>
-        <Field label="Relationship" wide>
+        <Field label={t("addConnection.relationship")} wide>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as ConnectionKind)}
           >
             {KIND_OPTIONS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
+              <option key={k} value={k}>
+                {t(`connectionKind.${k}`)}
               </option>
             ))}
           </select>
         </Field>
         {kind === "parent_child" && otherId !== "" && (
-          <FieldGroup label="Who is the parent?" wide>
+          <FieldGroup label={t("addConnection.whoIsParent")} wide>
             <div className="row" style={{ gap: 14 }}>
               <label className="row radio-option">
                 <input
@@ -126,7 +129,7 @@ export default function AddConnectionModal({
                   checked={aIsParent}
                   onChange={() => setAIsParent(true)}
                 />
-                {person.name} is the parent
+                {t("addConnection.isParent", { name: person.name })}
               </label>
               <label className="row radio-option">
                 <input
@@ -135,45 +138,52 @@ export default function AddConnectionModal({
                   checked={!aIsParent}
                   onChange={() => setAIsParent(false)}
                 />
-                {otherName} is the parent
+                {t("addConnection.isParent", { name: otherName })}
               </label>
             </div>
           </FieldGroup>
         )}
         {kind === "colleague" && (
-          <Field label="Where? (optional)" wide>
+          <Field label={t("addModals.whereOptional")} wide>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="at Fabrikam, years ago"
+              placeholder={t("addConnection.colleagueNote")}
             />
           </Field>
         )}
         {kind === "other" && (
           <>
-            <Field label={`On ${firstName}’s page`}>
+            <Field label={t("addConnection.onPageOf", { name: firstName })}>
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder={`e.g. “Introduced me to” ${otherName || "…"}`}
+                placeholder={t("addConnection.labelExample", {
+                  name: otherName || "…",
+                })}
               />
             </Field>
             <Field
-              label={`On ${otherName ? otherName.split(" ")[0] : "their"}’s page`}
+              label={
+                otherName
+                  ? t("addConnection.onPageOf", {
+                      name: otherName.split(" ")[0],
+                    })
+                  : t("addConnection.onTheirPage")
+              }
             >
               <input
                 value={inverseLabel}
                 onChange={(e) => setInverseLabel(e.target.value)}
-                placeholder={`e.g. “Introduced me to” ${firstName}`}
+                placeholder={t("addConnection.labelExample", {
+                  name: firstName,
+                })}
               />
             </Field>
           </>
         )}
       </div>
-      <div className="hint modal-hint">
-        Connections appear on both people’s pages, reading correctly from each
-        side.
-      </div>
+      <div className="hint modal-hint">{t("addConnection.hint")}</div>
     </Modal>
   );
 }

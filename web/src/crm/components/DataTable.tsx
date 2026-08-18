@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { IconEdit, IconTrash } from "./Icons";
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
@@ -19,10 +20,11 @@ interface Props<T> {
   onDelete?: (row: T) => void;
   /** Names a row for the action buttons, so "Edit Bluepeak Software" reads correctly. */
   rowLabel?: (row: T) => string;
-  emptyMessage?: string;
+  emptyMessage: string;
   /** Shown on the right of the footer, e.g. a total. */
   summary?: ReactNode;
-  noun?: string;
+  /** Key under `count` naming what a row is, for the footer tally and its plural. */
+  noun: string;
 }
 
 export default function DataTable<T>({
@@ -32,10 +34,11 @@ export default function DataTable<T>({
   onEdit,
   onDelete,
   rowLabel,
-  emptyMessage = "Nothing here yet.",
+  emptyMessage,
   summary,
-  noun = "record",
+  noun,
 }: Props<T>) {
+  const { t } = useTranslation("crm");
   const [sorting, setSorting] = useState<SortingState>([]);
   // React Compiler cannot memoize what useReactTable() returns, so the rule flags every call site.
   // There is nothing to change here - it is the library's only API, and Bench does not run the
@@ -114,8 +117,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn"
-                          aria-label={`Edit ${label(row.original)}`}
-                          title="Edit"
+                          aria-label={t("action.editRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("action.edit")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onEdit(row.original);
@@ -128,8 +133,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn icon-btn-danger"
-                          aria-label={`Delete ${label(row.original)}`}
-                          title="Delete"
+                          aria-label={t("action.deleteRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("action.delete")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDelete(row.original);
@@ -149,10 +156,7 @@ export default function DataTable<T>({
       {data.length === 0 && <div className="empty-state">{emptyMessage}</div>}
       {data.length > 0 && (
         <div className="table-foot">
-          <span>
-            {data.length} {noun}
-            {data.length === 1 ? "" : "s"}
-          </span>
+          <span>{t(`count.${noun}`, { count: data.length })}</span>
           {summary && <span className="table-summary">{summary}</span>}
         </div>
       )}

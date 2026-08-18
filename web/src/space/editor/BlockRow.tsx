@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { Block } from "../api";
 import ContentEditable from "./ContentEditable";
+import { useTranslation } from "react-i18next";
 
 interface BlockHandlers {
   onTextInput: (id: string, text: string, caret: number) => void;
@@ -30,17 +31,18 @@ const CLASSES: Record<string, string> = {
   callout: "b-callout-text",
 };
 
+/** Keys under `block`; a type with no entry gets no placeholder, as before. */
 const PLACEHOLDERS: Record<string, string> = {
-  paragraph: "Type “/” for commands",
-  heading1: "Heading 1",
-  heading2: "Heading 2",
-  heading3: "Heading 3",
-  bulleted: "List item",
-  numbered: "List item",
-  todo: "To-do",
-  quote: "Quote",
-  code: "Code",
-  callout: "Callout",
+  paragraph: "slashHint",
+  heading1: "heading1",
+  heading2: "heading2",
+  heading3: "heading3",
+  bulleted: "listItem",
+  numbered: "listItem",
+  todo: "todo",
+  quote: "quote",
+  code: "code",
+  callout: "callout",
 };
 
 export default function BlockRow({
@@ -49,6 +51,7 @@ export default function BlockRow({
   version,
   ...handlers
 }: Props) {
+  const { t } = useTranslation("space");
   const {
     attributes,
     listeners,
@@ -66,7 +69,9 @@ export default function BlockRow({
       version={version}
       initialText={text}
       className={`block-text ${CLASSES[block.type] ?? "b-paragraph"}${extraClass}`}
-      placeholder={PLACEHOLDERS[block.type]}
+      placeholder={
+        PLACEHOLDERS[block.type] && t(`block.${PLACEHOLDERS[block.type]}`)
+      }
       onTextInput={handlers.onTextInput}
       onKeyDown={handlers.onKeyDown}
       onBlur={handlers.onBlur}
@@ -142,7 +147,7 @@ export default function BlockRow({
     >
       <button
         className="drag-handle"
-        aria-label="Drag block"
+        aria-label={t("block.dragBlock")}
         {...attributes}
         {...listeners}
       >

@@ -33,6 +33,7 @@ import {
   IconRevenue,
   IconWon,
 } from "../components/Icons";
+import { useTranslation } from "react-i18next";
 
 /** Six months behind and six ahead: what landed, then what is forecast to. */
 const MONTHS_BACK = 5;
@@ -73,6 +74,7 @@ function StatTile({
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation("crm");
   const { data: deals } = useFetch<Deal[]>("/api/crm/deals");
   const { data: contacts } = useFetch<Contact[]>("/api/crm/contacts");
   const { data: orgs } = useFetch<Organization[]>("/api/crm/organizations");
@@ -119,8 +121,8 @@ export default function Dashboard() {
   const revenueWon = trailing.reduce((s, m) => s + m.actual, 0);
 
   const funnel = useMemo(
-    () => pipelineFunnel(deals ?? [], months[0].key),
-    [deals, months],
+    () => pipelineFunnel(deals ?? [], months[0].key, (s) => t(`stage.${s}`)),
+    [deals, months, t],
   );
   const rate = useMemo(
     () => winLoss(deals ?? [], months[0].key),
@@ -139,8 +141,8 @@ export default function Dashboard() {
         .sort((a, b) => a.due_date!.localeCompare(b.due_date!)),
     [activities],
   );
-  const overdue = tasks.filter((t) => t.due_date! < today);
-  const upcoming = tasks.filter((t) => t.due_date! >= today);
+  const overdue = tasks.filter((task) => task.due_date! < today);
+  const upcoming = tasks.filter((task) => task.due_date! >= today);
   const recent = (activities ?? []).slice(0, 8);
 
   async function toggleDone(task: Activity) {
@@ -168,87 +170,85 @@ export default function Dashboard() {
     <>
       <PageHeader
         icon={<IconDashboard size={20} />}
-        title="Dashboard"
-        sub="How your sales are going at a glance"
+        title={t("dashboard.title")}
+        sub={t("dashboard.sub")}
       />
       <div className="stat-row">
         <StatTile
           tone="count"
           icon={<IconDeals size={17} />}
-          label="Open deals"
+          label={t("dashboard.openDeals")}
           value={String(openDeals.length)}
-          sub={`${String(orgsInPlay)} organizations in play`}
+          sub={t("dashboard.orgsInPlay", { count: orgsInPlay })}
         />
         <StatTile
           tone="open"
           icon={<IconPipeline size={17} />}
-          label="Pipeline value"
+          label={t("dashboard.pipelineValue")}
           value={formatMoney(pipelineValue)}
-          sub={`${formatMoney(averageDeal)} average deal`}
+          sub={t("dashboard.averageDeal", { value: formatMoney(averageDeal) })}
           testId="dash-total"
         />
         <StatTile
           tone="forecast"
           icon={<IconForecast size={17} />}
-          label="Expected revenue"
+          label={t("dashboard.expectedRevenue")}
           value={formatMoney(expectedRevenue)}
-          sub={`${String(weighting)}% of the open pipeline`}
+          sub={t("dashboard.weighting", { percent: weighting })}
           testId="dash-expected"
         />
         <StatTile
           tone="won"
           icon={<IconWon size={17} />}
-          label="Deals won (6 mo)"
+          label={t("dashboard.dealsWon")}
           value={String(dealsWon)}
-          sub={`${String(rate.rate)}% of everything closed`}
+          sub={t("dashboard.ofClosed", { percent: rate.rate })}
         />
         <StatTile
           tone="won"
           icon={<IconRevenue size={17} />}
-          label="Revenue won (6 mo)"
+          label={t("dashboard.revenueWon")}
           value={formatMoney(revenueWon)}
-          sub={dealsWon ? `${formatMoney(revenueWon / dealsWon)} a win` : "—"}
+          sub={
+            dealsWon
+              ? t("dashboard.perWin", {
+                  value: formatMoney(revenueWon / dealsWon),
+                })
+              : "—"
+          }
         />
       </div>
       <div className="dash-grid">
         <div className="card">
-          <h2>Revenue and deal volume</h2>
-          <p className="card-sub">
-            Won revenue behind today, the weighted pipeline ahead of it, and the
-            number of deals closing each month.
-          </p>
+          <h2>{t("dashboard.revenueAndVolume")}</h2>
+          <p className="card-sub">{t("dashboard.revenueAndVolumeSub")}</p>
           <RevenueChart data={monthly} />
         </div>
         <div className="card">
-          <h2>Revenue funnel</h2>
-          <p className="card-sub">
-            Value at or past each stage: the open pipeline plus the last six
-            months of wins. Lost deals are excluded.
-          </p>
+          <h2>{t("dashboard.funnel")}</h2>
+          <p className="card-sub">{t("dashboard.funnelSub")}</p>
           <RevenueFunnel data={funnel} />
         </div>
         <div className="card">
-          <h2>Win rate</h2>
-          <p className="card-sub">
-            Deals closed in the last six months, won against lost.
-          </p>
+          <h2>{t("dashboard.winRate")}</h2>
+          <p className="card-sub">{t("dashboard.winRateSub")}</p>
           {rate.won + rate.lost === 0 ? (
-            <p className="muted">Nothing has closed in the last six months.</p>
+            <p className="muted">{t("dashboard.nothingClosed")}</p>
           ) : (
             <WinRateDonut data={rate} />
           )}
         </div>
         <div className="card">
-          <h2>Top organizations</h2>
-          <p className="card-sub">Where the open pipeline is concentrated.</p>
+          <h2>{t("dashboard.topOrganizations")}</h2>
+          <p className="card-sub">{t("dashboard.topOrganizationsSub")}</p>
           {byOrg.length === 0 ? (
-            <p className="muted">No open deals against an organization.</p>
+            <p className="muted">{t("dashboard.noOpenDeals")}</p>
           ) : (
             <TopOrganizations data={byOrg} />
           )}
         </div>
         <div className="card">
-          <h2>Recent activity</h2>
+          <h2>{t("dashboard.recentActivity")}</h2>
           <div className="feed-list">
             {recent.map((a) => (
               <div key={a.id} className="feed-item">
@@ -265,29 +265,31 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="card">
-          <h2>Follow-ups</h2>
+          <h2>{t("dashboard.followUps")}</h2>
           {tasks.length === 0 && (
-            <p className="muted">Nothing due. Nice work.</p>
+            <p className="muted">{t("dashboard.nothingDue")}</p>
           )}
           <div className="task-list">
-            {[...overdue, ...upcoming].map((t) => (
-              <div key={t.id} className="task-item">
+            {[...overdue, ...upcoming].map((task) => (
+              <div key={task.id} className="task-item">
                 <input
                   type="checkbox"
                   checked={false}
-                  onChange={() => void toggleDone(t)}
-                  aria-label={`Mark done: ${t.description}`}
+                  onChange={() => void toggleDone(task)}
+                  aria-label={t("dashboard.markDone", {
+                    description: task.description,
+                  })}
                 />
                 <div style={{ flex: 1 }}>
-                  <div>{t.description}</div>
+                  <div>{task.description}</div>
                   <div className="timeline-meta">
                     <span
-                      className={`due-chip${t.due_date! < today ? " overdue" : ""}`}
+                      className={`due-chip${task.due_date! < today ? " overdue" : ""}`}
                     >
-                      {t.due_date! < today ? "Overdue: " : "Due "}
-                      {formatDate(t.due_date)}
+                      {task.due_date! < today ? t("due.overdue") : t("due.due")}
+                      {formatDate(task.due_date)}
                     </span>
-                    {relatedLink(t)}
+                    {relatedLink(task)}
                   </div>
                 </div>
               </div>

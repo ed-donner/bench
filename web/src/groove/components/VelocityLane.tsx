@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import type { MelodicStep } from "../types";
 import { STEPS } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   steps: MelodicStep[];
@@ -10,6 +11,7 @@ interface Props {
 
 /** Draw per-step dynamics by dragging across the lane. Rests are left alone. */
 export function VelocityLane({ steps, current, onChange }: Props) {
+  const { t } = useTranslation("groove");
   const ref = useRef<HTMLDivElement>(null);
   const painting = useRef(false);
 
@@ -33,7 +35,7 @@ export function VelocityLane({ steps, current, onChange }: Props) {
       <div
         ref={ref}
         className="vel-track"
-        title="Drag across to draw per-step dynamics"
+        title={t("tip.velocity")}
         onPointerDown={(e) => {
           e.preventDefault();
           (e.currentTarget as Element).setPointerCapture(e.pointerId);

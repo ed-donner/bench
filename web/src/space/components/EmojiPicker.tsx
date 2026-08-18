@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 const EMOJIS = [
   "📄",
   "📝",
@@ -57,6 +59,7 @@ interface Props {
 }
 
 export default function EmojiPicker({ onPick, onClose }: Props) {
+  const { t } = useTranslation("space");
   return (
     <div
       role="presentation"
@@ -65,14 +68,18 @@ export default function EmojiPicker({ onPick, onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="emoji-picker" role="dialog" aria-label="Pick an icon">
+      <div
+        className="emoji-picker"
+        role="dialog"
+        aria-label={t("page.pickIcon")}
+      >
         <div className="emoji-grid">
           {EMOJIS.map((e) => (
             <button
               key={e}
               className="emoji-cell"
               onClick={() => onPick(e)}
-              aria-label={`Icon ${e}`}
+              aria-label={t("page.icon", { emoji: e })}
             >
               {e}
             </button>

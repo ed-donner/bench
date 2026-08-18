@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { api, type PersonDetail } from "../api";
 import { errorMessage } from "../format";
+import { useTranslation } from "react-i18next";
 import { useStore } from "../store";
 import { PersonForm } from "../components/PersonForm";
 import { LogInteractionModal } from "../components/LogInteractionModal";
@@ -29,6 +30,7 @@ type QuickModal =
   | null;
 
 export default function PersonDetailPage() {
+  const { t } = useTranslation("rolodex");
   const { id } = useParams();
   const personId = Number(id);
   const { people, refresh } = useStore();
@@ -68,8 +70,8 @@ export default function PersonDetailPage() {
   }, [load, refresh]);
 
   if (error)
-    return <div className="page">Couldn’t load this person: {error}</div>;
-  if (!detail) return <div className="page muted">Loading…</div>;
+    return <div className="page">{t("person.loadFailed", { error })}</div>;
+  if (!detail) return <div className="page muted">{t("people.loading")}</div>;
 
   const { person } = detail;
   return (

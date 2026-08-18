@@ -10,6 +10,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { formatMoney } from "../format";
 import { IconOrganizations, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
+import { useTranslation } from "react-i18next";
 
 interface OrgRow extends Organization {
   contact_count: number;
@@ -18,6 +19,7 @@ interface OrgRow extends Organization {
 }
 
 export default function Organizations() {
+  const { t } = useTranslation("crm");
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Organization | null>(null);
@@ -77,12 +79,12 @@ export default function Organizations() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t("field.name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "website",
-        header: "Website",
+        header: t("field.website"),
         cell: (c) => {
           const site = c.getValue<string>();
           return site ? (
@@ -94,23 +96,23 @@ export default function Organizations() {
       },
       {
         accessorKey: "industry",
-        header: "Industry",
+        header: t("field.industry"),
         cell: (c) =>
           c.getValue<string>() || <span className="cell-empty">—</span>,
       },
       {
         accessorKey: "contact_count",
-        header: "Contacts",
+        header: t("field.contacts"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_count",
-        header: "Open deals",
+        header: t("field.openDeals"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_value",
-        header: "Pipeline",
+        header: t("field.pipeline"),
         cell: (c) => (
           <span className="cell-money">
             {formatMoney(c.getValue<number>())}
@@ -118,7 +120,7 @@ export default function Organizations() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   const remove = async () => {
@@ -135,12 +137,12 @@ export default function Organizations() {
     <>
       <PageHeader
         icon={<IconOrganizations size={20} />}
-        title="Organizations"
-        sub="The companies you do business with"
+        title={t("organizations.title")}
+        sub={t("organizations.sub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add organization
+          {t("action.addOrganization")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -149,7 +151,7 @@ export default function Organizations() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search organizations…"
+            placeholder={t("organizations.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -164,9 +166,11 @@ export default function Organizations() {
         onEdit={(o) => setEditing(o)}
         onDelete={(o) => setDeleting(o)}
         emptyMessage={
-          q ? `No organizations match “${q}”.` : "No organizations yet."
+          q
+            ? t("organizations.noMatch", { query: q })
+            : t("empty.organizations")
         }
-        summary={<>Open pipeline {formatMoney(openPipeline)}</>}
+        summary={`${t("organizations.openPipeline")} ${formatMoney(openPipeline)}`}
       />
       {adding && (
         <OrganizationForm onSaved={reload} onClose={() => setAdding(false)} />
@@ -180,8 +184,8 @@ export default function Organizations() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete ${deleting.name}? Its contacts and deals stay, but lose their link to it.`}
+          title={t("organizations.confirmTitle")}
+          message={t("organizations.confirmRow", { name: deleting.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

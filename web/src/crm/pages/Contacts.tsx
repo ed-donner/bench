@@ -10,8 +10,10 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { StatusChip } from "../components/Chips";
 import { IconContacts, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
+import { useTranslation } from "react-i18next";
 
 export default function Contacts() {
+  const { t } = useTranslation("crm");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [adding, setAdding] = useState(false);
@@ -32,31 +34,31 @@ export default function Contacts() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t("field.name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "email",
-        header: "Email",
+        header: t("field.email"),
         cell: (c) => (
           <span className="cell-muted">{c.getValue<string>() || "—"}</span>
         ),
       },
       {
         accessorKey: "phone",
-        header: "Phone",
+        header: t("field.phone"),
         cell: (c) =>
           c.getValue<string>() || <span className="cell-empty">—</span>,
       },
       {
         accessorKey: "job_title",
-        header: "Job title",
+        header: t("field.jobTitle"),
         cell: (c) =>
           c.getValue<string>() || <span className="cell-empty">—</span>,
       },
       {
         accessorKey: "organization_id",
-        header: "Organization",
+        header: t("field.organization"),
         cell: (c) =>
           orgName.get(c.getValue<number>()) ?? (
             <span className="cell-empty">—</span>
@@ -64,23 +66,23 @@ export default function Contacts() {
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t("field.status"),
         cell: (c) => <StatusChip status={c.row.original.status} />,
       },
     ],
-    [orgName],
+    [orgName, t],
   );
 
   return (
     <>
       <PageHeader
         icon={<IconContacts size={20} />}
-        title="Contacts"
-        sub="The people you deal with"
+        title={t("contacts.title")}
+        sub={t("contacts.sub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add contact
+          {t("action.addContact")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -89,21 +91,21 @@ export default function Contacts() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search contacts…"
+            placeholder={t("contacts.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
         <select
           className="filter-select"
-          aria-label="Filter by status"
+          aria-label={t("contacts.filterByStatus")}
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          <option value="">All statuses</option>
+          <option value="">{t("contacts.allStatuses")}</option>
           {CONTACT_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {t(`status.${s}`)}
             </option>
           ))}
         </select>
@@ -116,9 +118,7 @@ export default function Contacts() {
         onRowClick={(c) => void navigate(`/contacts/${c.id}`)}
         onEdit={(c) => setEditing(c)}
         onDelete={(c) => setDeleting(c)}
-        emptyMessage={
-          q || status ? "No contacts match these filters." : "No contacts yet."
-        }
+        emptyMessage={q || status ? t("contacts.noMatch") : t("empty.contacts")}
       />
       {adding && (
         <ContactForm
@@ -137,8 +137,8 @@ export default function Contacts() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete ${deleting.name}? This cannot be undone.`}
+          title={t("contacts.confirmTitle")}
+          message={t("contacts.confirm", { name: deleting.name })}
           onConfirm={() => {
             void api.delete(`/api/crm/contacts/${deleting.id}`).then(() => {
               setDeleting(null);

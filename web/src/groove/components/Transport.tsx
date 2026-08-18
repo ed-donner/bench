@@ -3,6 +3,7 @@ import { IconGroove } from "../../shared/AppIcons";
 import type { Patch } from "../types";
 import { Knob } from "./Knob";
 import { LedStrip } from "./LedStrip";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   patches: Patch[];
@@ -26,6 +27,7 @@ function TempoDial({
   bpm: number;
   onBpm: (v: number) => void;
 }) {
+  const { t } = useTranslation("groove");
   const drag = useRef<{ y: number; start: number } | null>(null);
   const down = useCallback(
     (e: React.PointerEvent) => {
@@ -59,7 +61,7 @@ function TempoDial({
       </button>
       <div
         className="tempo-read"
-        title="Drag up/down to change tempo"
+        title={t("tip.tempo")}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -80,6 +82,7 @@ function TempoDial({
 }
 
 export function Transport(p: Props) {
+  const { t } = useTranslation("groove");
   return (
     <header className="transport">
       <div className="brand">
@@ -91,7 +94,7 @@ export function Transport(p: Props) {
       <button
         type="button"
         className={`play-btn${p.playing ? " playing" : ""}`}
-        title="Spacebar"
+        title={t("tip.play")}
         onClick={p.onPlay}
       >
         <span className="play-glyph">{p.playing ? "■" : "▶"}</span>
@@ -119,7 +122,11 @@ export function Transport(p: Props) {
             key={patch.name}
             type="button"
             className={`patch-btn${i === p.index ? " active" : ""}`}
-            title={`${patch.name} — ${patch.subtitle} (key ${i + 1})`}
+            title={t("tip.patch", {
+              name: patch.name,
+              subtitle: patch.subtitle,
+              index: i + 1,
+            })}
             onClick={() => p.onSelect(i)}
           >
             <span className="patch-slot">{"ABCD"[i]}</span>
@@ -134,7 +141,7 @@ export function Transport(p: Props) {
           className="revert-btn"
           onClick={p.onRevert}
           disabled={!p.edited}
-          title="Restore this patch to its factory settings"
+          title={t("tip.revert")}
         >
           {p.edited ? "REVERT" : "SAVED"}
         </button>

@@ -8,21 +8,24 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { ContactList, DealList } from "../components/RelatedLists";
 import PageHeader from "../components/PageHeader";
 import { IconOrganizations } from "../components/Icons";
+import { useTranslation } from "react-i18next";
 
 function OrganizationFacts({ org }: { org: Organization }) {
+  const { t } = useTranslation("crm");
   return (
     <dl className="props">
-      <dt>Website</dt>
+      <dt>{t("field.website")}</dt>
       <dd>{org.website || "—"}</dd>
-      <dt>Industry</dt>
+      <dt>{t("field.industry")}</dt>
       <dd>{org.industry || "—"}</dd>
-      <dt>Notes</dt>
+      <dt>{t("field.notes")}</dt>
       <dd>{org.notes || "—"}</dd>
     </dl>
   );
 }
 
 export default function OrganizationDetail() {
+  const { t } = useTranslation("crm");
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -47,33 +50,37 @@ export default function OrganizationDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/organizations">Organizations</Link> / {org.name}
+        <Link to="/organizations">{t("organizations.title")}</Link> / {org.name}
       </div>
       <PageHeader
         icon={<IconOrganizations size={20} />}
         title={org.name}
-        sub={org.industry || "Organization"}
+        sub={org.industry || t("empty.organizationFallback")}
       >
         <div className="header-actions">
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("action.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("action.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card full">
-          <h2>Details</h2>
+          <h2>{t("field.details")}</h2>
           <OrganizationFacts org={org} />
         </div>
         <div className="card">
-          <h2>Contacts ({contacts?.length ?? 0})</h2>
+          <h2>
+            {t("field.contacts")} ({contacts?.length ?? 0})
+          </h2>
           <ContactList contacts={contacts ?? []} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {t("field.deals")} ({deals?.length ?? 0})
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
       </div>
@@ -86,8 +93,8 @@ export default function OrganizationDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete "${org.name}"? Its contacts and deals will be kept but unlinked.`}
+          title={t("organizations.confirmTitle")}
+          message={t("organizations.confirmDetail", { name: org.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

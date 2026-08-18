@@ -42,7 +42,7 @@ const rowFor = (rows: ReturnType<typeof pipelineFunnel>, stage: DealStage) =>
 
 describe("pipeline funnel", () => {
   it("counts a deal towards its own stage and every stage before it", () => {
-    const rows = pipelineFunnel([deal("Negotiation", 1000)], SINCE);
+    const rows = pipelineFunnel([deal("Negotiation", 1000)], SINCE, (s) => s);
     expect(rowFor(rows, "New").value).toBe(1000);
     expect(rowFor(rows, "Negotiation").value).toBe(1000);
     expect(rowFor(rows, "Won").value).toBe(0);
@@ -57,6 +57,7 @@ describe("pipeline funnel", () => {
         deal("Negotiation", 100),
       ],
       SINCE,
+      (s) => s,
     );
     expect(rows.map((r) => r.value)).toEqual([400, 300, 200, 100, 0]);
   });
@@ -65,19 +66,28 @@ describe("pipeline funnel", () => {
     const rows = pipelineFunnel(
       [deal("Proposal", 100), deal("Negotiation", 100)],
       SINCE,
+      (s) => s,
     );
     expect(rowFor(rows, "Proposal").count).toBe(2);
     expect(rowFor(rows, "Proposal").inStage).toBe(1);
   });
 
   it("leaves lost deals out of every row", () => {
-    const rows = pipelineFunnel([deal("New", 500), deal("Lost", 900)], SINCE);
+    const rows = pipelineFunnel(
+      [deal("New", 500), deal("Lost", 900)],
+      SINCE,
+      (s) => s,
+    );
     expect(rowFor(rows, "New").value).toBe(500);
     expect(rowFor(rows, "New").count).toBe(1);
   });
 
   it("counts a win from inside the window at every stage", () => {
-    const rows = pipelineFunnel([deal("Won", 700, "2026-05-14")], SINCE);
+    const rows = pipelineFunnel(
+      [deal("Won", 700, "2026-05-14")],
+      SINCE,
+      (s) => s,
+    );
     expect(rows.map((r) => r.value)).toEqual([700, 700, 700, 700, 700]);
   });
 
@@ -85,23 +95,30 @@ describe("pipeline funnel", () => {
     const recent = deal("Won", 700, "2026-05-14");
     const ancient = deal("Won", 9000, "2025-11-02");
     expect(
-      pipelineFunnel([recent, ancient], SINCE).map((r) => r.value),
+      pipelineFunnel([recent, ancient], SINCE, (s) => s).map((r) => r.value),
     ).toEqual([700, 700, 700, 700, 700]);
   });
 
   it("keeps an open deal closing beyond the window, where most of the pipeline sits", () => {
-    const rows = pipelineFunnel([deal("Qualified", 300, "2026-12-01")], SINCE);
+    const rows = pipelineFunnel(
+      [deal("Qualified", 300, "2026-12-01")],
+      SINCE,
+      (s) => s,
+    );
     expect(rowFor(rows, "Qualified").value).toBe(300);
   });
 
   it("ignores a won deal with no close date, as the monthly charts do", () => {
-    expect(rowFor(pipelineFunnel([deal("Won", 400)], SINCE), "Won").value).toBe(
-      0,
-    );
+    expect(
+      rowFor(
+        pipelineFunnel([deal("Won", 400)], SINCE, (s) => s),
+        "Won",
+      ).value,
+    ).toBe(0);
   });
 
   it("marks every row but the last as covering the stages past it", () => {
-    expect(pipelineFunnel([], SINCE).map((r) => r.label)).toEqual([
+    expect(pipelineFunnel([], SINCE, (s) => s).map((r) => r.label)).toEqual([
       "New+",
       "Qualified+",
       "Proposal+",

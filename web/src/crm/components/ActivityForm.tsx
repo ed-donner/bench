@@ -2,6 +2,7 @@ import { SubmitEvent, useState } from "react";
 import Modal from "./Modal";
 import { api } from "../api";
 import { ACTIVITY_TYPES, ActivityType } from "../types";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   contactId?: number;
@@ -16,6 +17,7 @@ export default function ActivityForm({
   onSaved,
   onClose,
 }: Props) {
+  const { t } = useTranslation("crm");
   const [form, setForm] = useState({
     type: "note" as ActivityType,
     description: "",
@@ -36,11 +38,11 @@ export default function ActivityForm({
   }
 
   return (
-    <Modal title="Log activity" onClose={onClose}>
+    <Modal title={t("action.logActivity")} onClose={onClose}>
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="act-type">Type</label>
+            <label htmlFor="act-type">{t("field.type")}</label>
             <select
               id="act-type"
               value={form.type}
@@ -48,15 +50,15 @@ export default function ActivityForm({
                 setForm({ ...form, type: e.target.value as ActivityType })
               }
             >
-              {ACTIVITY_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {ACTIVITY_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {t(`activityType.${type}`)}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="act-due">Follow-up due date (optional)</label>
+            <label htmlFor="act-due">{t("form.followUpDue")}</label>
             <input
               id="act-due"
               type="date"
@@ -66,7 +68,7 @@ export default function ActivityForm({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="act-desc">Description</label>
+          <label htmlFor="act-desc">{t("field.description")}</label>
           <textarea
             id="act-desc"
             rows={3}
@@ -77,10 +79,10 @@ export default function ActivityForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t("action.cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {t("action.save")}
           </button>
         </div>
       </form>

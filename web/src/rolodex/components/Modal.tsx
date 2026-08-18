@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function Modal({
   title,
@@ -16,6 +17,7 @@ export function Modal({
   footer?: ReactNode;
   large?: boolean;
 }) {
+  const { t } = useTranslation("rolodex");
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -42,7 +44,11 @@ export function Modal({
             {icon}
             {title}
           </h3>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button
+            className="icon-btn"
+            onClick={onClose}
+            aria-label={t("action.close")}
+          >
             <X size={17} />
           </button>
         </div>

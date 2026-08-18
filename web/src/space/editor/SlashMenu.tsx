@@ -1,4 +1,5 @@
 import { filterBlockTypes } from "./blockTypes";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   query: string;
@@ -15,6 +16,7 @@ export default function SlashMenu({
   onPick,
   onHover,
 }: Props) {
+  const { t } = useTranslation("space");
   const items = filterBlockTypes(query);
   const top = Math.min(
     anchor.top + 6,
@@ -24,10 +26,12 @@ export default function SlashMenu({
     <div
       className="slash-menu"
       role="listbox"
-      aria-label="Block types"
+      aria-label={t("block.blockTypes")}
       style={{ left: anchor.left, top }}
     >
-      {items.length === 0 && <div className="slash-empty">No results</div>}
+      {items.length === 0 && (
+        <div className="slash-empty">{t("block.noResults")}</div>
+      )}
       {items.map((item, i) => (
         <button
           key={item.type}
@@ -39,7 +43,7 @@ export default function SlashMenu({
           onClick={() => onPick(item.type)}
         >
           <span className="slash-icon">{item.icon}</span>
-          {item.label}
+          {t(`block.${item.label}`)}
         </button>
       ))}
     </div>

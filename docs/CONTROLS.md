@@ -65,8 +65,8 @@ per workspace: type-aware linting reaches both tsconfigs through typescript-esli
 Two things need no package, only configuration:
 
 - The built-in size rules, which enforce "short functions, short modules": `max-lines` 500,
-  `max-lines-per-function` 200, `complexity` 15, `max-depth` 4, `max-params` 5. Seed and patch
-  modules are literal data and exempt from the line counts, and `max-lines-per-function` is off for
+  `max-lines-per-function` 200, `complexity` 15, `max-depth` 4, `max-params` 5. Seed, patch and
+  locale modules are literal data and exempt from the line counts, and `max-lines-per-function` is off for
   `.tsx`, whose bodies are mostly a JSX tree the rule counts as logic. `complexity` and
   `cognitive-complexity` measure whether a function is actually hard to follow, and stay strict
   everywhere outside Groove's audio. The numbers were calibrated against this codebase rather than
@@ -188,6 +188,20 @@ Formatting is applied in four places, and the split between which ones **write**
   Without it, `format:check` inside `check` fails on every unformatted agent edit.
 - **Never `prettier --write` in `prebuild` or CI.** A build that rewrites its own source is not
   reproducible, and in CI it would pass while leaving the repository unformatted.
+
+## Language, in the suites
+
+**The unit suite runs in English, pinned.** `web/src/test/setup-i18n.ts` initialises i18next with
+every app's bundle before any test renders - without it each label comes out as its key - and sets
+`bench.lang` to `en`, so the suites stay independent of the machine's language. `playwright.config.ts`
+pins `locale: "en-US"` for the same reason: the first visit follows the browser, and a machine set
+to Spanish would otherwise flip every English selector in the e2e suite at once.
+
+`web/src/test/locales.test.ts` is what keeps the two dictionaries honest - same keys, nothing empty,
+the same interpolation names on both sides. A missed string is invisible to the typechecker and
+shows up in the UI as a raw key, so this is the test that catches it. `initI18n` also installs a
+`missingKeyHandler` that **throws under vitest**, which catches the other direction: a key used but
+never defined.
 
 ## Coverage
 

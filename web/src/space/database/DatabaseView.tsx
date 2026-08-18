@@ -14,6 +14,7 @@ import BoardView from "./BoardView";
 import ListView from "./ListView";
 import Toolbar from "./Toolbar";
 import { applyFilters, applySort } from "./viewLogic";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   databaseId: string;
@@ -40,6 +41,7 @@ function reordered(property: Property, optionIds: string[]): Property {
 }
 
 export default function DatabaseView({ databaseId }: Props) {
+  const { t } = useTranslation("space");
   // The loaded id travels with the data, so "still loading the next database" is derived during
   // render rather than reset by an effect, which would render twice on every navigation.
   const [loaded, setLoaded] = useState<{
@@ -258,9 +260,7 @@ export default function DatabaseView({ databaseId }: Props) {
             }
           />
         ) : (
-          <div className="board-empty">
-            Add a select property to group this board.
-          </div>
+          <div className="board-empty">{t("db.needsSelect")}</div>
         ))}
       {kind === "list" && <ListView rows={rows} properties={data.properties} />}
     </div>

@@ -26,6 +26,7 @@ import { useNavigate } from "react-router";
 import type { DbRow, Property } from "../api";
 import { Chip } from "./cells";
 import { groupRows, type BoardColumn } from "./viewLogic";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   rows: DbRow[];
@@ -61,10 +62,11 @@ function CardBody({
   row: DbRow;
   cardProperty?: Property;
 }) {
+  const { t } = useTranslation("space");
   const chips = toChips(cardProperty ? row.values[cardProperty.id] : undefined);
   return (
     <>
-      <div className="board-card-title">{row.title || "Untitled"}</div>
+      <div className="board-card-title">{row.title || t("untitled")}</div>
       {chips.length > 0 && cardProperty && (
         <div className="board-card-chips">
           {chips
@@ -132,6 +134,7 @@ function Column({
   cardProperty?: Property;
   justDragged: React.RefObject<boolean>;
 }) {
+  const { t } = useTranslation("space");
   const id = columnId(column);
   // The whole column sorts horizontally, but only the handle starts that drag - dragging from
   // anywhere else would fight the cards inside it.
@@ -171,7 +174,9 @@ function Column({
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          aria-label={`Reorder ${column.option?.name ?? "ungrouped"} column`}
+          aria-label={t("db.reorderColumn", {
+            name: column.option?.name ?? t("db.ungrouped"),
+          })}
         >
           <GripVertical size={14} />
         </button>
@@ -190,7 +195,7 @@ function Column({
             />
           ))}
           {column.rows.length === 0 && (
-            <p className="board-col-empty">Drop a row here</p>
+            <p className="board-col-empty">{t("db.dropRow")}</p>
           )}
         </div>
       </SortableContext>
@@ -207,6 +212,7 @@ export default function BoardView({
   onReorder,
   onReorderColumns,
 }: Props) {
+  const { t } = useTranslation("space");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -362,7 +368,8 @@ export default function BoardView({
           <div className="board-col lifted">
             <div className="board-col-head">
               <span className="board-col-name">
-                {draggingColumn.option?.name ?? "No " + groupProperty.name}
+                {draggingColumn.option?.name ??
+                  t("db.noValue", { property: groupProperty.name })}
               </span>
               <span className="board-count">{draggingColumn.rows.length}</span>
             </div>

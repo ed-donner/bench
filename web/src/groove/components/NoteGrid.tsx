@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import type { MelodicStep } from "../types";
 import { STEPS } from "../types";
 import { CHORD_SHAPES, clampNote, noteName } from "../music";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   unit: string;
@@ -20,6 +21,7 @@ export function NoteGrid({
   onChange,
   onAudition,
 }: Props) {
+  const { t } = useTranslation("groove");
   const drag = useRef<{
     index: number;
     y: number;
@@ -98,10 +100,10 @@ export function NoteGrid({
             className={`pad note-pad${step.on ? " on" : ""}${i === current ? " playing" : ""}${
               i % 4 === 0 ? " beat" : ""
             }`}
-            aria-label={`${unit} step ${i + 1}`}
+            aria-label={t("step", { unit, index: i + 1 })}
             aria-pressed={step.on}
-            title={`Click to toggle · drag up/down or scroll to change pitch${
-              showChord ? " · shift-click to change chord" : ""
+            title={`${t("tip.notePad")}${
+              showChord ? t("tip.notePadChord") : ""
             }`}
             onPointerDown={(e) => down(e, i)}
             onPointerMove={move}

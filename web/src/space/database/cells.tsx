@@ -2,6 +2,7 @@ import { valueText } from "./valueText";
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, Plus, X } from "lucide-react";
 import type { Property, PropertyOption } from "../api";
+import { useTranslation } from "react-i18next";
 
 export function Chip({
   option,
@@ -10,13 +11,14 @@ export function Chip({
   option: PropertyOption;
   onRemove?: () => void;
 }) {
+  const { t } = useTranslation("space");
   return (
     <span className={`chip chip-${option.color}`}>
       {option.name}
       {onRemove && (
         <button
           className="chip-x"
-          aria-label={`Remove ${option.name}`}
+          aria-label={t("db.removeOption", { name: option.name })}
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
@@ -44,6 +46,7 @@ function TextLikeCell({
   onChange,
   kind,
 }: CellProps & { kind: "text" | "url" | "number" }) {
+  const { t } = useTranslation("space");
   const [draft, setDraft] = useState(() => valueText(value));
   // Adjusting during render rather than in an effect: React re-runs this component immediately
   // instead of painting the stale draft first.
@@ -64,7 +67,10 @@ function TextLikeCell({
     <span className="cell-input-wrap">
       <input
         className={`cell-input${kind === "number" ? " cell-number" : ""}`}
-        aria-label={`${property.name} for ${rowLabel}`}
+        aria-label={t("db.valueFor", {
+          property: property.name,
+          row: rowLabel,
+        })}
         value={draft}
         inputMode={kind === "number" ? "decimal" : undefined}
         onChange={(e) => setDraft(e.target.value)}
@@ -79,7 +85,7 @@ function TextLikeCell({
           href={value.startsWith("http") ? value : `https://${value}`}
           target="_blank"
           rel="noreferrer"
-          aria-label={`Open link ${value}`}
+          aria-label={t("db.openLink", { url: value })}
         >
           <ExternalLink size={13} />
         </a>
@@ -89,11 +95,12 @@ function TextLikeCell({
 }
 
 function DateCell({ property, value, rowLabel, onChange }: CellProps) {
+  const { t } = useTranslation("space");
   return (
     <input
       type="date"
       className="cell-input cell-date"
-      aria-label={`${property.name} for ${rowLabel}`}
+      aria-label={t("db.valueFor", { property: property.name, row: rowLabel })}
       value={typeof value === "string" ? value : ""}
       onChange={(e) => onChange(e.target.value || null)}
     />
@@ -101,11 +108,12 @@ function DateCell({ property, value, rowLabel, onChange }: CellProps) {
 }
 
 function CheckboxCell({ property, value, rowLabel, onChange }: CellProps) {
+  const { t } = useTranslation("space");
   return (
     <input
       type="checkbox"
       className="b-checkbox cell-checkbox"
-      aria-label={`${property.name} for ${rowLabel}`}
+      aria-label={t("db.valueFor", { property: property.name, row: rowLabel })}
       checked={Boolean(value)}
       onChange={(e) => onChange(e.target.checked)}
     />
@@ -127,6 +135,7 @@ function OptionPicker({
   onClose: () => void;
   multi: boolean;
 }) {
+  const { t } = useTranslation("space");
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => inputRef.current?.focus(), []);
@@ -142,12 +151,12 @@ function OptionPicker({
     <div
       className="option-picker"
       role="dialog"
-      aria-label={`${property.name} options`}
+      aria-label={t("db.propertyOptions", { property: property.name })}
     >
       <input
         ref={inputRef}
         className="option-search"
-        placeholder={multi ? "Search or create…" : "Select or create…"}
+        placeholder={multi ? t("db.searchOrCreate") : t("db.selectOrCreate")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
@@ -194,7 +203,7 @@ function OptionPicker({
           </button>
         )}
         {matches.length === 0 && !canCreate && (
-          <div className="option-empty">No options</div>
+          <div className="option-empty">{t("db.noOptions")}</div>
         )}
       </div>
     </div>
@@ -208,13 +217,17 @@ function SelectCell({
   onChange,
   onCreateOption,
 }: CellProps) {
+  const { t } = useTranslation("space");
   const [open, setOpen] = useState(false);
   const selected = property.options.find((o) => o.id === value);
   return (
     <div className="cell-select-wrap">
       <button
         className="cell-select"
-        aria-label={`${property.name} for ${rowLabel}`}
+        aria-label={t("db.valueFor", {
+          property: property.name,
+          row: rowLabel,
+        })}
         onClick={() => setOpen((v) => !v)}
       >
         {selected ? (
@@ -251,6 +264,7 @@ function MultiSelectCell({
   onChange,
   onCreateOption,
 }: CellProps) {
+  const { t } = useTranslation("space");
   const [open, setOpen] = useState(false);
   const ids = Array.isArray(value) ? (value as string[]) : [];
   const chosen = ids
@@ -263,7 +277,10 @@ function MultiSelectCell({
     <div className="cell-select-wrap">
       <button
         className="cell-select"
-        aria-label={`${property.name} for ${rowLabel}`}
+        aria-label={t("db.valueFor", {
+          property: property.name,
+          row: rowLabel,
+        })}
         onClick={() => setOpen((v) => !v)}
       >
         {chosen.length > 0 ? (

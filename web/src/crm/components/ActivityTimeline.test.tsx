@@ -37,7 +37,7 @@ describe("ActivityTimeline", () => {
   it("shows the description, the type and when it happened", () => {
     show([activity({ type: "call", description: "Discovery call" })]);
     expect(screen.getByText("Discovery call")).toBeInTheDocument();
-    expect(screen.getByText("call")).toBeInTheDocument();
+    expect(screen.getByText("Call")).toBeInTheDocument();
     expect(
       screen.getByText(formatDateTime("2026-06-02 14:30:00")),
     ).toBeInTheDocument();

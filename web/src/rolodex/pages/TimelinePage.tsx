@@ -6,23 +6,20 @@ import type { TimelineEntry } from "../types";
 import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/Modal";
 import InteractionIcon from "../components/InteractionIcon";
-import {
-  errorMessage,
-  fmtDate,
-  relativeDays,
-  INTERACTION_META,
-} from "../format";
+import { errorMessage, fmtDate, relativeDays } from "../format";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useStore } from "../store";
 
 const KIND_OPTIONS = [
-  { value: "all", label: "All activity" },
-  { value: "interaction_call", label: "Calls" },
-  { value: "interaction_message", label: "Messages" },
-  { value: "interaction_email", label: "Emails" },
-  { value: "interaction_met", label: "Meet-ups" },
-  { value: "interaction_other", label: "Other contact" },
-  { value: "news", label: "News" },
-  { value: "reminder_done", label: "Completed reminders" },
+  { value: "all", key: "kindAll" },
+  { value: "interaction_call", key: "kindCalls" },
+  { value: "interaction_message", key: "kindMessages" },
+  { value: "interaction_email", key: "kindEmails" },
+  { value: "interaction_met", key: "kindMeetups" },
+  { value: "interaction_other", key: "kindOther" },
+  { value: "news", key: "kindNews" },
+  { value: "reminder_done", key: "kindRemindersDone" },
 ];
 
 function entryIcon(e: TimelineEntry): React.ReactNode {
@@ -32,17 +29,15 @@ function entryIcon(e: TimelineEntry): React.ReactNode {
   return <History size={15} />;
 }
 
-const entryCount = (n: number) =>
-  `${n} ${n === 1 ? "entry" : "entries"} across everyone`;
-
-function entryLabel(e: TimelineEntry): string {
+function entryLabel(e: TimelineEntry, t: TFunction): string {
   if (e.kind === "interaction" && e.interaction_type)
-    return INTERACTION_META[e.interaction_type].verb;
-  if (e.kind === "news") return "News recorded";
-  return "Reminder completed";
+    return t(`interactionVerb.${e.interaction_type}`);
+  if (e.kind === "news") return t("timeline.newsRecorded");
+  return t("timeline.reminderCompleted");
 }
 
 export default function TimelinePage() {
+  const { t } = useTranslation("rolodex");
   const { people, loaded } = useStore();
   const [personId, setPersonId] = useState<number | "">("");
   const [kind, setKind] = useState("all");
@@ -75,24 +70,24 @@ export default function TimelinePage() {
             >
               <History size={19} />
             </span>
-            Timeline
+            {t("timeline.title")}
           </h1>
           <p className="page-desc">
             {entries
-              ? `${entryCount(entries.length)}, newest first`
-              : "Loading…"}
+              ? t("timeline.entries", { count: entries.length })
+              : t("people.loading")}
           </p>
         </div>
         <div className="page-actions">
           <select
             className="filter-select"
-            aria-label="Person"
+            aria-label={t("timeline.person")}
             value={personId}
             onChange={(e) =>
               setPersonId(e.target.value === "" ? "" : Number(e.target.value))
             }
           >
-            <option value="">Everyone</option>
+            <option value="">{t("timeline.everyone")}</option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -101,13 +96,13 @@ export default function TimelinePage() {
           </select>
           <select
             className="filter-select"
-            aria-label="Activity"
+            aria-label={t("timeline.activity")}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
             {KIND_OPTIONS.map((k) => (
               <option key={k.value} value={k.value}>
-                {k.label}
+                {t(`timeline.${k.key}`)}
               </option>
             ))}
           </select>
@@ -116,12 +111,14 @@ export default function TimelinePage() {
 
       <div className="card">
         {error && <div className="empty">{error}</div>}
-        {!error && entries === null && <div className="empty">Loading…</div>}
+        {!error && entries === null && (
+          <div className="empty">{t("people.loading")}</div>
+        )}
         {!error && entries !== null && entries.length === 0 && (
           <EmptyState icon={<History />}>
             {loaded && people.length === 0
-              ? "Nothing here yet — add people and log some interactions."
-              : "Nothing matches these filters."}
+              ? t("timeline.noPeopleYet")
+              : t("timeline.noMatch")}
           </EmptyState>
         )}
         {entries && entries.length > 0 && (
@@ -148,7 +145,7 @@ export default function TimelinePage() {
                       >
                         {e.person_name}
                       </Link>
-                      <span className="feed-type">{entryLabel(e)}</span>
+                      <span className="feed-type">{entryLabel(e, t)}</span>
                       <span className="feed-date">
                         {fmtDate(e.date)} · {relativeDays(e.date)}
                       </span>

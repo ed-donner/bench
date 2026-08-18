@@ -128,11 +128,24 @@ These are settled. Changing one is a project-level decision, not an implementati
   defines its palette twice - once on `:root`, once under `[data-theme="dark"]` - and sets
   `color-scheme` so native controls follow. Groove is the exception in direction only: it is dark
   by default and defines `[data-theme="light"]`.
+- **One language, chosen once.** `web/src/shared/i18n.ts` is theme.ts's counterpart: it holds the
+  choice in `localStorage` under `bench.lang`, each entry point calls `initI18n()` with its own
+  strings **before it renders**, and the first visit follows the browser. English and Spanish;
+  `i18next` with `react-i18next`, one namespace per app, and each app owns its two dictionaries in
+  `web/src/<app>/locales/`. **The toggle reloads the page**, because the apps hold their labels in
+  module-level tables and a module body runs before `main.tsx` gets to call `initI18n` - so
+  **nothing may be translated at module scope**. Tables carry keys and `t()` is called where the
+  label is rendered; `translate()` is the same thing for a module that is not a component. What is
+  deliberately not translated: user and seeded data, product names, and Groove's panel - a
+  groovebox says CUTOFF in any language, and that decision is what keeps `ParamSpec` and the audio
+  graph out of this entirely. Money, dates and numbers follow the language; the currency stays USD,
+  with `currencyDisplay: "narrowSymbol"` because Spanish spells it "US$" and three extra characters
+  overflow the pipeline cards.
 - **Colour means state, not identity.** In the strip and on the launcher, amber marks the app you
   are in and nothing else; the apps are told apart by their glyph. That is what keeps a fifth app
   from needing a fifth brand colour. Inside an app, its own accents are its own business.
 - **One dependency set per workspace.** All four UIs live in `web/`, so they share one set of
-  versions: TypeScript 6, Vite 8, vitest 4, react-router 8, React 19.
+  versions: TypeScript 6, Vite 8, vitest 4, react-router 8, React 19, i18next 26.
 - **TypeScript 6.0.3, pinned exactly, everywhere.** Root and both workspaces, one hoisted copy.
   6.0.3 is the last release carrying the JS compiler API that type-aware linting needs, so one
   compiler serves both `tsc --noEmit` and ESLint; TypeScript 7 is the native Go build and exposes no
@@ -158,6 +171,10 @@ A new `web/<name>/index.html`, a new `web/src/<name>/`, an entry in `vite.config
 one, is a `server/src/<name>/` with its own database file opened in `server/src/index.ts` and its
 router mounted at `/api/<name>` - and a `no-restricted-imports` entry in `eslint.config.js` so it
 stays separate from its siblings.
+
+It needs a `web/src/<name>/locales/` with `en.ts`, `es.ts` and an `index.ts` exporting
+`<name>Resources`, passed to `initI18n()` in its `main.tsx` and added to the merged bundle in
+`web/src/test/setup-i18n.ts` and to `web/src/test/locales.test.ts`.
 
 Then the navigation: an icon in `web/src/shared/AppIcons.tsx`, an entry in the `APPS` list in
 `web/src/shared/BenchNav.tsx`, the new key in that file's `AppKey` union, and

@@ -24,6 +24,7 @@ import {
 import { formatDateShort, formatMoney, formatMoneyCompact } from "../format";
 import PageHeader from "../components/PageHeader";
 import { IconPipeline } from "../components/Icons";
+import { useTranslation } from "react-i18next";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -36,6 +37,7 @@ function DealCard({
   index: number;
   orgName: string;
 }) {
+  const { t } = useTranslation("crm");
   const navigate = useNavigate();
   const open = () => void navigate(`/deals/${deal.id}`);
   const late = isOpen(deal) && (deal.close_date ?? "") < today();
@@ -61,7 +63,7 @@ function DealCard({
           }}
         >
           <div className="deal-name">{deal.name}</div>
-          <div className="deal-org">{orgName || "No organization"}</div>
+          <div className="deal-org">{orgName || t("empty.noOrganization")}</div>
           <div className="deal-figures">
             <span className="deal-value">{formatMoney(deal.value)}</span>
             <span className="deal-prob">{deal.probability}%</span>
@@ -71,7 +73,8 @@ function DealCard({
               {formatDateShort(deal.close_date)}
             </span>
             <span className="deal-expected">
-              {formatMoneyCompact(expectedValue(deal))} expected
+              {formatMoneyCompact(expectedValue(deal))}{" "}
+              {t("pipeline.expectedSuffix")}
             </span>
           </div>
         </div>
@@ -81,6 +84,7 @@ function DealCard({
 }
 
 export default function Pipeline() {
+  const { t } = useTranslation("crm");
   const { data: fetched } = useFetch<Deal[]>("/api/crm/deals");
   // Once a card has been dropped the local order wins; until then the fetched list is what shows.
   // Derived rather than copied into state by an effect, which would render twice on every load.
@@ -115,18 +119,18 @@ export default function Pipeline() {
     <>
       <PageHeader
         icon={<IconPipeline size={20} />}
-        title="Pipeline"
-        sub="Drag a card to another column to change its stage, or up and down to order a column your way"
+        title={t("pipeline.title")}
+        sub={t("pipeline.sub")}
       >
         <div className="pipeline-totals">
           <div className="total-block">
-            <span className="total-label">Total pipeline</span>
+            <span className="total-label">{t("pipeline.totalPipeline")}</span>
             <span className="total-value" data-testid="pipeline-total">
               {formatMoney(sumValue(open))}
             </span>
           </div>
           <div className="total-block">
-            <span className="total-label">Expected revenue</span>
+            <span className="total-label">{t("pipeline.expectedRevenue")}</span>
             <span
               className="total-value accent"
               data-testid="pipeline-expected"
@@ -155,7 +159,7 @@ export default function Pipeline() {
                     <div className="board-column-header">
                       <span className="col-title">
                         <span className="col-dot" />
-                        {stage}
+                        {t(`stage.${stage}`)}
                       </span>
                       <span className="col-count">{inStage.length}</span>
                     </div>
@@ -189,7 +193,7 @@ export default function Pipeline() {
                       ))}
                       {provided.placeholder}
                       {inStage.length === 0 && !snapshot.isDraggingOver && (
-                        <p className="board-empty">Drop a deal here</p>
+                        <p className="board-empty">{t("pipeline.dropHere")}</p>
                       )}
                     </div>
                   </div>
