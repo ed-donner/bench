@@ -157,36 +157,3 @@ export interface CircleMeta {
   cadenceDescription: string;
   blurb: string;
 }
-
-/** The circles and their check-in cadences. Mirrors server/src/rolodex/cadence.ts, which is the
-    authority: the server derives every status, and this copy only labels the UI. */
-export const CIRCLE_META: Record<Circle, CircleMeta> = {
-  inner: {
-    key: "inner",
-    label: "Inner",
-    cadenceDays: 30,
-    cadenceDescription: "Monthly",
-    blurb: "Your closest people — aim to be in touch every month.",
-  },
-  close: {
-    key: "close",
-    label: "Close",
-    cadenceDays: 91,
-    cadenceDescription: "Quarterly",
-    blurb: "Good friends and close family — every three months or so.",
-  },
-  wider: {
-    key: "wider",
-    label: "Wider",
-    cadenceDays: 182,
-    cadenceDescription: "Every six months",
-    blurb: "Friends you want to keep — twice a year.",
-  },
-  distant: {
-    key: "distant",
-    label: "Distant",
-    cadenceDays: 365,
-    cadenceDescription: "Yearly",
-    blurb: "Acquaintances and old friends — once a year is enough.",
-  },
-};

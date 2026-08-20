@@ -1,3 +1,5 @@
+import { useLocale } from "../../shared/useLocale";
+
 const EMOJIS = [
   "📄",
   "📝",
@@ -57,6 +59,7 @@ interface Props {
 }
 
 export default function EmojiPicker({ onPick, onClose }: Props) {
+  const { t } = useLocale();
   return (
     <div
       role="presentation"
@@ -65,21 +68,25 @@ export default function EmojiPicker({ onPick, onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="emoji-picker" role="dialog" aria-label="Pick an icon">
+      <div
+        className="emoji-picker"
+        role="dialog"
+        aria-label={t("emojiPicker.label")}
+      >
         <div className="emoji-grid">
           {EMOJIS.map((e) => (
             <button
               key={e}
               className="emoji-cell"
               onClick={() => onPick(e)}
-              aria-label={`Icon ${e}`}
+              aria-label={t("emojiPicker.iconLabel", { emoji: e })}
             >
               {e}
             </button>
           ))}
         </div>
         <button className="btn btn-subtle" onClick={() => onPick(null)}>
-          Remove icon
+          {t("emojiPicker.remove")}
         </button>
       </div>
     </div>

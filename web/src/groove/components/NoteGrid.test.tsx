@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NoteGrid } from "./NoteGrid";
 import { STEPS, type MelodicStep } from "../types";
 import { CHORD_SHAPES, noteName } from "../music";
+import { melodicStep, renderWithLocale } from "../i18n/test-utils";
 
 function melodic(partial: Partial<MelodicStep> = {}): MelodicStep {
   return { on: false, note: 60, chord: 0, vel: 0.8, ...partial };
@@ -12,7 +13,7 @@ function melodic(partial: Partial<MelodicStep> = {}): MelodicStep {
 function renderGrid(steps: MelodicStep[], showChord = false) {
   const onChange = vi.fn();
   const onAudition = vi.fn();
-  render(
+  renderWithLocale(
     <NoteGrid
       unit="BASS"
       steps={steps}
@@ -28,7 +29,7 @@ function renderGrid(steps: MelodicStep[], showChord = false) {
 const restSteps = () => Array.from({ length: STEPS }, () => melodic());
 
 const pad = (n: number) =>
-  screen.getByRole("button", { name: `BASS step ${n}` });
+  screen.getByRole("button", { name: melodicStep("BASS", n) });
 
 describe("NoteGrid", () => {
   it("toggles a rest on and auditions it", async () => {

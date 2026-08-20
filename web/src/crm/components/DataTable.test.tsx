@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import { renderCrm } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import { ColumnDef } from "@tanstack/react-table";
 import DataTable from "./DataTable";
@@ -28,18 +29,20 @@ const names = () =>
 
 describe("DataTable", () => {
   it("renders the rows and counts them, pluralising the noun", () => {
-    render(<DataTable data={rows} columns={columns} noun="organization" />);
+    renderCrm(<DataTable data={rows} columns={columns} noun="organization" />);
     expect(names()).toEqual(["Bluepeak", "Alderway", "Crestline"]);
     expect(screen.getByText("3 organizations")).toBeInTheDocument();
   });
 
   it("keeps the count singular for one row", () => {
-    render(<DataTable data={rows.slice(0, 1)} columns={columns} noun="deal" />);
+    renderCrm(
+      <DataTable data={rows.slice(0, 1)} columns={columns} noun="deal" />,
+    );
     expect(screen.getByText("1 deal")).toBeInTheDocument();
   });
 
   it("shows the empty message instead of a footer when there is no data", () => {
-    render(
+    renderCrm(
       <DataTable data={[]} columns={columns} emptyMessage="No deals yet." />,
     );
     expect(screen.getByText("No deals yet.")).toBeInTheDocument();
@@ -49,7 +52,7 @@ describe("DataTable", () => {
   // TanStack sorts a numeric column largest-first on the first click and a text column A-Z, which
   // is why these two run in opposite directions.
   it("sorts a numeric column, and says which way in aria-sort", async () => {
-    render(<DataTable data={rows} columns={columns} />);
+    renderCrm(<DataTable data={rows} columns={columns} />);
     const header = screen.getByRole("columnheader", { name: /Value/ });
 
     await userEvent.click(header);
@@ -62,14 +65,16 @@ describe("DataTable", () => {
   });
 
   it("sorts a text column alphabetically", async () => {
-    render(<DataTable data={rows} columns={columns} />);
+    renderCrm(<DataTable data={rows} columns={columns} />);
     await userEvent.click(screen.getByRole("columnheader", { name: /Name/ }));
     expect(names()).toEqual(["Alderway", "Bluepeak", "Crestline"]);
   });
 
   it("opens a row when it is clicked", async () => {
     const onRowClick = vi.fn();
-    render(<DataTable data={rows} columns={columns} onRowClick={onRowClick} />);
+    renderCrm(
+      <DataTable data={rows} columns={columns} onRowClick={onRowClick} />,
+    );
     await userEvent.click(screen.getByText("Crestline"));
     expect(onRowClick).toHaveBeenCalledWith(rows[2]);
   });
@@ -78,7 +83,7 @@ describe("DataTable", () => {
     const onRowClick = vi.fn();
     const onEdit = vi.fn();
     const onDelete = vi.fn();
-    render(
+    renderCrm(
       <DataTable
         data={rows}
         columns={columns}
@@ -102,12 +107,12 @@ describe("DataTable", () => {
   });
 
   it("leaves out the actions column when nothing handles it", () => {
-    render(<DataTable data={rows} columns={columns} />);
+    renderCrm(<DataTable data={rows} columns={columns} />);
     expect(screen.getAllByRole("columnheader")).toHaveLength(2);
   });
 
   it("shows a summary in the footer", () => {
-    render(<DataTable data={rows} columns={columns} summary="$60,000" />);
+    renderCrm(<DataTable data={rows} columns={columns} summary="$60,000" />);
     expect(screen.getByText("$60,000")).toBeInTheDocument();
   });
 });

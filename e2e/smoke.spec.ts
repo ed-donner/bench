@@ -44,7 +44,7 @@ const APPS: {
     path: "/groove/",
     title: "GROOVEBOX GX-4",
     tab: "Groove",
-    ready: (p) => p.getByRole("region", { name: "RHYTHM" }),
+    ready: (p) => p.getByRole("region", { name: /RHYTHM|ताल/ }),
   },
 ];
 

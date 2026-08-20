@@ -1,6 +1,7 @@
 import { SubmitEvent, useState } from "react";
 import Modal from "./Modal";
 import { api } from "../api";
+import { useLocale } from "../../shared/useLocale";
 import {
   Contact,
   DEAL_STAGES,
@@ -8,6 +9,7 @@ import {
   DealStage,
   Organization,
   STAGE_PROBABILITY,
+  dealStageLabel,
   expectedValue,
 } from "../types";
 import { formatMoney } from "../format";
@@ -66,6 +68,7 @@ export default function DealForm({
   onSaved,
   onClose,
 }: Props) {
+  const { t, locale } = useLocale();
   const [form, setForm] = useState(() =>
     initialForm(existing, defaultOrganizationId),
   );
@@ -88,10 +91,13 @@ export default function DealForm({
   }
 
   return (
-    <Modal title={existing ? "Edit deal" : "Add deal"} onClose={onClose}>
+    <Modal
+      title={existing ? t("deals.edit") : t("deals.add")}
+      onClose={onClose}
+    >
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="field">
-          <label htmlFor="dl-name">Name</label>
+          <label htmlFor="dl-name">{t("common.name")}</label>
           <input
             id="dl-name"
             required
@@ -101,7 +107,7 @@ export default function DealForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="dl-org">Organization</label>
+            <label htmlFor="dl-org">{t("common.organization")}</label>
             <select
               id="dl-org"
               value={form.organization_id}
@@ -113,7 +119,7 @@ export default function DealForm({
                 })
               }
             >
-              <option value="">— None —</option>
+              <option value="">{t("common.none")}</option>
               {organizations.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
@@ -122,7 +128,7 @@ export default function DealForm({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="dl-contact">Primary contact</label>
+            <label htmlFor="dl-contact">{t("common.primaryContact")}</label>
             <select
               id="dl-contact"
               value={form.contact_id}
@@ -134,7 +140,7 @@ export default function DealForm({
                 })
               }
             >
-              <option value="">— None —</option>
+              <option value="">{t("common.none")}</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -145,7 +151,7 @@ export default function DealForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="dl-stage">Stage</label>
+            <label htmlFor="dl-stage">{t("common.stage")}</label>
             <select
               id="dl-stage"
               value={form.stage}
@@ -160,13 +166,13 @@ export default function DealForm({
             >
               {DEAL_STAGES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {dealStageLabel(s, t)}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="dl-value">Value (USD)</label>
+            <label htmlFor="dl-value">{t("deals.valueUsd")}</label>
             <input
               id="dl-value"
               type="number"
@@ -182,7 +188,7 @@ export default function DealForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="dl-probability">Probability (%)</label>
+            <label htmlFor="dl-probability">{t("deals.probabilityPct")}</label>
             <input
               id="dl-probability"
               type="number"
@@ -197,19 +203,20 @@ export default function DealForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="deal-expected">Expected value</label>
+            <label htmlFor="deal-expected">{t("deals.expectedValue")}</label>
             <output id="deal-expected" className="field-output">
               {formatMoney(
                 expectedValue({
                   value: form.value,
                   probability: form.probability,
                 }),
+                locale,
               )}
             </output>
           </div>
         </div>
         <div className="field">
-          <label htmlFor="dl-close">Close date</label>
+          <label htmlFor="dl-close">{t("common.closeDate")}</label>
           <input
             id="dl-close"
             type="date"
@@ -219,10 +226,10 @@ export default function DealForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {t("common.save")}
           </button>
         </div>
       </form>

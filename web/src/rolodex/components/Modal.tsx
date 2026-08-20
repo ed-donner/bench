@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
+import { useLocale } from "../../shared/useLocale";
 
 export function Modal({
   title,
@@ -16,6 +17,7 @@ export function Modal({
   footer?: ReactNode;
   large?: boolean;
 }) {
+  const { t } = useLocale();
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -42,7 +44,11 @@ export function Modal({
             {icon}
             {title}
           </h3>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
+          <button
+            className="icon-btn"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <X size={17} />
           </button>
         </div>

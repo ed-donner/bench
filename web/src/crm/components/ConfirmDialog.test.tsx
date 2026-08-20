@@ -1,12 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderCrm } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import ConfirmDialog from "./ConfirmDialog";
 
 function show() {
   const onConfirm = vi.fn();
   const onCancel = vi.fn();
-  render(
+  renderCrm(
     <ConfirmDialog
       title="Delete contact"
       message="Delete Dana Whitfield?"

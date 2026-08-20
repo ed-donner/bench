@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api } from "../api";
 import { useFetch } from "../hooks";
+import { useLocale } from "../../shared/useLocale";
 import { Activity, Contact, Deal, Organization } from "../types";
 import DealForm from "../components/DealForm";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -13,6 +14,7 @@ import PageHeader from "../components/PageHeader";
 import { IconDeals } from "../components/Icons";
 
 export default function DealDetail() {
+  const { t, locale } = useLocale();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -38,61 +40,61 @@ export default function DealDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/deals">Deals</Link> / {deal.name}
+        <Link to="/deals">{t("breadcrumb.deals")}</Link> / {deal.name}
       </div>
       <PageHeader
         icon={<IconDeals size={20} />}
         title={deal.name}
-        sub={formatMoney(deal.value) + withOrg}
+        sub={formatMoney(deal.value, locale) + withOrg}
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("common.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("common.details")}</h2>
           <dl className="props">
-            <dt>Stage</dt>
+            <dt>{t("common.stage")}</dt>
             <dd>
               <StageChip stage={deal.stage} />
             </dd>
-            <dt>Value</dt>
-            <dd>{formatMoney(deal.value)}</dd>
-            <dt>Close date</dt>
-            <dd>{formatDate(deal.close_date)}</dd>
-            <dt>Organization</dt>
+            <dt>{t("common.value")}</dt>
+            <dd>{formatMoney(deal.value, locale)}</dd>
+            <dt>{t("common.closeDate")}</dt>
+            <dd>{formatDate(deal.close_date, locale)}</dd>
+            <dt>{t("common.organization")}</dt>
             <dd>
               {org ? (
                 <Link className="entity-link" to={`/organizations/${org.id}`}>
                   {org.name}
                 </Link>
               ) : (
-                "—"
+                t("common.dash")
               )}
             </dd>
-            <dt>Primary contact</dt>
+            <dt>{t("common.primaryContact")}</dt>
             <dd>
               {contact ? (
                 <Link className="entity-link" to={`/contacts/${contact.id}`}>
                   {contact.name}
                 </Link>
               ) : (
-                "—"
+                t("common.dash")
               )}
             </dd>
           </dl>
         </div>
         <div className="card">
-          <h2>Activity</h2>
+          <h2>{t("common.activity")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -117,8 +119,8 @@ export default function DealDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete deal"
-          message={`Delete "${deal.name}"? This cannot be undone.`}
+          title={t("deals.deleteTitle")}
+          message={t("deals.deleteMessageQuoted", { name: deal.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

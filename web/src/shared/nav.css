@@ -94,6 +94,59 @@
   background: rgba(236, 173, 10, 0.16);
 }
 
+.bench-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.bench-nav-locale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #5b636e;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .bench-nav-locale {
+  color: #98a1ad;
+}
+
+.bench-nav-locale:hover {
+  color: #1c2128;
+  background: #f0f2f5;
+}
+
+[data-theme="dark"] .bench-nav-locale:hover {
+  color: #ffffff;
+  background: #272d36;
+}
+
+.bench-nav-locale-sep {
+  margin: 0 2px;
+  opacity: 0.45;
+  font-weight: 400;
+}
+
+.bench-nav-locale-active {
+  color: #a97d05;
+}
+
+[data-theme="dark"] .bench-nav-locale-active {
+  color: #f0b81f;
+}
+
 .bench-nav-theme {
   display: flex;
   align-items: center;

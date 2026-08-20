@@ -1,10 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { RowBreadcrumb, RowPropsGrid } from "./RowProperties";
 import { useRow } from "./useRow";
 import { api, type RowData } from "../api";
+import { renderSpace } from "../test/helpers";
 
 vi.mock("../api", () => ({
   api: {
@@ -50,7 +51,7 @@ function Harness() {
 describe("row page properties", () => {
   it("loads the row, shows a breadcrumb to the database, and lists properties", async () => {
     vi.mocked(api.getRow).mockResolvedValue(rowData());
-    render(<Harness />);
+    renderSpace(<Harness />);
     expect(
       await screen.findByRole("link", { name: /Reading List/ }),
     ).toHaveAttribute("href", "/p/db1");
@@ -61,7 +62,7 @@ describe("row page properties", () => {
 
   it("edits a property value and saves it", async () => {
     vi.mocked(api.getRow).mockResolvedValue(rowData());
-    render(<Harness />);
+    renderSpace(<Harness />);
     const input = await screen.findByDisplayValue("Frank Herbert");
     await userEvent.clear(input);
     await userEvent.type(input, "F. Herbert");
@@ -77,7 +78,7 @@ describe("row page properties", () => {
       color: "amber",
       position: 1,
     });
-    render(<Harness />);
+    renderSpace(<Harness />);
     await userEvent.click(
       await screen.findByRole("button", { name: "Status for Dune" }),
     );

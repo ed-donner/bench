@@ -3,7 +3,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { api, query } from "../api";
 import { useFetch } from "../hooks";
-import { CONTACT_STATUSES, Contact, Organization } from "../types";
+import { useLocale } from "../../shared/useLocale";
+import {
+  CONTACT_STATUSES,
+  Contact,
+  Organization,
+  contactStatusLabel,
+} from "../types";
 import DataTable from "../components/DataTable";
 import ContactForm from "../components/ContactForm";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -12,6 +18,7 @@ import { IconContacts, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
 
 export default function Contacts() {
+  const { t } = useLocale();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [adding, setAdding] = useState(false);
@@ -32,55 +39,61 @@ export default function Contacts() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t("common.name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "email",
-        header: "Email",
+        header: t("common.email"),
         cell: (c) => (
-          <span className="cell-muted">{c.getValue<string>() || "—"}</span>
+          <span className="cell-muted">
+            {c.getValue<string>() || t("common.dash")}
+          </span>
         ),
       },
       {
         accessorKey: "phone",
-        header: "Phone",
+        header: t("common.phone"),
         cell: (c) =>
-          c.getValue<string>() || <span className="cell-empty">—</span>,
+          c.getValue<string>() || (
+            <span className="cell-empty">{t("common.dash")}</span>
+          ),
       },
       {
         accessorKey: "job_title",
-        header: "Job title",
+        header: t("common.jobTitle"),
         cell: (c) =>
-          c.getValue<string>() || <span className="cell-empty">—</span>,
+          c.getValue<string>() || (
+            <span className="cell-empty">{t("common.dash")}</span>
+          ),
       },
       {
         accessorKey: "organization_id",
-        header: "Organization",
+        header: t("common.organization"),
         cell: (c) =>
           orgName.get(c.getValue<number>()) ?? (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{t("common.dash")}</span>
           ),
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t("common.status"),
         cell: (c) => <StatusChip status={c.row.original.status} />,
       },
     ],
-    [orgName],
+    [orgName, t],
   );
 
   return (
     <>
       <PageHeader
         icon={<IconContacts size={20} />}
-        title="Contacts"
-        sub="The people you deal with"
+        title={t("page.contacts.title")}
+        sub={t("page.contacts.subtitle")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add contact
+          {t("contacts.add")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -89,21 +102,21 @@ export default function Contacts() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search contacts…"
+            placeholder={t("contacts.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
         <select
           className="filter-select"
-          aria-label="Filter by status"
+          aria-label={t("contacts.filterStatus")}
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          <option value="">All statuses</option>
+          <option value="">{t("contacts.allStatuses")}</option>
           {CONTACT_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {contactStatusLabel(s, t)}
             </option>
           ))}
         </select>
@@ -117,7 +130,7 @@ export default function Contacts() {
         onEdit={(c) => setEditing(c)}
         onDelete={(c) => setDeleting(c)}
         emptyMessage={
-          q || status ? "No contacts match these filters." : "No contacts yet."
+          q || status ? t("contacts.emptyFiltered") : t("contacts.empty")
         }
       />
       {adding && (
@@ -137,8 +150,8 @@ export default function Contacts() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete ${deleting.name}? This cannot be undone.`}
+          title={t("contacts.deleteTitle")}
+          message={t("contacts.deleteMessage", { name: deleting.name })}
           onConfirm={() => {
             void api.delete(`/api/crm/contacts/${deleting.id}`).then(() => {
               setDeleting(null);

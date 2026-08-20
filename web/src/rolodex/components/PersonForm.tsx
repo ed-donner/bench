@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
+import { useLocale } from "../../shared/useLocale";
 import type { Circle, PersonComputed, PersonInput } from "../types";
 import { CIRCLES } from "../types";
 import { api } from "../api";
 import { Modal } from "./Modal";
 import { Avatar } from "./Avatar";
 import { Field, FieldGroup } from "./Field";
-import { CIRCLE_LABEL } from "../format";
+import { circleLabel } from "../format";
 import { useToast, useStore } from "../store";
 
 const COMMON_TZ = [
@@ -42,7 +43,6 @@ const COMMON_TZ = [
   "Pacific/Auckland",
 ];
 
-/** Every field of the form that is just text, so they can be held and updated as one. */
 const TEXT_FIELDS = [
   "name",
   "email",
@@ -83,6 +83,7 @@ export function PersonForm({
   onClose: () => void;
   onSaved?: (person: PersonComputed) => void;
 }) {
+  const { t } = useLocale();
   const { refresh } = useStore();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -103,7 +104,7 @@ export function PersonForm({
   const onPickPhoto = (file: File | null) => {
     if (!file) return;
     if (file.size > MAX_PHOTO_BYTES) {
-      setError("Photo is too large — please use one under 5 MB");
+      setError(t("form.photoTooLarge"));
       return;
     }
     const reader = new FileReader();
@@ -126,7 +127,7 @@ export function PersonForm({
     circle,
     tags: fields.tags
       .split(",")
-      .map((t) => t.trim().toLowerCase())
+      .map((tag) => tag.trim().toLowerCase())
       .filter(Boolean),
     how_met: text("how_met"),
     met_where: text("met_where"),
@@ -142,7 +143,7 @@ export function PersonForm({
 
   const save = async () => {
     if (!fields.name.trim()) {
-      setError("A name is required");
+      setError(t("form.nameRequired"));
       return;
     }
     setSaving(true);
@@ -153,7 +154,9 @@ export function PersonForm({
         : await api.createPerson(body());
       await refresh();
       toast(
-        existing ? `${saved.name} updated` : `${saved.name} added to Rolodex`,
+        existing
+          ? t("form.updatedToast", { name: saved.name })
+          : t("form.addedToast", { name: saved.name }),
       );
       onSaved?.(saved);
       onClose();
@@ -164,31 +167,40 @@ export function PersonForm({
     }
   };
 
-  const saveLabel = existing ? "Save changes" : "Add person";
+  const saveLabel = existing ? t("form.saveChanges") : t("people.addPerson");
+
   return (
     <Modal
       large
-      title={existing ? `Edit ${existing.name}` : "Add a person"}
+      title={
+        existing
+          ? t("form.editPerson", { name: existing.name })
+          : t("form.addPerson")
+      }
       icon={<ImagePlus size={17} className="modal-icon" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={saving}
           >
-            {saving ? "Saving…" : saveLabel}
+            {saving ? t("common.saving") : saveLabel}
           </button>
         </>
       }
     >
       <div className="photo-picker">
-        <Avatar name={fields.name || "New Person"} photo={photo} size="xl" />
+        <Avatar
+          name={fields.name || t("form.newPerson")}
+          photo={photo}
+          size="xl"
+        />
         <div>
           <div className="row" style={{ gap: 8 }}>
             <button
@@ -196,7 +208,7 @@ export function PersonForm({
               onClick={() => fileRef.current?.click()}
               type="button"
             >
-              <ImagePlus size={14} /> Upload photo
+              <ImagePlus size={14} /> {t("form.uploadPhoto")}
             </button>
             {photo && (
               <button
@@ -204,73 +216,71 @@ export function PersonForm({
                 onClick={() => setPhoto(null)}
                 type="button"
               >
-                <Trash2 size={14} /> Remove
+                <Trash2 size={14} /> {t("form.removePhoto")}
               </button>
             )}
           </div>
-          <div className="hint">
-            Without a photo we’ll use their initials on a colour of their own.
-          </div>
+          <div className="hint">{t("form.photoHint")}</div>
           <input
             ref={fileRef}
             type="file"
             accept="image/*"
             className="visually-hidden"
-            aria-label="Photo file"
+            aria-label={t("form.photoFile")}
             onChange={(e) => onPickPhoto(e.target.files?.[0] ?? null)}
           />
         </div>
       </div>
 
       <div className="form-grid">
-        <Field label="Name *" wide>
+        <Field label={t("form.name")} wide>
           <input
             value={fields.name}
             onChange={(e) => set("name")(e.target.value)}
-            placeholder="Ada Lovelace"
+            placeholder={t("form.placeholderName")}
           />
         </Field>
-        <Field label="Email">
+        <Field label={t("form.email")}>
           <input
             value={fields.email}
             onChange={(e) => set("email")(e.target.value)}
-            placeholder="ada@example.com"
+            placeholder={t("form.placeholderEmail")}
           />
         </Field>
-        <Field label="Phone">
+        <Field label={t("form.phone")}>
           <input
             value={fields.phone}
             onChange={(e) => set("phone")(e.target.value)}
-            placeholder="+44 20 7000 0000"
+            placeholder={t("form.placeholderPhone")}
           />
         </Field>
-        <Field label="Job title">
+        <Field label={t("form.jobTitle")}>
           <input
             value={fields.job_title}
             onChange={(e) => set("job_title")(e.target.value)}
-            placeholder="Product Designer"
+            placeholder={t("form.placeholderJobTitle")}
           />
         </Field>
-        <Field label="Company">
+        <Field label={t("form.company")}>
           <input
             value={fields.company}
             onChange={(e) => set("company")(e.target.value)}
-            placeholder="Figma"
+            placeholder={t("form.placeholderCompany")}
           />
         </Field>
-        <Field label="City">
+        <Field label={t("form.city")}>
           <input
             value={fields.city}
             onChange={(e) => set("city")(e.target.value)}
-            placeholder="London"
+            placeholder={t("form.placeholderCity")}
           />
         </Field>
-        <Field label="Time zone">
+        <Field label={t("form.timezone")}>
           <input
             list="tz-list"
             value={fields.timezone}
             onChange={(e) => set("timezone")(e.target.value)}
-            placeholder="Europe/London"
+            placeholder={t("form.placeholderTimezone")}
           />
           <datalist id="tz-list">
             {COMMON_TZ.map((tz) => (
@@ -278,11 +288,7 @@ export function PersonForm({
             ))}
           </datalist>
         </Field>
-        <FieldGroup
-          label="Circle"
-          wide
-          hint="Circle sets the check-in cadence: Inner monthly · Close quarterly · Wider every six months · Distant yearly."
-        >
+        <FieldGroup label={t("form.circle")} wide hint={t("form.circleHint")}>
           <div className="row wrap" style={{ gap: 6 }}>
             {CIRCLES.map((c) => (
               <button
@@ -292,37 +298,33 @@ export function PersonForm({
                 aria-pressed={circle === c}
                 onClick={() => setCircle(c)}
               >
-                {CIRCLE_LABEL[c]}
+                {circleLabel(t, c)}
               </button>
             ))}
           </div>
         </FieldGroup>
-        <Field
-          label="Tags"
-          wide
-          hint="Comma-separated — filter the People table by them later."
-        >
+        <Field label={t("form.tags")} wide hint={t("form.tagsHint")}>
           <input
             value={fields.tags}
             onChange={(e) => set("tags")(e.target.value)}
-            placeholder="family, university, cycling"
+            placeholder={t("form.placeholderTags")}
           />
         </Field>
-        <Field label="How you met">
+        <Field label={t("form.howMet")}>
           <input
             value={fields.how_met}
             onChange={(e) => set("how_met")(e.target.value)}
-            placeholder="University flatmates"
+            placeholder={t("form.placeholderHowMet")}
           />
         </Field>
-        <Field label="Where you met">
+        <Field label={t("form.metWhere")}>
           <input
             value={fields.met_where}
             onChange={(e) => set("met_where")(e.target.value)}
-            placeholder="Manchester"
+            placeholder={t("form.placeholderMetWhere")}
           />
         </Field>
-        <Field label="When you met">
+        <Field label={t("form.metWhen")}>
           <input
             type="date"
             value={fields.met_on}
@@ -330,21 +332,18 @@ export function PersonForm({
           />
         </Field>
         <Field
-          label="Check-in cadence override (days)"
-          hint="Leave empty to use the circle’s cadence."
+          label={t("form.cadenceOverride")}
+          hint={t("form.cadenceOverrideHint")}
         >
           <input
             type="number"
             min={1}
             value={fields.cadence_override_days}
             onChange={(e) => set("cadence_override_days")(e.target.value)}
-            placeholder="Circle default"
+            placeholder={t("form.placeholderCadence")}
           />
         </Field>
-        <Field
-          label="Snooze check-ins until"
-          hint="They stay in your list but stop nudging you until this date."
-        >
+        <Field label={t("form.snoozeUntil")} hint={t("form.snoozeHint")}>
           <input
             type="date"
             value={fields.snoozed_until}
@@ -357,13 +356,13 @@ export function PersonForm({
             checked={checkinsOff}
             onChange={(e) => setCheckinsOff(e.target.checked)}
           />
-          Turn check-ins off for this person
+          {t("form.checkinsOff")}
         </label>
-        <Field label="Notes" wide>
+        <Field label={t("form.notes")} wide>
           <textarea
             value={fields.notes}
             onChange={(e) => set("notes")(e.target.value)}
-            placeholder="Freeform notes about them"
+            placeholder={t("form.placeholderNotes")}
           />
         </Field>
       </div>

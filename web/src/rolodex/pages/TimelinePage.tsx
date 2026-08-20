@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { History } from "lucide-react";
+import { useLocale } from "../../shared/useLocale";
 import { api } from "../api";
 import type { TimelineEntry } from "../types";
 import { Avatar } from "../components/Avatar";
@@ -9,21 +10,10 @@ import InteractionIcon from "../components/InteractionIcon";
 import {
   errorMessage,
   fmtDate,
+  interactionMeta,
   relativeDays,
-  INTERACTION_META,
 } from "../format";
 import { useStore } from "../store";
-
-const KIND_OPTIONS = [
-  { value: "all", label: "All activity" },
-  { value: "interaction_call", label: "Calls" },
-  { value: "interaction_message", label: "Messages" },
-  { value: "interaction_email", label: "Emails" },
-  { value: "interaction_met", label: "Meet-ups" },
-  { value: "interaction_other", label: "Other contact" },
-  { value: "news", label: "News" },
-  { value: "reminder_done", label: "Completed reminders" },
-];
 
 function entryIcon(e: TimelineEntry): React.ReactNode {
   if (e.kind === "interaction")
@@ -32,22 +22,34 @@ function entryIcon(e: TimelineEntry): React.ReactNode {
   return <History size={15} />;
 }
 
-const entryCount = (n: number) =>
-  `${n} ${n === 1 ? "entry" : "entries"} across everyone`;
-
-function entryLabel(e: TimelineEntry): string {
+function entryLabel(
+  t: ReturnType<typeof useLocale>["t"],
+  e: TimelineEntry,
+): string {
   if (e.kind === "interaction" && e.interaction_type)
-    return INTERACTION_META[e.interaction_type].verb;
-  if (e.kind === "news") return "News recorded";
-  return "Reminder completed";
+    return interactionMeta(t, e.interaction_type).verb;
+  if (e.kind === "news") return t("timeline.entryNews");
+  return t("timeline.entryReminder");
 }
 
 export default function TimelinePage() {
+  const { t } = useLocale();
   const { people, loaded } = useStore();
   const [personId, setPersonId] = useState<number | "">("");
   const [kind, setKind] = useState("all");
   const [entries, setEntries] = useState<TimelineEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const kindOptions = [
+    { value: "all", label: t("timeline.filterAll") },
+    { value: "interaction_call", label: t("timeline.filterCalls") },
+    { value: "interaction_message", label: t("timeline.filterMessages") },
+    { value: "interaction_email", label: t("timeline.filterEmails") },
+    { value: "interaction_met", label: t("timeline.filterMeetups") },
+    { value: "interaction_other", label: t("timeline.filterOther") },
+    { value: "news", label: t("timeline.filterNews") },
+    { value: "reminder_done", label: t("timeline.filterReminders") },
+  ];
 
   useEffect(() => {
     api
@@ -64,6 +66,17 @@ export default function TimelinePage() {
     return map;
   }, [people]);
 
+  const entryCountText =
+    entries == null
+      ? t("timeline.descLoading")
+      : t("timeline.descCount", {
+          count: entries.length,
+          unit:
+            entries.length === 1
+              ? t("timeline.entryOne")
+              : t("timeline.entryMany"),
+        });
+
   return (
     <div className="page">
       <div className="page-header">
@@ -75,24 +88,20 @@ export default function TimelinePage() {
             >
               <History size={19} />
             </span>
-            Timeline
+            {t("timeline.title")}
           </h1>
-          <p className="page-desc">
-            {entries
-              ? `${entryCount(entries.length)}, newest first`
-              : "Loading…"}
-          </p>
+          <p className="page-desc">{entryCountText}</p>
         </div>
         <div className="page-actions">
           <select
             className="filter-select"
-            aria-label="Person"
+            aria-label={t("timeline.filterPerson")}
             value={personId}
             onChange={(e) =>
               setPersonId(e.target.value === "" ? "" : Number(e.target.value))
             }
           >
-            <option value="">Everyone</option>
+            <option value="">{t("timeline.filterEveryone")}</option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -101,11 +110,11 @@ export default function TimelinePage() {
           </select>
           <select
             className="filter-select"
-            aria-label="Activity"
+            aria-label={t("timeline.filterActivity")}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            {KIND_OPTIONS.map((k) => (
+            {kindOptions.map((k) => (
               <option key={k.value} value={k.value}>
                 {k.label}
               </option>
@@ -116,12 +125,14 @@ export default function TimelinePage() {
 
       <div className="card">
         {error && <div className="empty">{error}</div>}
-        {!error && entries === null && <div className="empty">Loading…</div>}
+        {!error && entries === null && (
+          <div className="empty">{t("common.loading")}</div>
+        )}
         {!error && entries !== null && entries.length === 0 && (
           <EmptyState icon={<History />}>
             {loaded && people.length === 0
-              ? "Nothing here yet — add people and log some interactions."
-              : "Nothing matches these filters."}
+              ? t("timeline.emptyNoPeople")
+              : t("timeline.emptyNoMatch")}
           </EmptyState>
         )}
         {entries && entries.length > 0 && (
@@ -148,9 +159,9 @@ export default function TimelinePage() {
                       >
                         {e.person_name}
                       </Link>
-                      <span className="feed-type">{entryLabel(e)}</span>
+                      <span className="feed-type">{entryLabel(t, e)}</span>
                       <span className="feed-date">
-                        {fmtDate(e.date)} · {relativeDays(e.date)}
+                        {fmtDate(e.date)} · {relativeDays(t, e.date)}
                       </span>
                     </div>
                     {e.text && <div className="feed-text">{e.text}</div>}

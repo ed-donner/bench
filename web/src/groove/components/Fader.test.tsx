@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Fader } from "./Fader";
 import type { ParamSpec } from "../types";
+import { renderWithLocale } from "../i18n/test-utils";
 
-const spec: ParamSpec = {
+const spec: ParamSpec & { label: string } = {
   key: "lvKick",
+  labelKey: "groove.param.lvKick",
   label: "BD",
   kind: "slider",
   min: 0,
@@ -15,7 +17,7 @@ const spec: ParamSpec = {
 function renderFader(value = 0.5) {
   const onChange = vi.fn();
   const onTouch = vi.fn();
-  const { container } = render(
+  const { container } = renderWithLocale(
     <Fader spec={spec} value={value} onChange={onChange} onTouch={onTouch} />,
   );
   const fader = container.querySelector(".fader");
@@ -41,7 +43,7 @@ async function drag(
 
 describe("Fader", () => {
   it("shows the value as fill height", () => {
-    const { container } = render(
+    const { container } = renderWithLocale(
       <Fader spec={spec} value={0.25} onChange={vi.fn()} />,
     );
     expect(container.querySelector<HTMLElement>(".fader-fill")).toHaveStyle({

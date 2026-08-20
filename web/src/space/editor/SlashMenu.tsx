@@ -1,3 +1,4 @@
+import { useLocale } from "../../shared/useLocale";
 import { filterBlockTypes } from "./blockTypes";
 
 interface Props {
@@ -15,7 +16,8 @@ export default function SlashMenu({
   onPick,
   onHover,
 }: Props) {
-  const items = filterBlockTypes(query);
+  const { t } = useLocale();
+  const items = filterBlockTypes(query, t);
   const top = Math.min(
     anchor.top + 6,
     window.innerHeight - Math.min(items.length, 8) * 40 - 20,
@@ -24,10 +26,12 @@ export default function SlashMenu({
     <div
       className="slash-menu"
       role="listbox"
-      aria-label="Block types"
+      aria-label={t("slashMenu.label")}
       style={{ left: anchor.left, top }}
     >
-      {items.length === 0 && <div className="slash-empty">No results</div>}
+      {items.length === 0 && (
+        <div className="slash-empty">{t("slashMenu.noResults")}</div>
+      )}
       {items.map((item, i) => (
         <button
           key={item.type}

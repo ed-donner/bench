@@ -3,11 +3,13 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { api, query } from "../api";
 import { useFetch } from "../hooks";
+import { useLocale } from "../../shared/useLocale";
 import {
   Contact,
   DEAL_STAGES,
   Deal,
   Organization,
+  dealStageLabel,
   expectedValue,
   sumExpected,
   sumValue,
@@ -21,6 +23,7 @@ import { IconDeals, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
 
 export default function Deals() {
+  const { t, locale } = useLocale();
   const [q, setQ] = useState("");
   const [stage, setStage] = useState("");
   const [adding, setAdding] = useState(false);
@@ -46,34 +49,34 @@ export default function Deals() {
     () => [
       {
         accessorKey: "name",
-        header: "Deal",
+        header: t("deals.columnDeal"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "organization_id",
-        header: "Organization",
+        header: t("common.organization"),
         cell: (c) =>
           orgName.get(c.getValue<number>()) ?? (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{t("common.dash")}</span>
           ),
       },
       {
         accessorKey: "stage",
-        header: "Stage",
+        header: t("common.stage"),
         cell: (c) => <StageChip stage={c.row.original.stage} />,
       },
       {
         accessorKey: "value",
-        header: "Value",
+        header: t("common.value"),
         cell: (c) => (
           <span className="cell-money">
-            {formatMoney(c.getValue<number>())}
+            {formatMoney(c.getValue<number>(), locale)}
           </span>
         ),
       },
       {
         accessorKey: "probability",
-        header: "Probability",
+        header: t("common.probability"),
         cell: (c) => {
           const p = c.getValue<number>();
           return (
@@ -88,29 +91,29 @@ export default function Deals() {
       },
       {
         id: "expected",
-        header: "Expected",
+        header: t("common.expected"),
         accessorFn: (d) => expectedValue(d),
         cell: (c) => (
           <span className="cell-money">
-            {formatMoney(c.getValue<number>())}
+            {formatMoney(c.getValue<number>(), locale)}
           </span>
         ),
       },
       {
         accessorKey: "close_date",
-        header: "Close date",
-        cell: (c) => formatDate(c.getValue<string>()),
+        header: t("common.closeDate"),
+        cell: (c) => formatDate(c.getValue<string>(), locale),
       },
       {
         accessorKey: "contact_id",
-        header: "Contact",
+        header: t("common.contact"),
         cell: (c) =>
           contactName.get(c.getValue<number>()) ?? (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{t("common.dash")}</span>
           ),
       },
     ],
-    [orgName, contactName],
+    [contactName, locale, orgName, t],
   );
 
   const remove = async () => {
@@ -124,12 +127,12 @@ export default function Deals() {
     <>
       <PageHeader
         icon={<IconDeals size={20} />}
-        title="Deals"
-        sub="The potential sales you're working on"
+        title={t("page.deals.title")}
+        sub={t("page.deals.subtitle")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add deal
+          {t("deals.add")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -138,21 +141,21 @@ export default function Deals() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search deals…"
+            placeholder={t("deals.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
         <select
           className="filter-select"
-          aria-label="Filter by stage"
+          aria-label={t("deals.filterStage")}
           value={stage}
           onChange={(e) => setStage(e.target.value)}
         >
-          <option value="">All stages</option>
+          <option value="">{t("deals.allStages")}</option>
           {DEAL_STAGES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {dealStageLabel(s, t)}
             </option>
           ))}
         </select>
@@ -165,13 +168,13 @@ export default function Deals() {
         onRowClick={(d) => void navigate(`/deals/${d.id}`)}
         onEdit={(d) => setEditing(d)}
         onDelete={(d) => setDeleting(d)}
-        emptyMessage={
-          q || stage ? "No deals match these filters." : "No deals yet."
-        }
+        emptyMessage={q || stage ? t("deals.emptyFiltered") : t("deals.empty")}
         summary={
           <>
-            Total {formatMoney(sumValue(deals))} · Expected{" "}
-            {formatMoney(sumExpected(deals))}
+            {t("deals.summary", {
+              total: formatMoney(sumValue(deals), locale),
+              expected: formatMoney(sumExpected(deals), locale),
+            })}
           </>
         }
       />
@@ -194,8 +197,8 @@ export default function Deals() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete deal"
-          message={`Delete ${deleting.name}? This cannot be undone.`}
+          title={t("deals.deleteTitle")}
+          message={t("deals.deleteMessage", { name: deleting.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

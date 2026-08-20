@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import type { ParamSpec } from "../types";
+import { useLocale } from "../../shared/useLocale";
 
 const START = -135;
 const END = 135;
@@ -17,13 +18,14 @@ function arcPath(r: number, from: number, to: number): string {
 }
 
 interface Props {
-  spec: ParamSpec;
+  spec: ParamSpec & { label: string };
   value: number;
   onChange: (v: number) => void;
   onTouch?: () => void;
 }
 
 export function Knob({ spec, value, onChange, onTouch }: Props) {
+  const { t } = useLocale();
   const drag = useRef<{ y: number; start: number } | null>(null);
   const range = spec.max - spec.min;
   const norm = (value - spec.min) / range;
@@ -58,7 +60,7 @@ export function Knob({ spec, value, onChange, onTouch }: Props) {
   return (
     <div
       className="knob"
-      title={`${spec.label} — drag up/down, hold shift for fine`}
+      title={t("groove.knob.title", { label: spec.label })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}

@@ -8,6 +8,10 @@ import {
 } from "./params";
 import { PATCHES } from "./patches";
 import { UNIT_IDS, type ParamSpec } from "./types";
+import { resolveSpec } from "./i18n/resolve";
+import { grooveEn } from "./i18n/en";
+
+const t = (key: string) => grooveEn[key] ?? key;
 
 const allSpecs = (): ParamSpec[] => [
   ...UNIT_IDS.flatMap((id) => UNIT_PARAMS[id]),
@@ -19,15 +23,15 @@ describe("param specs", () => {
   it("describes every unit and names it for the panel", () => {
     for (const id of UNIT_IDS) {
       expect(UNIT_PARAMS[id].length).toBeGreaterThan(0);
-      expect(UNIT_META[id].name).not.toBe("");
+      expect(UNIT_META[id].nameKey).not.toBe("");
       expect(UNIT_META[id].model).not.toBe("");
     }
   });
 
-  it("gives every spec a usable range and a label", () => {
+  it("gives every spec a usable range and a label key", () => {
     for (const spec of allSpecs()) {
       expect(spec.key).not.toBe("");
-      expect(spec.label).not.toBe("");
+      expect(spec.labelKey).not.toBe("");
       expect(spec.max).toBeGreaterThan(spec.min);
       expect(["knob", "slider"]).toContain(spec.kind);
     }
@@ -42,17 +46,17 @@ describe("param specs", () => {
 
   it("ranges a discrete spec over its own options", () => {
     for (const spec of allSpecs()) {
-      if (!spec.options) continue;
+      if (!spec.optionKeys) continue;
       expect(spec.min).toBe(0);
-      expect(spec.max).toBe(spec.options.length - 1);
+      expect(spec.max).toBe(spec.optionKeys.length - 1);
     }
   });
 
   it("formats a value without throwing wherever a formatter is given", () => {
     for (const spec of allSpecs()) {
-      if (!spec.format) continue;
+      const resolved = resolveSpec(spec, t);
       for (const v of [spec.min, (spec.min + spec.max) / 2, spec.max]) {
-        expect(typeof spec.format(v)).toBe("string");
+        expect(typeof resolved.format(v)).toBe("string");
       }
     }
   });
@@ -60,7 +64,7 @@ describe("param specs", () => {
   it("groups the master controls under non-empty titles", () => {
     expect(MASTER_GROUPS.length).toBeGreaterThan(0);
     for (const group of MASTER_GROUPS) {
-      expect(group.title).not.toBe("");
+      expect(group.titleKey).not.toBe("");
       expect(group.specs.length).toBeGreaterThan(0);
     }
   });

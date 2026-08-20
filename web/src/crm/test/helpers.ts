@@ -1,6 +1,21 @@
+import { createElement, type ReactElement, type ReactNode } from "react";
+import { render, type RenderOptions } from "@testing-library/react";
+import { LocaleProvider } from "../../shared/LocaleProvider";
 import type { Activity, Contact, Deal, Organization } from "../types";
+import { crmMessages } from "../i18n";
 
 /** Fixture builders. Every field has a default, so a test names only what it is about. */
+
+export function renderCrm(
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">,
+) {
+  return render(ui, {
+    wrapper: ({ children }: { children: ReactNode }) =>
+      createElement(LocaleProvider, { messages: crmMessages, children }),
+    ...options,
+  });
+}
 
 /**
  * Stands in for `api.get` across the several endpoints a page loads. Longest path first, so

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import PageView from "./PageView";
 import { api } from "../api";
-import { pageData } from "../test/helpers";
+import { pageData, renderSpace } from "../test/helpers";
 
 vi.mock("../api", () => ({
   api: {
@@ -18,7 +18,7 @@ vi.mock("../api", () => ({
 }));
 
 function renderPage(id = "p1", onTreeChange = vi.fn()) {
-  return render(
+  return renderSpace(
     <MemoryRouter initialEntries={[`/p/${id}`]}>
       <Routes>
         <Route

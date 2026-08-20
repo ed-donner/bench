@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api } from "../api";
 import { useFetch } from "../hooks";
+import { useLocale } from "../../shared/useLocale";
 import { Activity, Contact, Deal, Organization } from "../types";
 import ContactForm from "../components/ContactForm";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -19,26 +20,27 @@ function ContactFacts({
   contact: Contact;
   org?: Organization;
 }) {
+  const { t } = useLocale();
   return (
     <dl className="props">
-      <dt>Status</dt>
+      <dt>{t("common.status")}</dt>
       <dd>
         <StatusChip status={contact.status} />
       </dd>
-      <dt>Email</dt>
-      <dd>{contact.email || "—"}</dd>
-      <dt>Phone</dt>
-      <dd>{contact.phone || "—"}</dd>
-      <dt>Job title</dt>
-      <dd>{contact.job_title || "—"}</dd>
-      <dt>Organization</dt>
+      <dt>{t("common.email")}</dt>
+      <dd>{contact.email || t("common.dash")}</dd>
+      <dt>{t("common.phone")}</dt>
+      <dd>{contact.phone || t("common.dash")}</dd>
+      <dt>{t("common.jobTitle")}</dt>
+      <dd>{contact.job_title || t("common.dash")}</dd>
+      <dt>{t("common.organization")}</dt>
       <dd>
         {org ? (
           <Link className="entity-link" to={`/organizations/${org.id}`}>
             {org.name}
           </Link>
         ) : (
-          "—"
+          t("common.dash")
         )}
       </dd>
     </dl>
@@ -46,6 +48,7 @@ function ContactFacts({
 }
 
 export default function ContactDetail() {
+  const { t } = useLocale();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -60,7 +63,7 @@ export default function ContactDetail() {
     `/api/crm/activities?contact_id=${id}`,
   );
   const org = orgs?.find((o) => o.id === contact?.organization_id);
-  const atOrg = org ? ` at ${org.name}` : "";
+  const atOrg = org ? t("common.atOrg", { name: org.name }) : "";
 
   if (!contact) return null;
 
@@ -72,36 +75,38 @@ export default function ContactDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/contacts">Contacts</Link> / {contact.name}
+        <Link to="/contacts">{t("breadcrumb.contacts")}</Link> / {contact.name}
       </div>
       <PageHeader
         icon={<IconContacts size={20} />}
         title={contact.name}
-        sub={(contact.job_title || "Contact") + atOrg}
+        sub={(contact.job_title || t("common.contact")) + atOrg}
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("common.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("common.details")}</h2>
           <ContactFacts contact={contact} org={org} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {t("common.deals")} ({deals?.length ?? 0})
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
         <div className="card full">
-          <h2>Activity</h2>
+          <h2>{t("common.activity")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -125,8 +130,8 @@ export default function ContactDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete "${contact.name}"? This cannot be undone.`}
+          title={t("contacts.deleteTitle")}
+          message={t("contacts.deleteMessageQuoted", { name: contact.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

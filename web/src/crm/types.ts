@@ -1,3 +1,7 @@
+import type { Locale, Translate } from "../shared/locales";
+
+export type TranslateFn = Translate;
+
 export const DEAL_STAGES = [
   "New",
   "Qualified",
@@ -13,6 +17,51 @@ export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 
 export const ACTIVITY_TYPES = ["note", "call", "email"] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+
+const DEAL_STAGE_KEYS: Record<DealStage, string> = {
+  New: "dealStage.new",
+  Qualified: "dealStage.qualified",
+  Proposal: "dealStage.proposal",
+  Negotiation: "dealStage.negotiation",
+  Won: "dealStage.won",
+  Lost: "dealStage.lost",
+};
+
+export function dealStageLabel(stage: DealStage, t: TranslateFn): string {
+  return t(DEAL_STAGE_KEYS[stage]);
+}
+
+function dealStageFunnelLabel(
+  stage: DealStage,
+  t: TranslateFn,
+  withPlus: boolean,
+): string {
+  const label = dealStageLabel(stage, t);
+  return withPlus ? `${label}+` : label;
+}
+
+const CONTACT_STATUS_KEYS: Record<ContactStatus, string> = {
+  lead: "contactStatus.lead",
+  qualified: "contactStatus.qualified",
+  customer: "contactStatus.customer",
+};
+
+export function contactStatusLabel(
+  status: ContactStatus,
+  t: TranslateFn,
+): string {
+  return t(CONTACT_STATUS_KEYS[status]);
+}
+
+const ACTIVITY_TYPE_KEYS: Record<ActivityType, string> = {
+  note: "activityType.note",
+  call: "activityType.call",
+  email: "activityType.email",
+};
+
+export function activityTypeLabel(type: ActivityType, t: TranslateFn): string {
+  return t(ACTIVITY_TYPE_KEYS[type]);
+}
 
 export interface Organization {
   id: number;
@@ -145,7 +194,11 @@ export interface FunnelRow {
  * since most of them close beyond that window. Lost deals never appear: a deal that dies overwrites
  * the stage it reached, so there is nothing to place it at.
  */
-export function pipelineFunnel(deals: Deal[], sinceMonth: string): FunnelRow[] {
+export function pipelineFunnel(
+  deals: Deal[],
+  sinceMonth: string,
+  t?: TranslateFn,
+): FunnelRow[] {
   const stages: DealStage[] = [...OPEN_STAGES, "Won"];
   const live = deals.filter(
     (d) =>
@@ -153,10 +206,19 @@ export function pipelineFunnel(deals: Deal[], sinceMonth: string): FunnelRow[] {
   );
   return stages.map((stage, i) => {
     const reached = live.filter((d) => stages.indexOf(d.stage) >= i);
+    const isLast = i === stages.length - 1;
+    let label: string;
+    if (t) {
+      label = dealStageFunnelLabel(stage, t, !isLast);
+    } else if (isLast) {
+      label = stage;
+    } else {
+      label = `${stage}+`;
+    }
     return {
       name: stage,
       // No space before the plus: recharts breaks a funnel label onto a second line at whitespace.
-      label: i === stages.length - 1 ? stage : `${stage}+`,
+      label,
       value: sumValue(reached),
       count: reached.length,
       inStage: live.filter((d) => d.stage === stage).length,
@@ -172,13 +234,19 @@ export interface Month {
 }
 
 /** Months from `back` before `from` to `forward` after it, oldest first, keyed 'YYYY-MM'. */
-export function monthRange(from: Date, back: number, forward: number): Month[] {
+export function monthRange(
+  from: Date,
+  back: number,
+  forward: number,
+  locale?: Locale,
+): Month[] {
+  const tag = locale === "hi" ? "hi-IN" : "en-US";
   const months: Month[] = [];
   for (let i = -back; i <= forward; i++) {
     const d = new Date(from.getFullYear(), from.getMonth() + i, 1);
     months.push({
       key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleDateString("en-US", { month: "short" }),
+      label: d.toLocaleDateString(tag, { month: "short" }),
       future: i > 0,
     });
   }

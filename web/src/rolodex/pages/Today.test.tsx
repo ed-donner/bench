@@ -13,6 +13,7 @@ import {
   today,
   upcoming,
 } from "../test/helpers";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -35,13 +36,15 @@ const toast = vi.fn();
 
 function renderToday(store = { people: [maya], tags: [], loaded: true }) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider value={{ ...store, refresh }}>
-        <ToastContext.Provider value={toast}>
-          <Today />
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider value={{ ...store, refresh }}>
+          <ToastContext.Provider value={toast}>
+            <Today />
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 
@@ -196,7 +199,7 @@ describe("Today", () => {
   it("charts what has been logged", async () => {
     vi.mocked(api.today).mockResolvedValue(today());
     const { container } = renderToday();
-    await screen.findByText("How you’re doing");
+    await screen.findByText("How you're doing");
     expect(
       within(container).getByText("Interactions logged per month"),
     ).toBeInTheDocument();
