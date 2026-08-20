@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useT } from "../../shared/useLocale";
 import { api, query } from "../api";
 import { useFetch } from "../hooks";
 import { Contact, Deal, Organization, isOpen, sumValue } from "../types";
@@ -18,6 +19,7 @@ interface OrgRow extends Organization {
 }
 
 export default function Organizations() {
+  const t = useT();
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Organization | null>(null);
@@ -77,40 +79,42 @@ export default function Organizations() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t("shared.common.name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "website",
-        header: "Website",
+        header: t("crm.organizations.col.website"),
         cell: (c) => {
           const site = c.getValue<string>();
           return site ? (
             <span className="cell-muted">{site}</span>
           ) : (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{t("shared.common.emDash")}</span>
           );
         },
       },
       {
         accessorKey: "industry",
-        header: "Industry",
+        header: t("crm.organizations.col.industry"),
         cell: (c) =>
-          c.getValue<string>() || <span className="cell-empty">—</span>,
+          c.getValue<string>() || (
+            <span className="cell-empty">{t("shared.common.emDash")}</span>
+          ),
       },
       {
         accessorKey: "contact_count",
-        header: "Contacts",
+        header: t("crm.organizations.col.contacts"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_count",
-        header: "Open deals",
+        header: t("crm.organizations.col.openDeals"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_value",
-        header: "Pipeline",
+        header: t("crm.organizations.col.pipeline"),
         cell: (c) => (
           <span className="cell-money">
             {formatMoney(c.getValue<number>())}
@@ -118,7 +122,7 @@ export default function Organizations() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   const remove = async () => {
@@ -135,12 +139,12 @@ export default function Organizations() {
     <>
       <PageHeader
         icon={<IconOrganizations size={20} />}
-        title="Organizations"
-        sub="The companies you do business with"
+        title={t("crm.organizations.title")}
+        sub={t("crm.organizations.sub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add organization
+          {t("crm.organizations.add")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -149,7 +153,7 @@ export default function Organizations() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search organizations…"
+            placeholder={t("crm.organizations.searchPlaceholder")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -158,15 +162,23 @@ export default function Organizations() {
       <DataTable
         data={rows}
         columns={columns}
-        noun="organization"
+        noun={t("crm.organizations.noun")}
         rowLabel={(o) => o.name}
         onRowClick={(o) => void navigate(`/organizations/${o.id}`)}
         onEdit={(o) => setEditing(o)}
         onDelete={(o) => setDeleting(o)}
         emptyMessage={
-          q ? `No organizations match “${q}”.` : "No organizations yet."
+          q
+            ? t("crm.organizations.emptySearch", { query: q })
+            : t("crm.organizations.empty")
         }
-        summary={<>Open pipeline {formatMoney(openPipeline)}</>}
+        summary={
+          <>
+            {t("crm.organizations.summary", {
+              amount: formatMoney(openPipeline),
+            })}
+          </>
+        }
       />
       {adding && (
         <OrganizationForm onSaved={reload} onClose={() => setAdding(false)} />
@@ -180,8 +192,10 @@ export default function Organizations() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete ${deleting.name}? Its contacts and deals stay, but lose their link to it.`}
+          title={t("crm.organizations.deleteTitle")}
+          message={t("crm.organizations.deleteMessage", {
+            name: deleting.name,
+          })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

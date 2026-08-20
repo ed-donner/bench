@@ -20,28 +20,36 @@ import {
 import { useStore } from "../store";
 import { api } from "../api";
 import type { PersonComputed } from "../types";
+import { CIRCLES, type Circle } from "../types";
 import { filterPeople } from "../search";
 import { Avatar } from "../components/Avatar";
 import { CircleChip, StatusBadge } from "../components/Chips";
 import { EmptyState } from "../components/Modal";
 import { PersonForm } from "../components/PersonForm";
 import { ImportModal } from "../components/ImportModal";
-import { CIRCLE_LABEL, fmtDate, relativeDays } from "../format";
-import type { Circle } from "../types";
+import { circleLabel, fmtDate, relativeDays } from "../format";
+import { useT } from "../../shared/useLocale";
+import type { TranslateFn } from "../../shared/i18n";
 
 const col = createColumnHelper<PersonComputed>();
 
-/** How late a check-in is, in the table's own shorthand: "12d overdue", "due in 3 days". */
-function checkInText(p: PersonComputed): string | null {
-  if (p.status === "overdue")
-    return relativeDays(p.next_due)
-      .replace(" days ago", "d overdue")
-      .replace(" ago", " overdue");
-  if (p.status === "due_soon") return `due ${relativeDays(p.next_due)}`;
+/** How late a check-in is, in the table's own shorthand. */
+function checkInText(p: PersonComputed, t: TranslateFn): string | null {
+  if (p.status === "overdue") {
+    if (!p.next_due) return t("rolodex.time.neverContacted");
+    return t("rolodex.people.checkInOverdue", {
+      when: relativeDays(p.next_due, undefined, t),
+    });
+  }
+  if (p.status === "due_soon")
+    return t("rolodex.people.checkInDueSoon", {
+      when: relativeDays(p.next_due, undefined, t),
+    });
   return null;
 }
 
 export default function People() {
+  const t = useT();
   const { people, tags, loaded, refresh } = useStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -62,14 +70,16 @@ export default function People() {
   const columns = useMemo(
     () => [
       col.accessor("name", {
-        header: "Person",
+        header: t("rolodex.people.col.person"),
         cell: (info) => (
           <div className="person-cell">
             <Avatar name={info.getValue()} photo={info.row.original.photo} />
             <div>
               <div className="name">{info.getValue()}</div>
               <div className="sub">
-                {info.row.original.email ?? info.row.original.city ?? "—"}
+                {info.row.original.email ??
+                  info.row.original.city ??
+                  t("shared.common.emDash")}
               </div>
             </div>
           </div>
@@ -77,11 +87,13 @@ export default function People() {
       }),
       col.accessor((p) => p.company ?? "", {
         id: "company",
-        header: "Company",
+        header: t("rolodex.people.col.company"),
         cell: (info) => (
           <div>
             <div>
-              {info.row.original.company ?? <span className="muted">—</span>}
+              {info.row.original.company ?? (
+                <span className="muted">{t("shared.common.emDash")}</span>
+              )}
             </div>
             <div className="sub small muted">
               {info.row.original.job_title ?? ""}
@@ -90,25 +102,25 @@ export default function People() {
         ),
       }),
       col.accessor("circle", {
-        header: "Circle",
+        header: t("rolodex.people.col.circle"),
         cell: (info) => <CircleChip circle={info.getValue()} />,
       }),
       col.accessor("last_contacted", {
-        header: "Last contacted",
+        header: t("rolodex.people.col.lastContacted"),
         cell: (info) => (
           <div>
-            <div>{fmtDate(info.getValue())}</div>
+            <div>{fmtDate(info.getValue(), undefined, t)}</div>
             <div className="sub small muted">
-              {relativeDays(info.getValue())}
+              {relativeDays(info.getValue(), undefined, t)}
             </div>
           </div>
         ),
       }),
       col.accessor("status", {
-        header: "Check-in",
+        header: t("rolodex.people.col.checkIn"),
         cell: (info) => {
           const p = info.row.original;
-          const when = checkInText(p);
+          const when = checkInText(p, t);
           return (
             <div className="row" style={{ gap: 7 }}>
               <StatusBadge status={p.status} />
@@ -119,7 +131,7 @@ export default function People() {
       }),
       col.accessor((p) => p.latest_news?.text ?? "", {
         id: "latest_news",
-        header: "Latest news",
+        header: t("rolodex.people.col.latestNews"),
         cell: (info) =>
           info.row.original.latest_news ? (
             <div>
@@ -127,11 +139,11 @@ export default function People() {
                 {info.row.original.latest_news.text}
               </div>
               <div className="sub small muted">
-                {relativeDays(info.row.original.latest_news.date)}
+                {relativeDays(info.row.original.latest_news.date, undefined, t)}
               </div>
             </div>
           ) : (
-            <span className="muted">—</span>
+            <span className="muted">{t("shared.common.emDash")}</span>
           ),
       }),
       col.display({
@@ -145,14 +157,14 @@ export default function People() {
           >
             <button
               className="icon-btn"
-              title="Edit"
+              title={t("shared.common.edit")}
               onClick={() => setEditing(info.row.original)}
             >
               <Pencil size={15} />
             </button>
             <button
               className="icon-btn danger"
-              title="Delete"
+              title={t("shared.common.delete")}
               onClick={() => setDeleting(info.row.original)}
             >
               <Trash2 size={15} />
@@ -161,12 +173,9 @@ export default function People() {
         ),
       }),
     ],
-    [],
+    [t],
   );
 
-  // React Compiler cannot memoize what useReactTable() returns; see the same disable in CRM's
-  // DataTable. Nothing to change here, and lint will report the directive as unused if TanStack
-  // ever makes the hook compatible.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filtered,
@@ -184,6 +193,8 @@ export default function People() {
     setDeleting(null);
   };
 
+  const firstName = deleting?.name.split(" ")[0] ?? "";
+
   return (
     <div className="page">
       <div className="page-header">
@@ -198,20 +209,23 @@ export default function People() {
             >
               <Users size={19} />
             </span>
-            People
+            {t("rolodex.people.title")}
           </h1>
           <p className="page-desc">
             {loaded
-              ? `${people.length} people in your Rolodex — showing ${filtered.length}`
-              : "Loading…"}
+              ? t("rolodex.people.subLoaded", {
+                  total: people.length,
+                  shown: filtered.length,
+                })
+              : t("shared.common.loading")}
           </p>
         </div>
         <div className="page-actions">
           <button className="btn" onClick={() => setImporting(true)}>
-            <Upload size={15} /> Import
+            <Upload size={15} /> {t("rolodex.people.import")}
           </button>
           <button className="btn btn-primary" onClick={() => setEditing("new")}>
-            <Plus size={15} /> Add person
+            <Plus size={15} /> {t("rolodex.people.add")}
           </button>
         </div>
       </div>
@@ -230,34 +244,34 @@ export default function People() {
           <div className="search-box">
             <Search />
             <input
-              placeholder="Search by name, company, email, city…"
+              placeholder={t("rolodex.people.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <select
             className="filter-select"
-            aria-label="Circle"
+            aria-label={t("rolodex.people.filterCircleAria")}
             value={circle}
             onChange={(e) => setCircle(e.target.value as Circle | "all")}
           >
-            <option value="all">All circles</option>
-            {(Object.keys(CIRCLE_LABEL) as Circle[]).map((c) => (
+            <option value="all">{t("rolodex.people.allCircles")}</option>
+            {CIRCLES.map((c) => (
               <option key={c} value={c}>
-                {CIRCLE_LABEL[c]}
+                {circleLabel(c, t)}
               </option>
             ))}
           </select>
           <select
             className="filter-select"
-            aria-label="Tag"
+            aria-label={t("rolodex.people.filterTagAria")}
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           >
-            <option value="all">All tags</option>
-            {tags.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="all">{t("rolodex.people.allTags")}</option>
+            {tags.map((tagName) => (
+              <option key={tagName} value={tagName}>
+                {tagName}
               </option>
             ))}
           </select>
@@ -270,7 +284,7 @@ export default function People() {
                 setTag("all");
               }}
             >
-              Clear
+              {t("rolodex.people.clear")}
             </button>
           )}
         </div>
@@ -278,8 +292,8 @@ export default function People() {
         {filtered.length === 0 ? (
           <EmptyState icon={<Users size={22} />}>
             {loaded
-              ? "No people match — try clearing the search or filters."
-              : "Loading your people…"}
+              ? t("rolodex.people.emptyLoaded")
+              : t("rolodex.people.emptyLoading")}
           </EmptyState>
         ) : (
           <div className="table-wrap">
@@ -359,27 +373,31 @@ export default function People() {
             className="modal modal-confirm"
             role="dialog"
             aria-modal="true"
-            aria-label={`Delete ${deleting.name}?`}
+            aria-label={t("rolodex.people.deleteTitle", {
+              name: deleting.name,
+            })}
           >
             <div className="modal-header">
-              <h3>Delete {deleting.name}?</h3>
+              <h3>
+                {t("rolodex.people.deleteTitle", { name: deleting.name })}
+              </h3>
             </div>
             <div className="modal-body">
               <p>
-                This removes {deleting.name.split(" ")[0]} and everything logged
-                about them — interactions, dates, facts, news, reminders, gifts
-                and connections. It can’t be undone.
+                {t("rolodex.people.deleteBody", {
+                  firstName,
+                })}
               </p>
             </div>
             <div className="modal-footer">
               <button className="btn" onClick={() => setDeleting(null)}>
-                Cancel
+                {t("shared.common.cancel")}
               </button>
               <button
                 className="btn btn-danger"
                 onClick={() => void confirmDelete()}
               >
-                Delete
+                {t("shared.common.delete")}
               </button>
             </div>
           </div>

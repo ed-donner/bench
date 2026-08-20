@@ -127,12 +127,19 @@ export const FILTER_SPEC: ParamSpec = {
   format: filterLabel,
 };
 
-export const MASTER_GROUPS: { title: string; specs: ParamSpec[] }[] = [
+export const MASTER_GROUPS: {
+  id: string;
+  /** English fallback for param specs / tests */
+  title: string;
+  specs: ParamSpec[];
+}[] = [
   {
+    id: "filter",
     title: "FILTER",
     specs: [knob("filterReso", "RESO"), knob("filterDrive", "BITE")],
   },
   {
+    id: "sweep",
     title: "SWEEP",
     specs: [
       knob("sweepDepth", "DEPTH"),
@@ -148,10 +155,12 @@ export const MASTER_GROUPS: { title: string; specs: ParamSpec[] }[] = [
     ],
   },
   {
+    id: "sidechain",
     title: "SIDECHAIN",
     specs: [knob("pump", "PUMP"), knob("pumpTime", "RELEASE")],
   },
   {
+    id: "sendFx",
     title: "SEND FX",
     specs: [
       {

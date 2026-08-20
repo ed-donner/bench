@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useT } from "../../shared/useLocale";
 import { filterGainAt } from "../filter";
 
 const MIN_HZ = 30;
@@ -13,6 +14,7 @@ interface Props {
 
 /** Live spectrum with the master filter's response drawn over it. */
 export function Scope({ analyser, getFilter }: Props) {
+  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export function Scope({ analyser, getFilter }: Props) {
   return (
     <div className="scope">
       <canvas ref={canvasRef} className="scope-canvas" />
-      <span className="scope-tag">SPECTRUM · FILTER</span>
+      <span className="scope-tag">{t("groove.master.scopeTag")}</span>
     </div>
   );
 }

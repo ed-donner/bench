@@ -1,15 +1,17 @@
 import { Link } from "react-router";
 import { CornerUpLeft } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import { api, type RowData } from "../api";
 import Cell from "./cells";
 import { nextColor } from "./optionColors";
-import { PROPERTY_TYPE_LABELS } from "./propertyTypes";
+import { PROPERTY_TYPE_KEYS } from "./propertyTypes";
 
 export function RowBreadcrumb({ row }: { row: RowData }) {
+  const t = useT();
   return (
     <Link className="row-breadcrumb" to={`/p/${row.database_id}`}>
       <CornerUpLeft size={13} />
-      {row.database_title || "Untitled database"}
+      {row.database_title || t("space.page.untitledDatabase")}
     </Link>
   );
 }
@@ -21,6 +23,7 @@ export function RowPropsGrid({
   row: RowData;
   onRowChange: (row: RowData) => void;
 }) {
+  const t = useT();
   const setValue = (propertyId: string, value: unknown) => {
     onRowChange({ ...row, values: { ...row.values, [propertyId]: value } });
     void api.setRowValue(row.id, propertyId, value);
@@ -41,17 +44,19 @@ export function RowPropsGrid({
     return option;
   };
 
+  const rowTitle = row.title || t("shared.common.untitled");
+
   return (
     <div className="row-props">
       <dl className="props-grid">
         {row.properties.map((p) => (
           <div className="props-row" key={p.id}>
-            <dt title={PROPERTY_TYPE_LABELS[p.type]}>{p.name}</dt>
+            <dt title={t(PROPERTY_TYPE_KEYS[p.type])}>{p.name}</dt>
             <dd>
               <Cell
                 property={p}
                 value={row.values[p.id]}
-                rowLabel={row.title || "Untitled"}
+                rowLabel={rowTitle}
                 onChange={(v) => setValue(p.id, v)}
                 onCreateOption={(name) => createOption(p.id, name)}
               />

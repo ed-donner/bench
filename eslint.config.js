@@ -109,6 +109,12 @@ export default tseslint.config(
     rules: { "max-lines-per-function": "off" },
   },
 
+  // Translation catalogs are literal string data, like seed fixtures — line count is not complexity.
+  {
+    files: ["web/src/shared/messages/*.ts"],
+    rules: { "max-lines": "off", "max-lines-per-function": "off" },
+  },
+
   // Seed and patch modules are literal data - rows to insert, synth presets. Counting their lines
   // measures the size of the fixture, not the difficulty of the code.
   {

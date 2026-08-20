@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { api, type PersonDetail } from "../api";
 import { errorMessage } from "../format";
+import { useT } from "../../shared/useLocale";
 import { useStore } from "../store";
 import { PersonForm } from "../components/PersonForm";
 import { LogInteractionModal } from "../components/LogInteractionModal";
@@ -29,6 +30,7 @@ type QuickModal =
   | null;
 
 export default function PersonDetailPage() {
+  const t = useT();
   const { id } = useParams();
   const personId = Number(id);
   const { people, refresh } = useStore();
@@ -62,14 +64,16 @@ export default function PersonDetailPage() {
     };
   }, [personId]);
 
-  /** After any change: the person's own page and the shared people list both need rereading. */
   const after = useCallback(async () => {
     await Promise.all([load(), refresh()]);
   }, [load, refresh]);
 
   if (error)
-    return <div className="page">Couldn’t load this person: {error}</div>;
-  if (!detail) return <div className="page muted">Loading…</div>;
+    return (
+      <div className="page">{t("rolodex.person.loadError", { error })}</div>
+    );
+  if (!detail)
+    return <div className="page muted">{t("shared.common.loading")}</div>;
 
   const { person } = detail;
   return (

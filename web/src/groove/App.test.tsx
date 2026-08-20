@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderWithLocale } from "../shared/test/render";
 import App from "./App";
 import { PATCHES } from "./patches";
 
@@ -61,7 +62,7 @@ const unit = (name: string) => screen.getByRole("region", { name });
 
 describe("Groove App", () => {
   it("lays out the transport, all four units and the master section", () => {
-    render(<App />);
+    renderWithLocale(<App />);
     for (const name of ["RHYTHM", "BASS", "PADS", "LEAD"]) {
       expect(unit(name)).toBeInTheDocument();
     }
@@ -70,7 +71,7 @@ describe("Groove App", () => {
   });
 
   it("starts and stops the engine from the play button", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     await userEvent.click(screen.getByRole("button", { name: /PLAY/ }));
 
     expect(engineOf().resume).toHaveBeenCalled();
@@ -83,7 +84,7 @@ describe("Groove App", () => {
   });
 
   it("toggles the transport with the spacebar", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     await press({ code: "Space" });
     expect(engineOf().start).toHaveBeenCalledOnce();
 
@@ -92,7 +93,7 @@ describe("Groove App", () => {
   });
 
   it("switches patch with the number keys and the patch buttons", async () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     const active = () =>
       container.querySelector(".patch-btn.active")!.textContent;
 
@@ -106,7 +107,7 @@ describe("Groove App", () => {
   });
 
   it("ignores the keyboard while a text field has focus", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const input = document.createElement("input");
     document.body.append(input);
     input.focus();
@@ -123,7 +124,7 @@ describe("Groove App", () => {
   });
 
   it("edits a step, offers a revert, and restores the factory patch", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const step = within(unit("RHYTHM")).getByRole("button", {
       name: "KICK step 2",
     });
@@ -139,7 +140,7 @@ describe("Groove App", () => {
   });
 
   it("auditions a drum step as it is switched on, but not as it is cleared", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const step = within(unit("RHYTHM")).getByRole("button", {
       name: "CLAP step 2",
     });
@@ -154,7 +155,7 @@ describe("Groove App", () => {
   });
 
   it("auditions a melodic step as it is switched on, but not as it is cleared", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const pads = within(unit("BASS")).getAllByRole("button", {
       name: /BASS step/,
     });
@@ -174,7 +175,7 @@ describe("Groove App", () => {
   });
 
   it("mutes a single unit without touching the others", async () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     const bass = unit("BASS");
     await userEvent.click(within(bass).getByRole("button", { name: "MUTE" }));
 
@@ -184,7 +185,7 @@ describe("Groove App", () => {
   });
 
   it("pushes every change down to the engine", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     engineOf().applyParams.mockClear();
 
     await userEvent.click(
@@ -194,7 +195,7 @@ describe("Groove App", () => {
   });
 
   it("follows the playhead the engine reports", () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     act(() => engineOf().onStep(5));
 
     const lit = container.querySelectorAll(".master-leds .led.on");

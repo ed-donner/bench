@@ -25,6 +25,7 @@ if (!(Blob.prototype.text as unknown))
   };
 
 beforeEach(() => {
+  document.documentElement.lang = "en";
   // The editor flushes pending block edits with a raw keepalive fetch when it unmounts. Node's
   // fetch rejects relative URLs, so keep every test off the real one; suites that assert on
   // requests stub it again themselves.
@@ -42,4 +43,5 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   delete document.documentElement.dataset.theme;
+  document.documentElement.lang = "en";
 });

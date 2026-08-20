@@ -3,15 +3,18 @@ import { Link } from "react-router";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { CalendarDays, Cake, ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
 import { api, type CalendarPayload } from "../api";
 import type { PersonComputed, UpcomingDate } from "../types";
 import { dateTypeLabel } from "../dates";
 import { Avatar } from "../components/Avatar";
-import { errorMessage, fmtDate, relativeDays } from "../format";
+import { dateFnsLocale, errorMessage, fmtDate, relativeDays } from "../format";
+import { useT } from "../../shared/useLocale";
+import type { TranslateFn } from "../../shared/i18n";
 import { useStore } from "../store";
-import { format } from "date-fns";
 
 export default function CalendarPage() {
+  const t = useT();
   const [activeDate, setActiveDate] = useState(new Date());
   const [payload, setPayload] = useState<CalendarPayload | null>(null);
   const { people } = useStore();
@@ -46,7 +49,9 @@ export default function CalendarPage() {
   }, [people]);
 
   if (error)
-    return <div className="page">Couldn’t load the calendar: {error}</div>;
+    return (
+      <div className="page">{t("rolodex.calendar.loadError", { error })}</div>
+    );
 
   return (
     <div className="page">
@@ -62,12 +67,9 @@ export default function CalendarPage() {
             >
               <CalendarDays size={19} />
             </span>
-            Calendar
+            {t("rolodex.calendar.title")}
           </h1>
-          <p className="page-desc">
-            Birthdays and important dates, month by month — click any date to
-            open the person.
-          </p>
+          <p className="page-desc">{t("rolodex.calendar.sub")}</p>
         </div>
       </div>
 
@@ -86,7 +88,9 @@ export default function CalendarPage() {
             next2Label={null}
             prevLabel={<ChevronLeft size={17} />}
             nextLabel={<ChevronRight size={17} />}
-            formatMonthYear={(_locale, d) => format(d, "MMMM yyyy")}
+            formatMonthYear={(_locale, d) =>
+              format(d, "MMMM yyyy", { locale: dateFnsLocale() })
+            }
             tileClassName={({ date }) => {
               const iso = format(date, "yyyy-MM-dd");
               return eventsByDay.has(iso) ? "has-events" : undefined;
@@ -102,7 +106,7 @@ export default function CalendarPage() {
                       key={e.id}
                       to={`/people/${e.person_id}`}
                       className={`cal-event ${e.type}${e.milestone ? " milestone" : ""}`}
-                      title={milestoneTitle(e)}
+                      title={milestoneTitle(e, t)}
                     >
                       <Cake size={10} />
                       <span className="label">
@@ -113,7 +117,9 @@ export default function CalendarPage() {
                   ))}
                   {events.length > 3 && (
                     <span className="small muted">
-                      +{events.length - 3} more
+                      {t("rolodex.calendar.moreEvents", {
+                        count: events.length - 3,
+                      })}
                     </span>
                   )}
                 </div>
@@ -124,12 +130,12 @@ export default function CalendarPage() {
 
         <div className="card">
           <div className="card-header">
-            <h2 className="card-title">Coming up — next 30 days</h2>
+            <h2 className="card-title">
+              {t("rolodex.calendar.upcomingTitle")}
+            </h2>
           </div>
           {(payload?.upcoming.length ?? 0) === 0 ? (
-            <div className="empty">
-              Nothing in the next 30 days — a quiet month.
-            </div>
+            <div className="empty">{t("rolodex.calendar.upcomingEmpty")}</div>
           ) : (
             (payload?.upcoming ?? []).map((e) => {
               const person = peopleById.get(e.person_id);
@@ -142,7 +148,9 @@ export default function CalendarPage() {
                 >
                   <div className="date-pill">
                     <span className="mon">
-                      {format(new Date(e.date + "T00:00:00"), "MMM")}
+                      {format(new Date(e.date + "T00:00:00"), "MMM", {
+                        locale: dateFnsLocale(),
+                      })}
                     </span>
                     <span className="day">
                       {format(new Date(e.date + "T00:00:00"), "d")}
@@ -156,14 +164,20 @@ export default function CalendarPage() {
                   <div className="grow">
                     <div style={{ fontWeight: 600 }}>{e.person_name}</div>
                     <div className="small muted">
-                      {dateTypeLabel(e.type, e.label)}
-                      {e.age_turning != null ? ` · turns ${e.age_turning}` : ""}
-                      {e.milestone ? " — milestone!" : ""}
+                      {dateTypeLabel(e.type, e.label, t)}
+                      {e.age_turning != null
+                        ? t("rolodex.today.turnsAgeInline", {
+                            age: e.age_turning,
+                          })
+                        : ""}
+                      {e.milestone ? t("rolodex.calendar.milestone") : ""}
                     </div>
                   </div>
                   <div className="small muted" style={{ textAlign: "right" }}>
-                    {relativeDays(e.date)}
-                    <div style={{ fontSize: 11 }}>{fmtDate(e.date)}</div>
+                    {relativeDays(e.date, undefined, t)}
+                    <div style={{ fontSize: 11 }}>
+                      {fmtDate(e.date, undefined, t)}
+                    </div>
                   </div>
                 </Link>
               );
@@ -175,9 +189,13 @@ export default function CalendarPage() {
   );
 }
 
-function milestoneTitle(e: UpcomingDate): string {
-  const base = dateTypeLabel(e.type, e.label);
+function milestoneTitle(e: UpcomingDate, t: TranslateFn): string {
+  const base = dateTypeLabel(e.type, e.label, t);
   if (e.milestone && e.age_turning != null)
-    return `${base} — ${e.person_name} turns ${e.age_turning}!`;
+    return t("rolodex.calendar.milestoneTitle", {
+      label: base,
+      name: e.person_name,
+      age: e.age_turning,
+    });
   return base;
 }

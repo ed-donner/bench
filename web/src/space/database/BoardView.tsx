@@ -23,6 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useT } from "../../shared/useLocale";
 import type { DbRow, Property } from "../api";
 import { Chip } from "./cells";
 import { groupRows, type BoardColumn } from "./viewLogic";
@@ -61,10 +62,13 @@ function CardBody({
   row: DbRow;
   cardProperty?: Property;
 }) {
+  const t = useT();
   const chips = toChips(cardProperty ? row.values[cardProperty.id] : undefined);
   return (
     <>
-      <div className="board-card-title">{row.title || "Untitled"}</div>
+      <div className="board-card-title">
+        {row.title || t("shared.common.untitled")}
+      </div>
       {chips.length > 0 && cardProperty && (
         <div className="board-card-chips">
           {chips
@@ -132,6 +136,7 @@ function Column({
   cardProperty?: Property;
   justDragged: React.RefObject<boolean>;
 }) {
+  const t = useT();
   const id = columnId(column);
   // The whole column sorts horizontally, but only the handle starts that drag - dragging from
   // anywhere else would fight the cards inside it.
@@ -162,7 +167,11 @@ function Column({
           {column.option ? (
             column.option.name
           ) : (
-            <span className="board-col-none">No {groupProperty.name}</span>
+            <span className="board-col-none">
+              {t("space.property.boardNoGroup", {
+                property: groupProperty.name,
+              })}
+            </span>
           )}
         </span>
         <span className="board-count">{column.rows.length}</span>
@@ -171,7 +180,13 @@ function Column({
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          aria-label={`Reorder ${column.option?.name ?? "ungrouped"} column`}
+          aria-label={t("space.property.reorderColumn", {
+            column:
+              column.option?.name ??
+              t("space.property.boardNoGroup", {
+                property: groupProperty.name,
+              }),
+          })}
         >
           <GripVertical size={14} />
         </button>
@@ -190,7 +205,9 @@ function Column({
             />
           ))}
           {column.rows.length === 0 && (
-            <p className="board-col-empty">Drop a row here</p>
+            <p className="board-col-empty">
+              {t("space.property.boardDropRow")}
+            </p>
           )}
         </div>
       </SortableContext>
@@ -207,6 +224,7 @@ export default function BoardView({
   onReorder,
   onReorderColumns,
 }: Props) {
+  const t = useT();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -362,7 +380,10 @@ export default function BoardView({
           <div className="board-col lifted">
             <div className="board-col-head">
               <span className="board-col-name">
-                {draggingColumn.option?.name ?? "No " + groupProperty.name}
+                {draggingColumn.option?.name ??
+                  t("space.property.boardNoGroup", {
+                    property: groupProperty.name,
+                  })}
               </span>
               <span className="board-count">{draggingColumn.rows.length}</span>
             </div>

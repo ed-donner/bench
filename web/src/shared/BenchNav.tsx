@@ -13,37 +13,56 @@ import {
   IconSpace,
   IconSun,
 } from "./AppIcons";
+import { useLocale } from "./useLocale";
 import { currentTheme, toggleTheme, type Theme } from "./theme";
 import "./nav.css";
 
 type AppKey = "home" | "crm" | "space" | "rolodex" | "groove";
 
-/** Colour marks the active app and nothing else: one amber chip, wherever you are. An app is
-    told apart by its glyph, which is what still works once there are more of them than there
-    are brand colours. */
 const APPS: {
   key: AppKey;
   href: string;
-  label: string;
+  labelKey:
+    | "shared.nav.home"
+    | "shared.nav.crm"
+    | "shared.nav.space"
+    | "shared.nav.rolodex"
+    | "shared.nav.groove";
   Icon: (p: { size?: number }) => React.ReactElement;
 }[] = [
-  { key: "home", href: "/", label: "Home", Icon: IconHome },
-  { key: "crm", href: "/crm/", label: "CRM", Icon: IconCrm },
-  { key: "space", href: "/space/", label: "Space", Icon: IconSpace },
-  { key: "rolodex", href: "/rolodex/", label: "Rolodex", Icon: IconRolodex },
-  { key: "groove", href: "/groove/", label: "Groove", Icon: IconGroove },
+  { key: "home", href: "/", labelKey: "shared.nav.home", Icon: IconHome },
+  { key: "crm", href: "/crm/", labelKey: "shared.nav.crm", Icon: IconCrm },
+  {
+    key: "space",
+    href: "/space/",
+    labelKey: "shared.nav.space",
+    Icon: IconSpace,
+  },
+  {
+    key: "rolodex",
+    href: "/rolodex/",
+    labelKey: "shared.nav.rolodex",
+    Icon: IconRolodex,
+  },
+  {
+    key: "groove",
+    href: "/groove/",
+    labelKey: "shared.nav.groove",
+    Icon: IconGroove,
+  },
 ];
 
 export default function BenchNav({ active }: { active: AppKey }) {
+  const { t, locale, toggleLocale } = useLocale();
   const [theme, setTheme] = useState<Theme>(currentTheme);
   return (
     <header className="bench-nav">
       <span className="bench-nav-brand">
         <BenchMark size={21} />
-        Bench
+        {t("shared.brand")}
       </span>
-      <nav className="bench-nav-links" aria-label="Primary">
-        {APPS.map(({ key, href, label, Icon }) => (
+      <nav className="bench-nav-links" aria-label={t("shared.nav.primaryAria")}>
+        {APPS.map(({ key, href, labelKey, Icon }) => (
           <a
             key={key}
             className="bench-nav-link"
@@ -51,19 +70,46 @@ export default function BenchNav({ active }: { active: AppKey }) {
             aria-current={key === active ? "page" : undefined}
           >
             <Icon size={16} />
-            {label}
+            {t(labelKey)}
           </a>
         ))}
       </nav>
-      <button
-        type="button"
-        className="bench-nav-theme"
-        onClick={() => setTheme(toggleTheme())}
-        aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
-        title={theme === "dark" ? "Switch to light" : "Switch to dark"}
-      >
-        {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
-      </button>
+      <div className="bench-nav-controls">
+        <button
+          type="button"
+          className="bench-nav-locale"
+          onClick={toggleLocale}
+          aria-label={
+            locale === "en"
+              ? t("shared.locale.switchToSpanish")
+              : t("shared.locale.switchToEnglish")
+          }
+          title={
+            locale === "en"
+              ? t("shared.locale.switchToSpanish")
+              : t("shared.locale.switchToEnglish")
+          }
+        >
+          {locale === "en" ? t("shared.locale.es") : t("shared.locale.en")}
+        </button>
+        <button
+          type="button"
+          className="bench-nav-theme"
+          onClick={() => setTheme(toggleTheme())}
+          aria-label={
+            theme === "dark"
+              ? t("shared.theme.switchToLight")
+              : t("shared.theme.switchToDark")
+          }
+          title={
+            theme === "dark"
+              ? t("shared.theme.switchToLight")
+              : t("shared.theme.switchToDark")
+          }
+        >
+          {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
+        </button>
+      </div>
     </header>
   );
 }

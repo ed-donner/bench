@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
+import { renderWithLocale } from "../shared/test/render";
 import App from "./App";
 import { api } from "./api";
 import { deal, routes } from "./test/helpers";
@@ -25,7 +26,7 @@ afterEach(() => {
 });
 
 const show = (path = "/") =>
-  render(
+  renderWithLocale(
     <MemoryRouter initialEntries={[path]}>
       <App />
     </MemoryRouter>,

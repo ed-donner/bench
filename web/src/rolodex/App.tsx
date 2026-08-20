@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import BenchNav from "../shared/BenchNav";
 import { IconRolodex } from "../shared/AppIcons";
+import type { MessageKey } from "../shared/i18n";
+import { useT } from "../shared/useLocale";
 import StoreProvider from "./StoreProvider";
 import Today from "./pages/Today";
 import People from "./pages/People";
@@ -16,34 +18,45 @@ import Circles from "./pages/Circles";
 import CalendarPage from "./pages/CalendarPage";
 import TimelinePage from "./pages/TimelinePage";
 
-const NAV = [
-  { to: "/", label: "Today", end: true, Icon: LayoutDashboard },
-  { to: "/people", label: "People", Icon: Users },
-  { to: "/circles", label: "Circles", Icon: UsersRound },
-  { to: "/calendar", label: "Calendar", Icon: CalendarDays },
-  { to: "/timeline", label: "Timeline", Icon: History },
+const NAV: {
+  to: string;
+  labelKey: MessageKey;
+  end?: boolean;
+  Icon: typeof LayoutDashboard;
+}[] = [
+  { to: "/", labelKey: "rolodex.nav.today", end: true, Icon: LayoutDashboard },
+  { to: "/people", labelKey: "rolodex.nav.people", Icon: Users },
+  { to: "/circles", labelKey: "rolodex.nav.circles", Icon: UsersRound },
+  { to: "/calendar", labelKey: "rolodex.nav.calendar", Icon: CalendarDays },
+  { to: "/timeline", labelKey: "rolodex.nav.timeline", Icon: History },
 ];
 
 function Shell() {
+  const t = useT();
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
           <IconRolodex size={19} />
-          Rolodex
+          {t("rolodex.brand")}
         </div>
         <nav>
-          {NAV.map(({ to, label, end, Icon }) => (
+          {NAV.map(({ to, labelKey, end, Icon }) => (
             <NavLink key={to} to={to} end={end} className="nav-item">
               <Icon size={17} />
-              <span>{label}</span>
+              <span>{t(labelKey)}</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
-          Runs on your machine.
-          <br />
-          No accounts, no cloud.
+          {t("rolodex.sidebar.footer")
+            .split("\n")
+            .map((line, i) => (
+              <span key={i}>
+                {i > 0 && <br />}
+                {line}
+              </span>
+            ))}
         </div>
       </aside>
       <main className="main">
