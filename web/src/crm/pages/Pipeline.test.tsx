@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import type {
@@ -11,7 +11,7 @@ import type {
 } from "@hello-pangea/dnd";
 import Pipeline from "./Pipeline";
 import { api } from "../api";
-import { deal, org, routes } from "../test/helpers";
+import { deal, org, routes, renderCrm } from "../test/helpers";
 
 /**
  * dnd measures the boxes it drags, and jsdom lays nothing out, so the real library cannot drag
@@ -112,7 +112,7 @@ afterEach(() => {
 });
 
 function show() {
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={["/pipeline"]}>
       <Routes>
         <Route path="/pipeline" element={<Pipeline />} />

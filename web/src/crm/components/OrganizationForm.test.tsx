@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OrganizationForm from "./OrganizationForm";
 import { api } from "../api";
-import { org } from "../test/helpers";
+import { org, renderCrm } from "../test/helpers";
 
 vi.mock("../api", () => ({ api: { post: vi.fn(), put: vi.fn() } }));
 
@@ -19,7 +19,7 @@ afterEach(() => {
 function show(existing?: ReturnType<typeof org>) {
   const onSaved = vi.fn();
   const onClose = vi.fn();
-  render(
+  renderCrm(
     <OrganizationForm
       existing={existing}
       onSaved={onSaved}

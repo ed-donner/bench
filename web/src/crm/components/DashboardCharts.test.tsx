@@ -1,6 +1,6 @@
 import { cloneElement, isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, within } from "@testing-library/react";
+import { within } from "@testing-library/react";
 import {
   RevenueChart,
   RevenueFunnel,
@@ -8,7 +8,7 @@ import {
   WinRateDonut,
 } from "./DashboardCharts";
 import { pipelineFunnel, type MonthlyRow } from "../types";
-import { deal } from "../test/helpers";
+import { deal, renderCrm } from "../test/helpers";
 
 /**
  * ResponsiveContainer measures its parent, and jsdom lays nothing out, so every chart would render
@@ -29,7 +29,7 @@ vi.mock("recharts", async () => {
  * Query the chart, not the page: recharts sizes a label by writing it into a measurement span on
  * `document.body`, which survives cleanup still holding the last text it measured.
  */
-const show = (ui: React.ReactElement) => within(render(ui).container);
+const show = (ui: React.ReactElement) => within(renderCrm(ui).container);
 
 const month = (partial: Partial<MonthlyRow>): MonthlyRow => ({
   key: "2026-06",
