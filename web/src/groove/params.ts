@@ -1,4 +1,6 @@
 import type { ParamSpec, UnitId } from "./types";
+import type { MessageKey } from "../shared/locales";
+import type { MasterGroupKey } from "./i18n";
 import { VOICINGS } from "./music";
 import { filterLabel } from "./filter";
 
@@ -110,11 +112,14 @@ export const UNIT_PARAMS: Record<UnitId, ParamSpec[]> = {
   lead: LEAD,
 };
 
-export const UNIT_META: Record<UnitId, { name: string; model: string }> = {
-  drums: { name: "RHYTHM", model: "DR-16" },
-  bass: { name: "BASS", model: "MB-1" },
-  pads: { name: "PADS", model: "PX-4" },
-  lead: { name: "LEAD", model: "LX-2" },
+export const UNIT_META: Record<
+  UnitId,
+  { nameKey: MessageKey<"groove">; model: string }
+> = {
+  drums: { nameKey: "unitRhythm", model: "DR-16" },
+  bass: { nameKey: "unitBass", model: "MB-1" },
+  pads: { nameKey: "unitPads", model: "PX-4" },
+  lead: { nameKey: "unitLead", model: "LX-2" },
 };
 
 /** The hero control: a full-range DJ filter across the whole mix. */
@@ -127,56 +132,57 @@ export const FILTER_SPEC: ParamSpec = {
   format: filterLabel,
 };
 
-export const MASTER_GROUPS: { title: string; specs: ParamSpec[] }[] = [
-  {
-    title: "FILTER",
-    specs: [knob("filterReso", "RESO"), knob("filterDrive", "BITE")],
-  },
-  {
-    title: "SWEEP",
-    specs: [
-      knob("sweepDepth", "DEPTH"),
-      selector("sweepBars", "LENGTH", [
-        "OFF",
-        "1 BAR",
-        "2 BAR",
-        "4 BAR",
-        "8 BAR",
-        "16 BAR",
-      ]),
-      selector("sweepShape", "SHAPE", ["RISE", "FALL", "TRI", "SINE"]),
-    ],
-  },
-  {
-    title: "SIDECHAIN",
-    specs: [knob("pump", "PUMP"), knob("pumpTime", "RELEASE")],
-  },
-  {
-    title: "SEND FX",
-    specs: [
-      {
-        key: "delaySteps",
-        label: "DELAY",
-        kind: "knob",
-        min: 1,
-        max: 8,
-        integer: true,
-        format: (v) => `${Math.round(v)}/16`,
-      },
-      {
-        key: "delayFeedback",
-        label: "REPEATS",
-        kind: "knob",
-        min: 0,
-        max: 0.85,
-        format: pct,
-      },
-      knob("delayTone", "TONE"),
-      knob("reverbSize", "REVERB"),
-      knob("drive", "GLUE"),
-    ],
-  },
-];
+export const MASTER_GROUPS: { titleKey: MasterGroupKey; specs: ParamSpec[] }[] =
+  [
+    {
+      titleKey: "filter",
+      specs: [knob("filterReso", "RESO"), knob("filterDrive", "BITE")],
+    },
+    {
+      titleKey: "sweep",
+      specs: [
+        knob("sweepDepth", "DEPTH"),
+        selector("sweepBars", "LENGTH", [
+          "OFF",
+          "1 BAR",
+          "2 BAR",
+          "4 BAR",
+          "8 BAR",
+          "16 BAR",
+        ]),
+        selector("sweepShape", "SHAPE", ["RISE", "FALL", "TRI", "SINE"]),
+      ],
+    },
+    {
+      titleKey: "sidechain",
+      specs: [knob("pump", "PUMP"), knob("pumpTime", "RELEASE")],
+    },
+    {
+      titleKey: "sendFx",
+      specs: [
+        {
+          key: "delaySteps",
+          label: "DELAY",
+          kind: "knob",
+          min: 1,
+          max: 8,
+          integer: true,
+          format: (v) => `${Math.round(v)}/16`,
+        },
+        {
+          key: "delayFeedback",
+          label: "REPEATS",
+          kind: "knob",
+          min: 0,
+          max: 0.85,
+          format: pct,
+        },
+        knob("delayTone", "TONE"),
+        knob("reverbSize", "REVERB"),
+        knob("drive", "GLUE"),
+      ],
+    },
+  ];
 
 export const MASTER_PARAMS: ParamSpec[] = [
   FILTER_SPEC,

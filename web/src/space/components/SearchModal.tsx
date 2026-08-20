@@ -7,6 +7,7 @@ import {
   Rows3,
   Search,
 } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import { api, type SearchResult } from "../api";
 
 interface Props {
@@ -14,14 +15,17 @@ interface Props {
 }
 
 function TypeBadge({ result }: { result: SearchResult }) {
+  const t = useT("space");
   if (result.type === "database")
-    return <DatabaseIcon size={14} aria-label="Database" />;
+    return <DatabaseIcon size={14} aria-label={t("typeDatabase")} />;
   if (result.type === "row")
-    return <Rows3 size={14} aria-label="Database row" />;
-  return <FileText size={14} aria-label="Page" />;
+    return <Rows3 size={14} aria-label={t("typeRow")} />;
+  return <FileText size={14} aria-label={t("typePage")} />;
 }
 
 export default function SearchModal({ onClose }: Props) {
+  const t = useT("space");
+  const ts = useT("shared");
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<SearchResult[]>([]);
@@ -73,14 +77,14 @@ export default function SearchModal({ onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="search-modal" role="dialog" aria-label="Quick find">
+      <div className="search-modal" role="dialog" aria-label={t("quickFind")}>
         <div className="search-input-row">
           <Search size={17} className="search-glyph" />
           <input
             ref={inputRef}
             className="search-input"
-            placeholder="Search pages, databases, rows…"
-            aria-label="Search"
+            placeholder={t("searchPlaceholderExtended")}
+            aria-label={ts("search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
@@ -91,7 +95,7 @@ export default function SearchModal({ onClose }: Props) {
           <div
             className="search-results"
             role="listbox"
-            aria-label="Search results"
+            aria-label={t("searchResults")}
           >
             {results.map((r, i) => (
               <button
@@ -105,7 +109,7 @@ export default function SearchModal({ onClose }: Props) {
                 <span className="search-icon">
                   {r.icon ?? <TypeBadge result={r} />}
                 </span>
-                <span className="search-title">{r.title || "Untitled"}</span>
+                <span className="search-title">{r.title || t("untitled")}</span>
                 {r.parent_title && (
                   <span className="search-crumb">{r.parent_title}</span>
                 )}
@@ -116,7 +120,7 @@ export default function SearchModal({ onClose }: Props) {
             ))}
             {results.length === 0 && (
               <div className="search-empty">
-                No matches for “{query.trim()}”
+                {t.i("searchNoMatches", { query: query.trim() })}
               </div>
             )}
           </div>

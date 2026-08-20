@@ -1,28 +1,47 @@
 import { Clock3, MapPin, Megaphone, Pencil, Phone } from "lucide-react";
+import { useLocale, useT } from "../../../shared/useLocale";
 import type { PersonComputed } from "../../types";
-import { CIRCLE_META } from "../../types";
 import { Avatar } from "../Avatar";
 import { CircleChip, StatusBadge } from "../Chips";
-import { fmtDate, localTimeIn, relativeDays } from "../../format";
+import {
+  circleCadence,
+  circleLabel,
+  relativeDays,
+  type RolodexT,
+} from "../../i18n";
+import { fmtDate, localTimeIn } from "../../format";
 
 /** How often you mean to be in touch with this person, and why. */
-function cadenceText(person: PersonComputed): string {
-  if (person.checkins_off) return "Check-ins are off for this person";
-  const { label, cadenceDescription } = CIRCLE_META[person.circle];
-  const base = `${label} circle · check in ${cadenceDescription.toLowerCase()}`;
+function cadenceText(t: RolodexT, person: PersonComputed): string {
+  if (person.checkins_off) return t("checkInsOff");
+  const label = circleLabel(t, person.circle);
+  const cadence = circleCadence(t, person.circle).toLowerCase();
+  const base = t.i("cadenceLine", { circle: label, cadence });
   return person.cadence_override_days
-    ? `${base} (overridden: every ${person.cadence_override_days} days)`
+    ? t.i("cadenceOverride", {
+        base,
+        days: person.cadence_override_days,
+      })
     : base;
 }
 
 /** The one line under the chips that says where the check-in clock stands. */
-function dueText(person: PersonComputed): string {
+function dueText(
+  t: RolodexT,
+  person: PersonComputed,
+  locale: "en" | "es",
+): string {
   if (person.status === "overdue" && person.next_due)
-    return ` · was due ${fmtDate(person.next_due)} (${relativeDays(person.next_due)})`;
+    return t.i("wasDue", {
+      date: fmtDate(person.next_due, locale),
+      relative: relativeDays(t, person.next_due),
+    });
   if (person.status === "due_soon" && person.next_due)
-    return ` · due ${fmtDate(person.next_due)}`;
+    return t.i("dueOn", { date: fmtDate(person.next_due, locale) });
   if (person.status === "snoozed" && person.snoozed_until)
-    return ` · snoozed until ${fmtDate(person.snoozed_until)}`;
+    return t.i("snoozedUntil", {
+      date: fmtDate(person.snoozed_until, locale),
+    });
   return "";
 }
 
@@ -35,8 +54,11 @@ export default function PersonHeader({
   onLog: () => void;
   onEdit: () => void;
 }) {
-  const localTime = localTimeIn(person.timezone);
-  const cadence = cadenceText(person);
+  const t = useT("rolodex");
+  const { locale } = useLocale();
+  const localTime = localTimeIn(person.timezone, locale);
+  const cadence = cadenceText(t, person);
+
   return (
     <>
       <div className="person-head">
@@ -47,7 +69,7 @@ export default function PersonHeader({
             {person.job_title && <span>{person.job_title}</span>}
             {person.company && (
               <span>
-                {person.job_title ? " at " : ""}
+                {person.job_title ? t("atCompany") : ""}
                 <strong>{person.company}</strong>
               </span>
             )}
@@ -62,32 +84,32 @@ export default function PersonHeader({
               <span
                 className="row"
                 style={{ gap: 4 }}
-                title={`Their time zone: ${person.timezone}`}
+                title={t.i("theirTimezone", { zone: person.timezone ?? "" })}
               >
-                <Clock3 size={13} /> {localTime} their time
+                <Clock3 size={13} /> {t.i("theirTime", { time: localTime })}
               </span>
             )}
           </div>
           <div className="row wrap" style={{ marginTop: 10, gap: 8 }}>
             <StatusBadge status={person.status} title={cadence} />
             <CircleChip circle={person.circle} />
-            {person.tags.map((t) => (
-              <span key={t} className="chip">
-                {t}
+            {person.tags.map((tag) => (
+              <span key={tag} className="chip">
+                {tag}
               </span>
             ))}
           </div>
           <div className="small muted" style={{ marginTop: 6 }}>
             {cadence}
-            {dueText(person)}
+            {dueText(t, person, locale)}
           </div>
         </div>
         <div className="person-actions">
           <button className="btn btn-blue" onClick={onLog}>
-            <Phone size={15} /> Log interaction
+            <Phone size={15} /> {t("logInteraction")}
           </button>
           <button className="btn" onClick={onEdit}>
-            <Pencil size={15} /> Edit
+            <Pencil size={15} /> {t("edit")}
           </button>
         </div>
       </div>
@@ -95,8 +117,9 @@ export default function PersonHeader({
       {person.status === "snoozed" && person.snoozed_until && (
         <div className="snooze-banner">
           <Clock3 size={15} />
-          Snoozed until {fmtDate(person.snoozed_until)} — they won’t nudge you
-          on Today until then.
+          {t.i("snoozeBanner", {
+            date: fmtDate(person.snoozed_until, locale),
+          })}
         </div>
       )}
 
@@ -106,8 +129,10 @@ export default function PersonHeader({
           <div>
             <div className="text">{person.latest_news.text}</div>
             <div className="when">
-              Latest news · {fmtDate(person.latest_news.date)} ·{" "}
-              {relativeDays(person.latest_news.date)}
+              {t.i("latestNewsWhen", {
+                date: fmtDate(person.latest_news.date, locale),
+                relative: relativeDays(t, person.latest_news.date),
+              })}
             </div>
           </div>
         </div>

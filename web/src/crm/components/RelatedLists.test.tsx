@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { ContactList, DealList } from "./RelatedLists";
-import { contact, deal } from "../test/helpers";
+import { contact, deal, renderCrm } from "../test/helpers";
 
 const show = (ui: React.ReactElement) =>
-  render(<MemoryRouter>{ui}</MemoryRouter>);
+  renderCrm(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe("DealList", () => {
   it("says so when there are none", () => {
     show(<DealList deals={[]} />);
-    expect(screen.getByText("No deals yet.")).toBeInTheDocument();
+    expect(screen.getByText("No deals yet")).toBeInTheDocument();
   });
 
   it("links each deal and shows its value and stage", () => {
@@ -26,7 +26,7 @@ describe("DealList", () => {
 describe("ContactList", () => {
   it("says so when there are none", () => {
     show(<ContactList contacts={[]} />);
-    expect(screen.getByText("No contacts yet.")).toBeInTheDocument();
+    expect(screen.getByText("No contacts yet")).toBeInTheDocument();
   });
 
   it("links each contact and shows its status", () => {
@@ -34,7 +34,7 @@ describe("ContactList", () => {
     expect(
       screen.getByRole("link", { name: "Dana Whitfield" }),
     ).toHaveAttribute("href", "/contacts/3");
-    expect(screen.getByText("customer")).toBeInTheDocument();
+    expect(screen.getByText("Customer")).toBeInTheDocument();
   });
 
   it("falls back to the email when there is no job title, and to nothing when there is neither", () => {

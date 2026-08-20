@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { arrayContaining, containing } from "../test/helpers";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import DatabaseView from "./DatabaseView";
@@ -68,7 +69,7 @@ const dbData = (): DatabaseData => ({
 
 function renderDb() {
   vi.mocked(api.getDatabase).mockResolvedValue(dbData());
-  return render(
+  return renderSpace(
     <MemoryRouter>
       <DatabaseView databaseId="db1" />
     </MemoryRouter>,
@@ -77,7 +78,7 @@ function renderDb() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  localStorage.clear();
+  if (typeof localStorage !== "undefined") localStorage.clear();
 });
 
 describe("view switcher", () => {
@@ -131,7 +132,7 @@ describe("board", () => {
 
   it("moving a card calls the API with the new option", () => {
     const onMove = vi.fn();
-    render(
+    renderSpace(
       <MemoryRouter>
         <BoardView
           rows={dbData().rows}
@@ -244,7 +245,7 @@ describe("filters and sort in the toolbar", () => {
 describe("ListView", () => {
   it("shows the title and up to two property previews", () => {
     const data = dbData();
-    render(
+    renderSpace(
       <MemoryRouter>
         <ListView rows={data.rows} properties={data.properties} />
       </MemoryRouter>,
@@ -255,7 +256,7 @@ describe("ListView", () => {
   });
 
   it("shows an empty message when no rows match", () => {
-    render(
+    renderSpace(
       <MemoryRouter>
         <ListView rows={[]} properties={[]} />
       </MemoryRouter>,

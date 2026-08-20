@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowUpRight, Plus, Trash2 } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import type {
   DatabaseData,
   DbRow,
@@ -10,7 +11,7 @@ import type {
 } from "../api";
 import Cell from "./cells";
 import type { DbActions } from "./DatabaseView";
-import { PROPERTY_TYPE_LABELS } from "./propertyTypes";
+import { propertyTypeLabels } from "./propertyTypes";
 
 interface Props {
   data: DatabaseData;
@@ -23,20 +24,25 @@ interface Props {
 function AddPropertyPopover({
   onAdd,
   onClose,
+  t,
+  ts,
 }: {
   onAdd: (name: string, type: PropertyType) => void;
   onClose: () => void;
+  t: ReturnType<typeof useT<"space">>;
+  ts: ReturnType<typeof useT<"shared">>;
 }) {
   const [name, setName] = useState("");
   const [type, setType] = useState<PropertyType>("text");
   const inputRef = useRef<HTMLInputElement>(null);
+  const labels = propertyTypeLabels(t);
   useEffect(() => inputRef.current?.focus(), []);
   return (
-    <div className="popover" role="dialog" aria-label="New property">
+    <div className="popover" role="dialog" aria-label={t("newProperty")}>
       <input
         ref={inputRef}
         className="popover-input"
-        placeholder="Property name"
+        placeholder={t("propertyName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
@@ -47,15 +53,15 @@ function AddPropertyPopover({
           if (e.key === "Escape") onClose();
         }}
       />
-      <div className="popover-label">Type</div>
+      <div className="popover-label">{ts("type")}</div>
       <div className="type-list">
-        {(Object.keys(PROPERTY_TYPE_LABELS) as PropertyType[]).map((t) => (
+        {(Object.keys(labels) as PropertyType[]).map((propertyType) => (
           <button
-            key={t}
-            className={`type-row${t === type ? " selected" : ""}`}
-            onClick={() => setType(t)}
+            key={propertyType}
+            className={`type-row${propertyType === type ? " selected" : ""}`}
+            onClick={() => setType(propertyType)}
           >
-            {PROPERTY_TYPE_LABELS[t]}
+            {labels[propertyType]}
           </button>
         ))}
       </div>
@@ -67,7 +73,7 @@ function AddPropertyPopover({
           onClose();
         }}
       >
-        Create property
+        {t("createProperty")}
       </button>
     </div>
   );
@@ -77,13 +83,16 @@ function ColumnMenu({
   property,
   actions,
   onClose,
+  t,
 }: {
   property: Property;
   actions: DbActions;
   onClose: () => void;
+  t: ReturnType<typeof useT<"space">>;
 }) {
   const [name, setName] = useState(property.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  const labels = propertyTypeLabels(t);
   useEffect(() => inputRef.current?.select(), []);
   const commit = () => {
     if (name.trim() && name !== property.name)
@@ -98,7 +107,7 @@ function ColumnMenu({
       <input
         ref={inputRef}
         className="popover-input"
-        aria-label="Property name"
+        aria-label={t("propertyName")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={commit}
@@ -111,7 +120,7 @@ function ColumnMenu({
         }}
       />
       <div className="popover-label">
-        {PROPERTY_TYPE_LABELS[property.type]} · type is fixed
+        {t.i("propertyTypeFixed", { type: labels[property.type] })}
       </div>
       <button
         className="menu-item danger"
@@ -120,24 +129,27 @@ function ColumnMenu({
           void actions.deleteProperty(property.id);
         }}
       >
-        Delete property
+        {t("deleteProperty")}
       </button>
     </div>
   );
 }
 
 export default function TableView({ data, actions, rows }: Props) {
+  const t = useT("space");
+  const ts = useT("shared");
   const navigate = useNavigate();
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const visibleRows = rows ?? data.rows;
+  const rowTitle = (title: string) => title || t("untitled");
 
   return (
     <div className="table-scroll">
       <table className="db-table">
         <thead>
           <tr>
-            <th className="col-title">Name</th>
+            <th className="col-title">{ts("name")}</th>
             {data.properties.map((p) => (
               <th key={p.id}>
                 <div className="th-wrap">
@@ -158,6 +170,7 @@ export default function TableView({ data, actions, rows }: Props) {
                         property={p}
                         actions={actions}
                         onClose={() => setMenuFor(null)}
+                        t={t}
                       />
                     </>
                   )}
@@ -168,7 +181,7 @@ export default function TableView({ data, actions, rows }: Props) {
               <div className="th-wrap">
                 <button
                   className="th-btn add-prop"
-                  aria-label="Add property"
+                  aria-label={t("addProperty")}
                   onClick={() => setAdding((v) => !v)}
                 >
                   <Plus size={15} />
@@ -185,6 +198,8 @@ export default function TableView({ data, actions, rows }: Props) {
                         void actions.addProperty(name, type)
                       }
                       onClose={() => setAdding(false)}
+                      t={t}
+                      ts={ts}
                     />
                   </>
                 )}
@@ -199,9 +214,11 @@ export default function TableView({ data, actions, rows }: Props) {
                 <div className="title-cell">
                   <input
                     className="cell-input cell-title"
-                    aria-label={`Title for row ${row.title || "Untitled"}`}
+                    aria-label={t.i("titleForRow", {
+                      title: rowTitle(row.title),
+                    })}
                     value={row.title}
-                    placeholder="Untitled"
+                    placeholder={t("untitled")}
                     onChange={(e) =>
                       actions.setRowTitle(row.id, e.target.value)
                     }
@@ -209,15 +226,19 @@ export default function TableView({ data, actions, rows }: Props) {
                   <span className="title-actions">
                     <button
                       className="row-open"
-                      aria-label={`Open ${row.title || "Untitled"}`}
+                      aria-label={t.i("openRow", {
+                        title: rowTitle(row.title),
+                      })}
                       onClick={() => void navigate(`/p/${row.id}`)}
                     >
                       <ArrowUpRight size={13} />
-                      open
+                      {t("openRowLink")}
                     </button>
                     <button
                       className="row-delete"
-                      aria-label={`Delete row ${row.title || "Untitled"}`}
+                      aria-label={t.i("deleteRowAria", {
+                        title: rowTitle(row.title),
+                      })}
                       onClick={() => void actions.deleteRow(row.id)}
                     >
                       <Trash2 size={13} />
@@ -230,7 +251,7 @@ export default function TableView({ data, actions, rows }: Props) {
                   <Cell
                     property={p}
                     value={row.values[p.id]}
-                    rowLabel={row.title || "Untitled"}
+                    rowLabel={rowTitle(row.title)}
                     onChange={(v) => actions.setValue(row.id, p.id, v)}
                     onCreateOption={(name) => actions.createOption(p.id, name)}
                   />
@@ -243,7 +264,7 @@ export default function TableView({ data, actions, rows }: Props) {
             <td colSpan={data.properties.length + 2}>
               <button className="new-row" onClick={() => void actions.addRow()}>
                 <Plus size={14} />
-                New row
+                {t("addRow")}
               </button>
             </td>
           </tr>

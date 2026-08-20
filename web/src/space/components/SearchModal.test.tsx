@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import SearchModal from "./SearchModal";
@@ -29,7 +30,7 @@ const results: SearchResult[] = [
 ];
 
 function renderModal(onClose = vi.fn()) {
-  render(
+  renderSpace(
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<SearchModal onClose={onClose} />} />

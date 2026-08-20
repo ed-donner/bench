@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { CalendarDays, Phone } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import type { InteractionType, PersonComputed } from "../types";
 import { INTERACTION_TYPES } from "../types";
 import { api } from "../api";
 import { Modal } from "./Modal";
 import { Field, FieldGroup } from "./Field";
 import InteractionIcon from "./InteractionIcon";
-import { todayISO, INTERACTION_META } from "../format";
+import { todayISO } from "../format";
+import { interactionMeta } from "../i18n";
 import { useToast } from "../store";
 
 export function LogInteractionModal({
@@ -18,6 +20,7 @@ export function LogInteractionModal({
   onClose: () => void;
   onSaved?: () => void;
 }) {
+  const t = useT("rolodex");
   const [type, setType] = useState<InteractionType>("call");
   const [date, setDate] = useState(todayISO());
   const [notes, setNotes] = useState("");
@@ -32,7 +35,10 @@ export function LogInteractionModal({
     try {
       await api.addInteraction(person.id, type, date, notes.trim());
       toast(
-        `Logged a ${INTERACTION_META[type].label.toLowerCase()} with ${firstName} — the clock is reset`,
+        t.i("loggedInteraction", {
+          type: interactionMeta(t, type).label.toLowerCase(),
+          name: firstName,
+        }),
       );
       onSaved?.();
       onClose();
@@ -45,43 +51,43 @@ export function LogInteractionModal({
 
   return (
     <Modal
-      title={`Log an interaction with ${firstName}`}
+      title={t.i("logWith", { name: firstName })}
       icon={<Phone size={17} className="modal-icon blue" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={saving || !date}
           >
-            {saving ? "Saving…" : "Save interaction"}
+            {saving ? t("saving") : t("saveInteraction")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <FieldGroup label="Type">
+        <FieldGroup label={t("interactionType")}>
           <div className="row wrap" style={{ gap: 6 }}>
-            {INTERACTION_TYPES.map((t) => (
+            {INTERACTION_TYPES.map((interactionType) => (
               <button
-                key={t}
-                className={`btn btn-sm${type === t ? " btn-blue" : ""}`}
-                aria-pressed={type === t}
-                onClick={() => setType(t)}
+                key={interactionType}
+                className={`btn btn-sm${type === interactionType ? " btn-blue" : ""}`}
+                aria-pressed={type === interactionType}
+                onClick={() => setType(interactionType)}
                 type="button"
               >
-                <InteractionIcon type={t} />
-                {INTERACTION_META[t].label}
+                <InteractionIcon type={interactionType} />
+                {interactionMeta(t, interactionType).label}
               </button>
             ))}
           </div>
         </FieldGroup>
-        <Field label="Date">
+        <Field label={t("interactionDate")}>
           <div className="row">
             <CalendarDays size={15} className="muted-icon" />
             <input
@@ -92,11 +98,11 @@ export function LogInteractionModal({
             />
           </div>
         </Field>
-        <Field label="What did you talk about?" wide>
+        <Field label={t("talkAbout")} wide>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes on the conversation — the little things worth remembering"
+            placeholder={t("talkPlaceholder")}
           />
         </Field>
       </div>

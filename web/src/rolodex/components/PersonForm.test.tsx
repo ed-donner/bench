@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { PersonForm } from "./PersonForm";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
-import { person } from "../test/helpers";
+import { person, withLocale } from "../test/helpers";
 
 vi.mock("../api");
 
@@ -14,13 +14,15 @@ const toast = vi.fn();
 function renderForm(props: Partial<Parameters<typeof PersonForm>[0]> = {}) {
   const onClose = vi.fn();
   render(
-    <StoreContext.Provider
-      value={{ people: [], tags: [], loaded: true, refresh }}
-    >
-      <ToastContext.Provider value={toast}>
-        <PersonForm onClose={onClose} {...props} />
-      </ToastContext.Provider>
-    </StoreContext.Provider>,
+    withLocale(
+      <StoreContext.Provider
+        value={{ people: [], tags: [], loaded: true, refresh }}
+      >
+        <ToastContext.Provider value={toast}>
+          <PersonForm onClose={onClose} {...props} />
+        </ToastContext.Provider>
+      </StoreContext.Provider>,
+    ),
   );
   return { onClose };
 }

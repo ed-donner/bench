@@ -1,53 +1,59 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { History } from "lucide-react";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api } from "../api";
 import type { TimelineEntry } from "../types";
 import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/Modal";
 import InteractionIcon from "../components/InteractionIcon";
-import {
-  errorMessage,
-  fmtDate,
-  relativeDays,
-  INTERACTION_META,
-} from "../format";
+import { errorMessage, fmtDate } from "../format";
+import { interactionMeta, relativeDays, type RolodexT } from "../i18n";
 import { useStore } from "../store";
 
-const KIND_OPTIONS = [
-  { value: "all", label: "All activity" },
-  { value: "interaction_call", label: "Calls" },
-  { value: "interaction_message", label: "Messages" },
-  { value: "interaction_email", label: "Emails" },
-  { value: "interaction_met", label: "Meet-ups" },
-  { value: "interaction_other", label: "Other contact" },
-  { value: "news", label: "News" },
-  { value: "reminder_done", label: "Completed reminders" },
-];
+function kindOptions(t: RolodexT) {
+  return [
+    { value: "all", label: t("timelineFilterAll") },
+    { value: "interaction_call", label: t("timelineFilterCalls") },
+    { value: "interaction_message", label: t("timelineFilterMessages") },
+    { value: "interaction_email", label: t("timelineFilterEmails") },
+    { value: "interaction_met", label: t("timelineFilterMeetings") },
+    { value: "interaction_other", label: t("timelineFilterOther") },
+    { value: "news", label: t("timelineFilterNews") },
+    { value: "reminder_done", label: t("timelineFilterReminders") },
+  ];
+}
 
 function entryIcon(e: TimelineEntry): React.ReactNode {
   if (e.kind === "interaction")
     return <InteractionIcon type={e.interaction_type} />;
-  if (e.kind === "news") return <History size={15} />;
   return <History size={15} />;
 }
 
-const entryCount = (n: number) =>
-  `${n} ${n === 1 ? "entry" : "entries"} across everyone`;
+function entryCount(t: RolodexT, n: number) {
+  const count =
+    n === 1
+      ? t.i("timelineEntryCount", { n })
+      : t.i("timelineEntryCountPlural", { n });
+  return `${count} ${t("timelineAcrossEveryone")}`;
+}
 
-function entryLabel(e: TimelineEntry): string {
+function entryLabel(t: RolodexT, e: TimelineEntry): string {
   if (e.kind === "interaction" && e.interaction_type)
-    return INTERACTION_META[e.interaction_type].verb;
-  if (e.kind === "news") return "News recorded";
-  return "Reminder completed";
+    return interactionMeta(t, e.interaction_type).verb;
+  if (e.kind === "news") return t("entryNewsLabel");
+  return t("entryReminderLabel");
 }
 
 export default function TimelinePage() {
+  const t = useT("rolodex");
+  const { locale } = useLocale();
   const { people, loaded } = useStore();
   const [personId, setPersonId] = useState<number | "">("");
   const [kind, setKind] = useState("all");
   const [entries, setEntries] = useState<TimelineEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const filters = kindOptions(t);
 
   useEffect(() => {
     api
@@ -75,24 +81,24 @@ export default function TimelinePage() {
             >
               <History size={19} />
             </span>
-            Timeline
+            {t("timelineTitle")}
           </h1>
           <p className="page-desc">
             {entries
-              ? `${entryCount(entries.length)}, newest first`
-              : "Loading…"}
+              ? t.i("timelineDesc", { count: entryCount(t, entries.length) })
+              : t("loading")}
           </p>
         </div>
         <div className="page-actions">
           <select
             className="filter-select"
-            aria-label="Person"
+            aria-label={t("personColumn")}
             value={personId}
             onChange={(e) =>
               setPersonId(e.target.value === "" ? "" : Number(e.target.value))
             }
           >
-            <option value="">Everyone</option>
+            <option value="">{t("everyone")}</option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -101,11 +107,11 @@ export default function TimelinePage() {
           </select>
           <select
             className="filter-select"
-            aria-label="Activity"
+            aria-label={t("interactions")}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            {KIND_OPTIONS.map((k) => (
+            {filters.map((k) => (
               <option key={k.value} value={k.value}>
                 {k.label}
               </option>
@@ -116,12 +122,14 @@ export default function TimelinePage() {
 
       <div className="card">
         {error && <div className="empty">{error}</div>}
-        {!error && entries === null && <div className="empty">Loading…</div>}
+        {!error && entries === null && (
+          <div className="empty">{t("loading")}</div>
+        )}
         {!error && entries !== null && entries.length === 0 && (
           <EmptyState icon={<History />}>
             {loaded && people.length === 0
-              ? "Nothing here yet — add people and log some interactions."
-              : "Nothing matches these filters."}
+              ? t("timelineEmptyNoPeople")
+              : t("timelineEmptyNoMatch")}
           </EmptyState>
         )}
         {entries && entries.length > 0 && (
@@ -148,9 +156,9 @@ export default function TimelinePage() {
                       >
                         {e.person_name}
                       </Link>
-                      <span className="feed-type">{entryLabel(e)}</span>
+                      <span className="feed-type">{entryLabel(t, e)}</span>
                       <span className="feed-date">
-                        {fmtDate(e.date)} · {relativeDays(e.date)}
+                        {fmtDate(e.date, locale)} · {relativeDays(t, e.date)}
                       </span>
                     </div>
                     {e.text && <div className="feed-text">{e.text}</div>}

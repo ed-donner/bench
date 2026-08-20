@@ -1,10 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import Dashboard from "./Dashboard";
 import { api } from "../api";
-import { activity, contact, deal, org, routes } from "../test/helpers";
+import {
+  activity,
+  contact,
+  deal,
+  org,
+  routes,
+  renderCrm,
+} from "../test/helpers";
 
 vi.mock("../api", () => ({ api: { get: vi.fn(), patch: vi.fn() } }));
 
@@ -95,7 +102,7 @@ afterEach(() => {
 });
 
 const show = () =>
-  render(
+  renderCrm(
     <MemoryRouter>
       <Dashboard />
     </MemoryRouter>,
@@ -150,7 +157,7 @@ describe("Dashboard", () => {
   it("lists recent activity, linking each item to the contact or deal it is about", async () => {
     show();
     await screen.findByTestId("dash-total");
-    const feed = card("Recent activity");
+    const feed = card("Recent activities");
     const item = (text: string): HTMLElement =>
       within(feed).getByText(text).closest(".feed-item")!;
 

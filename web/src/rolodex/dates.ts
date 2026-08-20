@@ -3,7 +3,7 @@
  * back (server/src/rolodex/importantDates.ts); these are here because a person's page resolves
  * their dates locally, without a round trip.
  */
-import type { ImportantDate, ImportantDateType } from "./types";
+import type { ImportantDate } from "./types";
 
 export interface Occurrence {
   date: string;
@@ -64,21 +64,4 @@ export function currentAge(d: AnnualDate, today: string): number | null {
     new Date(year, d.month - 1, effectiveDay(d.month, d.day, year)),
   );
   return (thisYear <= today ? year : year - 1) - d.year;
-}
-
-const DATE_TYPE_LABEL: Record<ImportantDateType, string> = {
-  birthday: "Birthday",
-  anniversary: "Anniversary",
-  work_anniversary: "Work anniversary",
-  child_birthday: "Child's birthday",
-  other: "Important date",
-};
-
-export function dateTypeLabel(
-  type: ImportantDateType,
-  label: string | null,
-): string {
-  if (type === "other" && label) return label;
-  if (type === "child_birthday" && label) return `${label}'s birthday`;
-  return DATE_TYPE_LABEL[type];
 }

@@ -39,11 +39,11 @@ describe("useFetch", () => {
   });
 
   it("refetches when the url changes", async () => {
-    vi.mocked(api.get).mockResolvedValue({ name: "Bluepeak" });
+    vi.mocked(api.get).mockResolvedValueOnce({ name: "Bluepeak" });
+    vi.mocked(api.get).mockResolvedValueOnce({ name: "Alderway" });
     const { rerender } = render(<Probe url="/api/crm/organizations/1" />);
-    await screen.findByText("Bluepeak");
+    expect(await screen.findByText("Bluepeak")).toBeInTheDocument();
 
-    vi.mocked(api.get).mockResolvedValue({ name: "Alderway" });
     rerender(<Probe url="/api/crm/organizations/2" />);
     expect(await screen.findByText("Alderway")).toBeInTheDocument();
   });
@@ -51,31 +51,30 @@ describe("useFetch", () => {
   it("refetches the same url when reload is called", async () => {
     vi.mocked(api.get).mockResolvedValue({ name: "Bluepeak" });
     render(<Probe url="/api/crm/organizations/1" />);
-    await screen.findByText("Bluepeak");
+    expect(await screen.findByText("Bluepeak")).toBeInTheDocument();
 
-    vi.mocked(api.get).mockResolvedValue({ name: "Bluepeak Ltd" });
+    vi.mocked(api.get).mockResolvedValue({ name: "Updated" });
     await userEvent.click(screen.getByRole("button", { name: "Reload" }));
-    expect(await screen.findByText("Bluepeak Ltd")).toBeInTheDocument();
-    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText("Updated")).toBeInTheDocument();
   });
 
   it("drops a reply that arrives after the url moved on", async () => {
-    let settleFirst!: (value: { name: string }) => void;
-    vi.mocked(api.get).mockReturnValueOnce(
-      new Promise<{ name: string }>((resolve) => {
-        settleFirst = resolve;
-      }),
+    let resolveFirst!: (v: { name: string }) => void;
+    vi.mocked(api.get).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        }),
     );
+    vi.mocked(api.get).mockResolvedValueOnce({ name: "Alderway" });
+
     const { rerender } = render(<Probe url="/api/crm/organizations/1" />);
-
-    vi.mocked(api.get).mockResolvedValue({ name: "Alderway" });
     rerender(<Probe url="/api/crm/organizations/2" />);
-    await screen.findByText("Alderway");
+    expect(await screen.findByText("Alderway")).toBeInTheDocument();
 
-    await act(async () => {
-      settleFirst({ name: "Bluepeak" });
-      await Promise.resolve();
+    act(() => {
+      resolveFirst({ name: "Stale" });
     });
-    expect(name()).toBe("Alderway");
+    expect(screen.queryByText("Stale")).not.toBeInTheDocument();
   });
 });

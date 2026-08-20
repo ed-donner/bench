@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { api } from "./api";
 
 function mockFetch(response: Partial<Response> = {}) {
@@ -18,6 +18,10 @@ const callOf = (mock: ReturnType<typeof mockFetch>, i = 0) =>
 
 afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+beforeEach(() => {
+  document.documentElement.lang = "en";
 });
 
 describe("the rolodex api client", () => {

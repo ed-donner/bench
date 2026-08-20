@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Unit } from "./Unit";
 import { clonePatch, PATCHES } from "../patches";
 import { UNIT_PARAMS } from "../params";
 import { DRUM_LANES, STEPS, type UnitId } from "../types";
+import { renderGroove } from "../test/render";
 
 type UnitProps = Parameters<typeof Unit>[0];
 
@@ -21,7 +22,7 @@ function renderUnit(id: UnitId, overrides: Partial<UnitProps> = {}) {
     onAudition: vi.fn(),
     ...overrides,
   };
-  const { container, rerender } = render(<Unit {...props} />);
+  const { container, rerender } = renderGroove(<Unit {...props} />);
   const show = (next: Partial<UnitProps>) =>
     rerender(<Unit {...props} {...next} />);
   return { ...props, container, show };
@@ -39,7 +40,7 @@ describe("Unit", () => {
     expect(container.querySelector(".note-grid")).not.toBeInTheDocument();
 
     const display = container.querySelector(".unit-display")!;
-    expect(display).toHaveTextContent("HITS");
+    expect(display).toHaveTextContent("Hits");
     expect(display).toHaveTextContent("2");
   });
 
@@ -67,12 +68,12 @@ describe("Unit", () => {
 
   it("names the unit for the accessibility tree", () => {
     renderUnit("bass");
-    expect(screen.getByRole("region", { name: "BASS" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Bass" })).toBeInTheDocument();
   });
 
   it("mutes on request and shows it", async () => {
     const { onMute, container, show } = renderUnit("bass");
-    await userEvent.click(screen.getByRole("button", { name: "MUTE" }));
+    await userEvent.click(screen.getByRole("button", { name: "Mute" }));
     expect(onMute).toHaveBeenCalledOnce();
 
     expect(container.querySelector(".unit")).not.toHaveClass("muted");

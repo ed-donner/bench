@@ -12,6 +12,7 @@ import {
   importantDate,
   person,
   reminder,
+  withLocale,
 } from "../test/helpers";
 import type { PersonDetail as PersonDetailData } from "../api";
 
@@ -22,17 +23,19 @@ const refresh = vi.fn().mockResolvedValue(undefined);
 function renderPerson(data: PersonDetailData = detail()) {
   vi.mocked(api.getPerson).mockResolvedValue(data);
   return render(
-    <MemoryRouter initialEntries={["/people/1"]}>
-      <StoreContext.Provider
-        value={{ people: [data.person], tags: [], loaded: true, refresh }}
-      >
-        <ToastContext.Provider value={vi.fn()}>
-          <Routes>
-            <Route path="/people/:id" element={<PersonDetail />} />
-          </Routes>
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter initialEntries={["/people/1"]}>
+        <StoreContext.Provider
+          value={{ people: [data.person], tags: [], loaded: true, refresh }}
+        >
+          <ToastContext.Provider value={vi.fn()}>
+            <Routes>
+              <Route path="/people/:id" element={<PersonDetail />} />
+            </Routes>
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 
@@ -186,17 +189,19 @@ describe("a person's page", () => {
   it("says so when the person cannot be loaded", async () => {
     vi.mocked(api.getPerson).mockRejectedValue(new Error("not found"));
     render(
-      <MemoryRouter initialEntries={["/people/99"]}>
-        <StoreContext.Provider
-          value={{ people: [], tags: [], loaded: true, refresh }}
-        >
-          <ToastContext.Provider value={vi.fn()}>
-            <Routes>
-              <Route path="/people/:id" element={<PersonDetail />} />
-            </Routes>
-          </ToastContext.Provider>
-        </StoreContext.Provider>
-      </MemoryRouter>,
+      withLocale(
+        <MemoryRouter initialEntries={["/people/99"]}>
+          <StoreContext.Provider
+            value={{ people: [], tags: [], loaded: true, refresh }}
+          >
+            <ToastContext.Provider value={vi.fn()}>
+              <Routes>
+                <Route path="/people/:id" element={<PersonDetail />} />
+              </Routes>
+            </ToastContext.Provider>
+          </StoreContext.Provider>
+        </MemoryRouter>,
+      ),
     );
     expect(await screen.findByText(/not found/)).toBeInTheDocument();
   });

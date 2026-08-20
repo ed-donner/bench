@@ -6,10 +6,12 @@ import {
   StickyNote,
   Trash2,
 } from "lucide-react";
+import { useLocale, useT } from "../../../shared/useLocale";
 import { api, type PersonDetail } from "../../api";
 import { EmptyState } from "../Modal";
 import InteractionIcon from "../InteractionIcon";
-import { INTERACTION_META, fmtDate, relativeDays } from "../../format";
+import { fmtDate } from "../../format";
+import { interactionMeta, relativeDays, type RolodexT } from "../../i18n";
 
 interface TimelineItem {
   key: string;
@@ -21,15 +23,15 @@ interface TimelineItem {
   interactionId?: number;
 }
 
-/** Everything logged about one person, newest first: interactions, news and finished reminders. */
-function personTimeline(detail: PersonDetail): TimelineItem[] {
+/** Everything logged about one person, newest first. */
+function personTimeline(t: RolodexT, detail: PersonDetail): TimelineItem[] {
   const items: TimelineItem[] = [
     ...detail.interactions.map((i) => ({
       key: `i-${i.id}`,
       kind: "interaction" as const,
       date: i.date,
       icon: <InteractionIcon type={i.type} />,
-      label: INTERACTION_META[i.type].verb,
+      label: interactionMeta(t, i.type).verb,
       text: i.notes ?? "",
       interactionId: i.id,
     })),
@@ -38,7 +40,7 @@ function personTimeline(detail: PersonDetail): TimelineItem[] {
       kind: "news" as const,
       date: n.date,
       icon: <Megaphone size={15} />,
-      label: "News",
+      label: t("news"),
       text: n.text,
     })),
     ...detail.reminders
@@ -48,14 +50,13 @@ function personTimeline(detail: PersonDetail): TimelineItem[] {
         kind: "reminder_done" as const,
         date: r.done_at?.slice(0, 10) ?? r.due_date,
         icon: <BadgeCheck size={15} />,
-        label: "Reminder done",
+        label: t("reminderDoneLabel"),
         text: r.text,
       })),
   ];
   return items.sort((a, b) => b.date.localeCompare(a.date));
 }
 
-/** The main column of a person's page: their story, then what you know, then what is new. */
 export default function PersonMain({
   detail,
   after,
@@ -65,24 +66,24 @@ export default function PersonMain({
   after: () => Promise<void>;
   onAdd: (what: "fact" | "news") => void;
 }) {
+  const t = useT("rolodex");
+  const { locale } = useLocale();
   const firstName = detail.person.name.split(" ")[0];
-  const timeline = personTimeline(detail);
+  const timeline = personTimeline(t, detail);
 
   return (
     <div className="person-col">
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <StickyNote size={16} /> Timeline
+            <StickyNote size={16} /> {t("timelineTitle")}
           </h2>
           <span className="card-sub">
-            everything logged with {firstName}, newest first
+            {t.i("timelineSubtitle", { name: firstName })}
           </span>
         </div>
         {timeline.length === 0 ? (
-          <EmptyState icon={<StickyNote />}>
-            Nothing logged yet — log an interaction to start their story.
-          </EmptyState>
+          <EmptyState icon={<StickyNote />}>{t("nothingLogged")}</EmptyState>
         ) : (
           <div className="feed">
             {timeline.map((item) => (
@@ -92,7 +93,8 @@ export default function PersonMain({
                   <div className="feed-top">
                     <span className="feed-type">{item.label}</span>
                     <span className="feed-date">
-                      {fmtDate(item.date)} · {relativeDays(item.date)}
+                      {fmtDate(item.date, locale)} ·{" "}
+                      {relativeDays(t, item.date)}
                     </span>
                   </div>
                   {item.text && <div className="feed-text">{item.text}</div>}
@@ -100,8 +102,8 @@ export default function PersonMain({
                 {item.interactionId != null && (
                   <button
                     className="icon-btn danger"
-                    title="Delete interaction"
-                    aria-label="Delete interaction"
+                    title={t("deleteInteraction")}
+                    aria-label={t("deleteInteraction")}
                     onClick={() => {
                       void api
                         .deleteInteraction(item.interactionId!)
@@ -120,17 +122,14 @@ export default function PersonMain({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Sparkles size={16} /> Facts worth remembering
+            <Sparkles size={16} /> {t("factsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("fact")}>
-            <Plus size={13} /> Add fact
+            <Plus size={13} /> {t("addFact")}
           </button>
         </div>
         {detail.facts.length === 0 ? (
-          <EmptyState icon={<Sparkles />}>
-            No facts yet — small, durable things: “allergic to shellfish”,
-            “supports Arsenal”.
-          </EmptyState>
+          <EmptyState icon={<Sparkles />}>{t("noFacts")}</EmptyState>
         ) : (
           <div className="card-body">
             {detail.facts.map((f) => (
@@ -155,16 +154,14 @@ export default function PersonMain({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Megaphone size={16} /> News
+            <Megaphone size={16} /> {t("news")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("news")}>
-            <Plus size={13} /> Add news
+            <Plus size={13} /> {t("addNews")}
           </button>
         </div>
         {detail.news.length === 0 ? (
-          <EmptyState icon={<Megaphone />}>
-            No news recorded — the latest shows at the top of their page.
-          </EmptyState>
+          <EmptyState icon={<Megaphone />}>{t("noNews")}</EmptyState>
         ) : (
           <div className="feed">
             {detail.news.map((n) => (
@@ -174,11 +171,11 @@ export default function PersonMain({
                 </div>
                 <div className="feed-body">
                   <div className="feed-text strong">{n.text}</div>
-                  <div className="feed-date">{fmtDate(n.date)}</div>
+                  <div className="feed-date">{fmtDate(n.date, locale)}</div>
                 </div>
                 <button
                   className="icon-btn danger"
-                  aria-label="Delete news"
+                  aria-label={t("deleteNews")}
                   onClick={() => {
                     void api.deleteNews(n.id).then(after);
                   }}

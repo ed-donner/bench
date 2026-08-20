@@ -6,7 +6,7 @@ import TimelinePage from "./TimelinePage";
 import CalendarPage from "./CalendarPage";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
-import { person, timelineEntry, upcoming } from "../test/helpers";
+import { person, timelineEntry, upcoming, withLocale } from "../test/helpers";
 
 vi.mock("../api");
 
@@ -14,13 +14,15 @@ const maya = person({ id: 1, name: "Maya Chen" });
 
 function renderWithStore(ui: React.ReactElement) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
-      >
-        <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
+        >
+          <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 
@@ -51,7 +53,10 @@ describe("Timeline", () => {
     await userEvent.selectOptions(screen.getByLabelText("Person"), "1");
     expect(api.timeline).toHaveBeenLastCalledWith(1, null);
 
-    await userEvent.selectOptions(screen.getByLabelText("Activity"), "news");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Interactions"),
+      "news",
+    );
     expect(api.timeline).toHaveBeenLastCalledWith(1, "news");
   });
 

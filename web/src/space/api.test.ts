@@ -4,6 +4,7 @@ import { api } from "./api";
 const fetchMock = vi.fn();
 
 beforeEach(() => {
+  document.documentElement.lang = "en";
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
 });
@@ -23,7 +24,10 @@ describe("api client", () => {
     expect(tree).toEqual([{ id: "a" }]);
     expect(fetchMock).toHaveBeenCalledWith("/api/space/tree", {
       method: "GET",
-      headers: undefined,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Bench-Locale": "en",
+      },
       body: undefined,
     });
   });
@@ -34,7 +38,10 @@ describe("api client", () => {
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/space/pages");
     expect(init.method).toBe("POST");
-    expect(init.headers).toEqual({ "Content-Type": "application/json" });
+    expect(init.headers).toEqual({
+      "Content-Type": "application/json",
+      "X-Bench-Locale": "en",
+    });
     expect(JSON.parse(init.body as string)).toEqual({
       title: "X",
       parentId: null,

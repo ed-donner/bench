@@ -16,6 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLocale, useT } from "../../shared/useLocale";
 import { FunnelRow, MonthlyRow, OrgPipeline, WinLoss } from "../types";
 import { formatMoney } from "../format";
 
@@ -42,18 +43,19 @@ const shortMoney = (v: number) => {
   return `$${amount}`;
 };
 
-const REVENUE_LABEL: Record<string, string> = {
-  actual: "Won",
-  expected: "Expected",
-  count: "Deals closing",
-};
-
 /**
  * Money as stacked bars, deal volume as a line on its own axis. Won and expected stack rather than
  * sit side by side because a month is nearly always one or the other, which keeps the bars wide
  * enough to read across a twelve-month span.
  */
 export function RevenueChart({ data }: { data: MonthlyRow[] }) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
+  const revenueLabel: Record<string, string> = {
+    actual: tc("chartWon"),
+    expected: tc("chartExpected"),
+    count: tc("chartDealsClosing"),
+  };
   const firstFuture = data.find((m) => m.future);
   return (
     <ResponsiveContainer width="100%" height={240}>
@@ -90,12 +92,12 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
           cursor={{ fill: "#f2f4f6" }}
           contentStyle={tooltipStyle}
           formatter={(value, name) => [
-            name === "count" ? value : formatMoney(Number(value)),
-            REVENUE_LABEL[String(name)],
+            name === "count" ? value : formatMoney(Number(value), locale),
+            revenueLabel[String(name)],
           ]}
         />
         <Legend
-          formatter={(value) => REVENUE_LABEL[String(value)]}
+          formatter={(value) => revenueLabel[String(value)]}
           wrapperStyle={{ fontSize: 12, color: "#6b7280" }}
         />
         {firstFuture && (
@@ -105,7 +107,7 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
             stroke="#b6bcc6"
             strokeDasharray="3 3"
             label={{
-              value: "forecast",
+              value: tc("chartForecast"),
               position: "insideTopLeft",
               fill: "#8a919c",
               fontSize: 11,
@@ -144,6 +146,8 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
 }
 
 export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   return (
     <ResponsiveContainer width="100%" height={240}>
       <FunnelChart margin={{ top: 8, right: 96, left: 96, bottom: 8 }}>
@@ -152,8 +156,12 @@ export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
           formatter={(value, _name, item) => {
             const row = item.payload as FunnelRow;
             return [
-              `${formatMoney(Number(value))} · ${row.count} at or past this stage, ${row.inStage} in it`,
-              row.name,
+              tc.i("funnelTooltip", {
+                amount: formatMoney(Number(value), locale),
+                count: row.count,
+                inStage: row.inStage,
+              }),
+              row.label,
             ];
           }}
         />
@@ -179,7 +187,7 @@ export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
             fill="#454c58"
             fontSize={12}
             offset={12}
-            formatter={(v: unknown) => formatMoney(Number(v))}
+            formatter={(v: unknown) => formatMoney(Number(v), locale)}
           />
         </Funnel>
       </FunnelChart>
@@ -189,9 +197,21 @@ export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
 
 /** Won against lost, with the rate itself in the middle where it is the first thing read. */
 export function WinRateDonut({ data }: { data: WinLoss }) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   const slices = [
-    { name: "Won", value: data.won, money: data.wonValue, fill: GREEN },
-    { name: "Lost", value: data.lost, money: data.lostValue, fill: RED },
+    {
+      name: tc("chartWon"),
+      value: data.won,
+      money: data.wonValue,
+      fill: GREEN,
+    },
+    {
+      name: tc("chartLost"),
+      value: data.lost,
+      money: data.lostValue,
+      fill: RED,
+    },
   ];
   return (
     <div className="donut-wrap">
@@ -202,7 +222,10 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
             formatter={(value, name, item) => {
               const slice = item.payload as (typeof slices)[number];
               return [
-                `${Number(value)} deals · ${formatMoney(slice.money)}`,
+                tc.i("dealsAndMoney", {
+                  count: Number(value),
+                  amount: formatMoney(slice.money, locale),
+                }),
                 name,
               ];
             }}
@@ -222,7 +245,7 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
       <div className="donut-centre">
         <div className="donut-rate">{data.rate}%</div>
         <div className="donut-caption">
-          {data.won} won · {data.lost} lost
+          {tc.i("wonLostCaption", { won: data.won, lost: data.lost })}
         </div>
       </div>
     </div>
@@ -230,6 +253,8 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
 }
 
 export function TopOrganizations({ data }: { data: OrgPipeline[] }) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart
@@ -259,7 +284,10 @@ export function TopOrganizations({ data }: { data: OrgPipeline[] }) {
           formatter={(value, _name, item) => {
             const org = item.payload as OrgPipeline;
             return [
-              `${formatMoney(Number(value))} · ${org.count} open deals`,
+              tc.i("orgPipelineTooltip", {
+                amount: formatMoney(Number(value), locale),
+                count: org.count,
+              }),
               org.name,
             ];
           }}

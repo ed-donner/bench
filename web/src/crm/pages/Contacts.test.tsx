@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import Contacts from "./Contacts";
 import { api } from "../api";
-import { contact, org, routes } from "../test/helpers";
+import { contact, org, routes, renderCrm } from "../test/helpers";
 
 vi.mock("../api", async () => {
   const actual = await vi.importActual<typeof import("../api")>("../api");
@@ -46,7 +46,7 @@ afterEach(() => {
 });
 
 function show() {
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={["/contacts"]}>
       <Routes>
         <Route path="/contacts" element={<Contacts />} />
@@ -73,7 +73,7 @@ describe("Contacts", () => {
       "555-0142",
       "Head of Ops",
       "Bluepeak Software",
-      "lead",
+      "Lead",
       "",
     ]);
   });

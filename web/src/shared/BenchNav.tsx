@@ -13,37 +13,57 @@ import {
   IconSpace,
   IconSun,
 } from "./AppIcons";
+import { useLocale, useT } from "./useLocale";
 import { currentTheme, toggleTheme, type Theme } from "./theme";
 import "./nav.css";
 
 type AppKey = "home" | "crm" | "space" | "rolodex" | "groove";
 
-/** Colour marks the active app and nothing else: one amber chip, wherever you are. An app is
-    told apart by its glyph, which is what still works once there are more of them than there
-    are brand colours. */
-const APPS: {
+const APP_KEYS: {
   key: AppKey;
   href: string;
-  label: string;
+  labelKey: "home" | null;
+  name: string;
   Icon: (p: { size?: number }) => React.ReactElement;
 }[] = [
-  { key: "home", href: "/", label: "Home", Icon: IconHome },
-  { key: "crm", href: "/crm/", label: "CRM", Icon: IconCrm },
-  { key: "space", href: "/space/", label: "Space", Icon: IconSpace },
-  { key: "rolodex", href: "/rolodex/", label: "Rolodex", Icon: IconRolodex },
-  { key: "groove", href: "/groove/", label: "Groove", Icon: IconGroove },
+  { key: "home", href: "/", labelKey: "home", name: "", Icon: IconHome },
+  { key: "crm", href: "/crm/", labelKey: null, name: "CRM", Icon: IconCrm },
+  {
+    key: "space",
+    href: "/space/",
+    labelKey: null,
+    name: "Space",
+    Icon: IconSpace,
+  },
+  {
+    key: "rolodex",
+    href: "/rolodex/",
+    labelKey: null,
+    name: "Rolodex",
+    Icon: IconRolodex,
+  },
+  {
+    key: "groove",
+    href: "/groove/",
+    labelKey: null,
+    name: "Groove",
+    Icon: IconGroove,
+  },
 ];
 
 export default function BenchNav({ active }: { active: AppKey }) {
   const [theme, setTheme] = useState<Theme>(currentTheme);
+  const { locale, toggleLocale } = useLocale();
+  const ts = useT("shared");
+
   return (
     <header className="bench-nav">
       <span className="bench-nav-brand">
         <BenchMark size={21} />
         Bench
       </span>
-      <nav className="bench-nav-links" aria-label="Primary">
-        {APPS.map(({ key, href, label, Icon }) => (
+      <nav className="bench-nav-links" aria-label={ts("navPrimary")}>
+        {APP_KEYS.map(({ key, href, labelKey, name, Icon }) => (
           <a
             key={key}
             className="bench-nav-link"
@@ -51,19 +71,36 @@ export default function BenchNav({ active }: { active: AppKey }) {
             aria-current={key === active ? "page" : undefined}
           >
             <Icon size={16} />
-            {label}
+            {labelKey ? ts(labelKey) : name}
           </a>
         ))}
       </nav>
-      <button
-        type="button"
-        className="bench-nav-theme"
-        onClick={() => setTheme(toggleTheme())}
-        aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
-        title={theme === "dark" ? "Switch to light" : "Switch to dark"}
-      >
-        {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
-      </button>
+      <div className="bench-nav-controls">
+        <button
+          type="button"
+          className="bench-nav-locale"
+          onClick={toggleLocale}
+          aria-label={
+            locale === "en" ? ts("switchToSpanish") : ts("switchToEnglish")
+          }
+          title={
+            locale === "en" ? ts("switchToSpanish") : ts("switchToEnglish")
+          }
+        >
+          {locale === "en" ? "ES" : "EN"}
+        </button>
+        <button
+          type="button"
+          className="bench-nav-theme"
+          onClick={() => setTheme(toggleTheme())}
+          aria-label={
+            theme === "dark" ? ts("switchToLight") : ts("switchToDark")
+          }
+          title={theme === "dark" ? ts("switchToLight") : ts("switchToDark")}
+        >
+          {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
+        </button>
+      </div>
     </header>
   );
 }

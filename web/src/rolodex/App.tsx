@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import BenchNav from "../shared/BenchNav";
 import { IconRolodex } from "../shared/AppIcons";
+import { useT } from "../shared/useLocale";
 import StoreProvider from "./StoreProvider";
 import Today from "./pages/Today";
 import People from "./pages/People";
@@ -16,24 +17,25 @@ import Circles from "./pages/Circles";
 import CalendarPage from "./pages/CalendarPage";
 import TimelinePage from "./pages/TimelinePage";
 
-const NAV = [
-  { to: "/", label: "Today", end: true, Icon: LayoutDashboard },
-  { to: "/people", label: "People", Icon: Users },
-  { to: "/circles", label: "Circles", Icon: UsersRound },
-  { to: "/calendar", label: "Calendar", Icon: CalendarDays },
-  { to: "/timeline", label: "Timeline", Icon: History },
-];
-
 function Shell() {
+  const t = useT("rolodex");
+  const nav = [
+    { to: "/", label: t("navToday"), end: true, Icon: LayoutDashboard },
+    { to: "/people", label: t("navPeople"), Icon: Users },
+    { to: "/circles", label: t("navCircles"), Icon: UsersRound },
+    { to: "/calendar", label: t("navCalendar"), Icon: CalendarDays },
+    { to: "/timeline", label: t("navTimeline"), Icon: History },
+  ];
+
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
           <IconRolodex size={19} />
-          Rolodex
+          {t("brand")}
         </div>
         <nav>
-          {NAV.map(({ to, label, end, Icon }) => (
+          {nav.map(({ to, label, end, Icon }) => (
             <NavLink key={to} to={to} end={end} className="nav-item">
               <Icon size={17} />
               <span>{label}</span>
@@ -41,9 +43,9 @@ function Shell() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          Runs on your machine.
+          {t("footer")}
           <br />
-          No accounts, no cloud.
+          {t("footerSub")}
         </div>
       </aside>
       <main className="main">

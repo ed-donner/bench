@@ -1,6 +1,7 @@
 /** The quick-add modals on a person's page: news, a fact, a reminder, a gift. */
 import { useState } from "react";
 import { Bell, Gift, Megaphone, Sparkles } from "lucide-react";
+import { useT } from "../../../shared/useLocale";
 import { api } from "../../api";
 import type { GiftKind, PersonComputed } from "../../types";
 import { Modal } from "../Modal";
@@ -13,7 +14,6 @@ interface AddProps {
   onSaved: () => Promise<void>;
 }
 
-/** Shared footer: cancel, then a save that is disabled until the form has something in it. */
 function SaveFooter({
   label,
   disabled,
@@ -25,11 +25,12 @@ function SaveFooter({
   onSave: () => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useT("rolodex");
   const [busy, setBusy] = useState(false);
   return (
     <>
       <button className="btn" onClick={onClose}>
-        Cancel
+        {t("cancel")}
       </button>
       <button
         className="btn btn-primary"
@@ -52,6 +53,7 @@ export function AddNewsModal({
   onClose,
   onSaved,
 }: Omit<AddProps, "personId"> & { person: PersonComputed }) {
+  const t = useT("rolodex");
   const [text, setText] = useState("");
   const save = async () => {
     await api.addNews(person.id, text.trim());
@@ -60,26 +62,23 @@ export function AddNewsModal({
   };
   return (
     <Modal
-      title={`Record news about ${person.name.split(" ")[0]}`}
+      title={t.i("recordNews", { name: person.name.split(" ")[0] })}
       icon={<Megaphone size={17} className="modal-icon purple" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save news"
+          label={t("saveNews")}
           disabled={!text.trim()}
           onSave={save}
           onClose={onClose}
         />
       }
     >
-      <Field
-        label="What’s new with them?"
-        hint="The newest piece of news becomes their “latest news”, shown here and in the People table."
-      >
+      <Field label={t("whatsNew")} hint={t("newsHint")}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Started at Figma. Moved to Berlin. Second baby due in March…"
+          placeholder={t("newsPlaceholder")}
         />
       </Field>
     </Modal>
@@ -87,6 +86,7 @@ export function AddNewsModal({
 }
 
 export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT("rolodex");
   const [text, setText] = useState("");
   const save = async () => {
     await api.addFact(personId, text.trim());
@@ -95,26 +95,23 @@ export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Add a fact worth remembering"
+      title={t("addFactTitle")}
       icon={<Sparkles size={17} className="modal-icon amber" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save fact"
+          label={t("saveFact")}
           disabled={!text.trim()}
           onSave={save}
           onClose={onClose}
         />
       }
     >
-      <Field
-        label="Fact"
-        hint="Small and durable — unlike news, facts don’t go stale."
-      >
+      <Field label={t("factLabel")} hint={t("factHint")}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Allergic to shellfish. Partner is Sam. Supports Arsenal."
+          placeholder={t("factPlaceholder")}
         />
       </Field>
     </Modal>
@@ -122,6 +119,7 @@ export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
 }
 
 export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT("rolodex");
   const [text, setText] = useState("");
   const [due, setDue] = useState(todayISO());
   const save = async () => {
@@ -131,12 +129,12 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Set a reminder"
+      title={t("setReminder")}
       icon={<Bell size={17} className="modal-icon blue" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save reminder"
+          label={t("saveReminder")}
           disabled={!text.trim() || !due}
           onSave={save}
           onClose={onClose}
@@ -144,18 +142,14 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
       }
     >
       <div className="form-grid">
-        <Field label="What needs doing?" wide>
+        <Field label={t("whatNeedsDoing")} wide>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Book a table for her birthday"
+            placeholder={t("reminderPlaceholder")}
           />
         </Field>
-        <Field
-          label="Due date"
-          wide
-          hint="Reminders due or overdue show up on Today."
-        >
+        <Field label={t("dueDate")} wide hint={t("reminderDueHint")}>
           <input
             type="date"
             value={due}
@@ -168,6 +162,7 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
 }
 
 export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT("rolodex");
   const [name, setName] = useState("");
   const [kind, setKind] = useState<GiftKind>("idea");
   const [occasion, setOccasion] = useState("");
@@ -183,12 +178,12 @@ export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Add a gift"
+      title={t("addGiftTitle")}
       icon={<Gift size={17} className="modal-icon purple" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save gift"
+          label={t("saveGift")}
           disabled={!name.trim()}
           onSave={save}
           onClose={onClose}
@@ -196,28 +191,28 @@ export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
       }
     >
       <div className="form-grid">
-        <Field label="What?" wide>
+        <Field label={t("giftWhat")} wide>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ceramic ramen bowl set"
+            placeholder={t("giftPlaceholder")}
           />
         </Field>
-        <Field label="Kind">
+        <Field label={t("giftKind")}>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as GiftKind)}
           >
-            <option value="idea">Idea (not given yet)</option>
-            <option value="given">Given to them</option>
-            <option value="received">Received from them</option>
+            <option value="idea">{t("giftIdea")}</option>
+            <option value="given">{t("giftGiven")}</option>
+            <option value="received">{t("giftReceived")}</option>
           </select>
         </Field>
-        <Field label="Occasion">
+        <Field label={t("occasion")}>
           <input
             value={occasion}
             onChange={(e) => setOccasion(e.target.value)}
-            placeholder="Birthday"
+            placeholder={t("dateBirthday")}
           />
         </Field>
       </div>

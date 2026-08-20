@@ -9,6 +9,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
+import { es } from "date-fns/locale/es";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api, type StatsPayload, type TodayPayload } from "../api";
 import type { PersonComputed, TimelineEntry } from "../types";
 import { Avatar } from "../components/Avatar";
@@ -17,38 +20,40 @@ import { LogInteractionModal } from "../components/LogInteractionModal";
 import InteractionIcon from "../components/InteractionIcon";
 import ContactHero from "../components/today/ContactHero";
 import TodayCharts from "../components/today/TodayCharts";
-import { dateTypeLabel } from "../dates";
 import {
-  errorMessage,
-  fmtDate,
-  monthShort,
+  dateTypeLabel,
+  interactionMeta,
   relativeDays,
-  INTERACTION_META,
-} from "../format";
+  type RolodexT,
+} from "../i18n";
+import { errorMessage, fmtDate, monthShort } from "../format";
 import { useStore, useToast } from "../store";
 
 /** What a timeline entry did, in words. */
-function entryVerb(entry: TimelineEntry): string {
-  if (entry.kind === "news") return "news recorded";
-  if (entry.kind === "reminder_done") return "reminder completed";
+function entryVerb(t: RolodexT, entry: TimelineEntry): string {
+  if (entry.kind === "news") return t("entryNewsRecorded");
+  if (entry.kind === "reminder_done") return t("entryReminderCompleted");
   return entry.interaction_type
-    ? INTERACTION_META[entry.interaction_type].verb
-    : "contact logged";
+    ? interactionMeta(t, entry.interaction_type).verb
+    : t("entryContactLogged");
 }
 
 export default function Today() {
+  const t = useT("rolodex");
+  const { locale } = useLocale();
   const { people, refresh } = useStore();
   const toast = useToast();
   const [payload, setPayload] = useState<TodayPayload | null>(null);
   const [stats, setStats] = useState<StatsPayload | null>(null);
   const [logging, setLogging] = useState<PersonComputed | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const dateLocale = locale === "es" ? es : enUS;
 
   const load = useCallback(
     () =>
       Promise.all([api.today(), api.stats()])
-        .then(([t, s]) => {
-          setPayload(t);
+        .then(([todayData, s]) => {
+          setPayload(todayData);
           setStats(s);
         })
         .catch((e: unknown) => {
@@ -60,9 +65,9 @@ export default function Today() {
   useEffect(() => {
     let cancelled = false;
     void Promise.all([api.today(), api.stats()])
-      .then(([t, s]) => {
+      .then(([todayData, s]) => {
         if (cancelled) return;
-        setPayload(t);
+        setPayload(todayData);
         setStats(s);
       })
       .catch((e: unknown) => {
@@ -77,8 +82,9 @@ export default function Today() {
     await Promise.all([load(), refresh()]);
   };
 
-  if (error) return <div className="page">Couldn’t load Today: {error}</div>;
-  if (!payload) return <div className="page muted">Loading…</div>;
+  if (error)
+    return <div className="page">{t.i("loadTodayFailed", { error })}</div>;
+  if (!payload) return <div className="page muted">{t("loading")}</div>;
 
   const overdue = payload.to_contact.filter((p) => p.status === "overdue");
   const peopleById = new Map(people.map((p) => [p.id, p]));
@@ -91,11 +97,14 @@ export default function Today() {
             <span className="icon-sq amber">
               <LayoutDashboard size={19} />
             </span>
-            Today
+            {t("todayTitle")}
           </h1>
           <p className="page-desc">
-            {format(new Date(), "EEEE d MMMM yyyy")} — what needs your
-            attention.
+            {t.i("todayDesc", {
+              date: format(new Date(), "EEEE d MMMM yyyy", {
+                locale: dateLocale,
+              }),
+            })}
           </p>
         </div>
       </div>
@@ -104,7 +113,7 @@ export default function Today() {
         <div className="stat-card">
           <div className="stat-num red">{overdue.length}</div>
           <div className="stat-label">
-            <Phone size={13} /> overdue to contact
+            <Phone size={13} /> {t("statOverdueContact")}
           </div>
         </div>
         <div className="stat-card">
@@ -112,19 +121,19 @@ export default function Today() {
             {payload.to_contact.length - overdue.length}
           </div>
           <div className="stat-label">
-            <History size={13} /> due within a week
+            <History size={13} /> {t("statDueWeek")}
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-num purple">{payload.upcoming_dates.length}</div>
           <div className="stat-label">
-            <Cake size={13} /> dates in 30 days
+            <Cake size={13} /> {t("statDates30")}
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-num blue">{payload.reminders.length}</div>
           <div className="stat-label">
-            <Bell size={13} /> reminders due
+            <Bell size={13} /> {t("statRemindersDue")}
           </div>
         </div>
       </div>
@@ -139,16 +148,14 @@ export default function Today() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">
-              <Cake size={16} /> Dates coming up
+              <Cake size={16} /> {t("datesComingUp")}
             </h2>
             <Link to="/calendar" className="small card-link">
-              Calendar →
+              {t("calendarLink")}
             </Link>
           </div>
           {payload.upcoming_dates.length === 0 ? (
-            <EmptyState icon={<Cake />}>
-              No birthdays or important dates in the next 30 days.
-            </EmptyState>
+            <EmptyState icon={<Cake />}>{t("noDates30")}</EmptyState>
           ) : (
             payload.upcoming_dates.slice(0, 7).map((e) => (
               <Link
@@ -158,7 +165,7 @@ export default function Today() {
               >
                 <div className="date-pill">
                   <span className="mon">
-                    {monthShort(Number(e.date.slice(5, 7)))}
+                    {monthShort(Number(e.date.slice(5, 7)), locale)}
                   </span>
                   <span className="day">{Number(e.date.slice(8, 10))}</span>
                 </div>
@@ -172,19 +179,19 @@ export default function Today() {
                     {e.person_name}
                     {e.milestone && (
                       <span className="badge status-due_soon milestone">
-                        turns {e.age_turning}
+                        {t.i("turnsAge", { age: e.age_turning ?? 0 })}
                       </span>
                     )}
                   </div>
                   <div className="small muted">
-                    {dateTypeLabel(e.type, e.label)}
+                    {dateTypeLabel(t, e.type, e.label)}
                     {e.age_turning != null && !e.milestone
-                      ? ` · turns ${e.age_turning}`
+                      ? t.i("turnsAgeInline", { age: e.age_turning })
                       : ""}
                   </div>
                 </div>
                 <span className="small muted">
-                  {relativeDays(e.date, payload.today)}
+                  {relativeDays(t, e.date, payload.today)}
                 </span>
               </Link>
             ))
@@ -194,38 +201,36 @@ export default function Today() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">
-              <Bell size={16} /> Reminders
+              <Bell size={16} /> {t("reminders")}
             </h2>
           </div>
           {payload.reminders.length === 0 ? (
-            <EmptyState icon={<Bell />}>
-              No reminders due — nothing on your list.
-            </EmptyState>
+            <EmptyState icon={<Bell />}>{t("noReminders")}</EmptyState>
           ) : (
             payload.reminders.slice(0, 7).map((r) => (
               <div key={r.id} className="list-row">
                 <button
                   className="reminder-check"
-                  title="Mark done"
-                  aria-label={`Mark done: ${r.text}`}
+                  title={t("markDone")}
+                  aria-label={t.i("markDoneAria", { text: r.text })}
                   onClick={() => {
                     void api
                       .setReminderDone(r.id, true)
                       .then(after)
-                      .then(() => toast("Reminder done — nice"));
+                      .then(() => toast(t("reminderDoneToast")));
                   }}
                 />
                 <div className="body">
                   <div className="strong">{r.text}</div>
                   <div className="small muted">
-                    <Link to={`/people/${r.person_id}`}>{r.person_name}</Link> ·
-                    due {fmtDate(r.due_date)} ·{" "}
+                    <Link to={`/people/${r.person_id}`}>{r.person_name}</Link> ·{" "}
+                    {t("duePrefix")} {fmtDate(r.due_date, locale)} ·{" "}
                     <span
                       className={r.overdue ? "reminder-overdue" : undefined}
                     >
                       {r.due_today
-                        ? "today"
-                        : relativeDays(r.due_date, payload.today)}
+                        ? t("relativeToday")
+                        : relativeDays(t, r.due_date, payload.today)}
                     </span>
                   </div>
                 </div>
@@ -239,16 +244,14 @@ export default function Today() {
         <div className="card span2">
           <div className="card-header">
             <h2 className="card-title">
-              <History size={16} /> Recent activity
+              <History size={16} /> {t("recentActivity")}
             </h2>
             <Link to="/timeline" className="small card-link">
-              Full timeline →
+              {t("fullTimeline")}
             </Link>
           </div>
           {payload.recent.length === 0 ? (
-            <EmptyState icon={<Sparkles />}>
-              Nothing logged yet — record an interaction and it’ll show up here.
-            </EmptyState>
+            <EmptyState icon={<Sparkles />}>{t("noActivity")}</EmptyState>
           ) : (
             <div className="feed">
               {payload.recent.slice(0, 8).map((e) => (
@@ -265,10 +268,10 @@ export default function Today() {
                       >
                         {e.person_name}
                       </Link>
-                      <span className="feed-type">{entryVerb(e)}</span>
+                      <span className="feed-type">{entryVerb(t, e)}</span>
                       <span className="feed-date">
-                        {fmtDate(e.date)} ·{" "}
-                        {relativeDays(e.date, payload.today)}
+                        {fmtDate(e.date, locale)} ·{" "}
+                        {relativeDays(t, e.date, payload.today)}
                       </span>
                     </div>
                     {e.text && <div className="feed-text">{e.text}</div>}

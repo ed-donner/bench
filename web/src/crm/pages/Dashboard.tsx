@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api } from "../api";
 import { useFetch } from "../hooks";
+import { dealStageLabel } from "../i18n";
 import {
   Activity,
   Contact,
@@ -73,6 +75,8 @@ function StatTile({
 }
 
 export default function Dashboard() {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   const { data: deals } = useFetch<Deal[]>("/api/crm/deals");
   const { data: contacts } = useFetch<Contact[]>("/api/crm/contacts");
   const { data: orgs } = useFetch<Organization[]>("/api/crm/organizations");
@@ -94,8 +98,8 @@ export default function Dashboard() {
   );
 
   const months = useMemo(
-    () => monthRange(new Date(), MONTHS_BACK, MONTHS_FORWARD),
-    [],
+    () => monthRange(new Date(), MONTHS_BACK, MONTHS_FORWARD, locale),
+    [locale],
   );
   const monthly = useMemo(
     () => monthlyRevenue(deals ?? [], months),
@@ -118,10 +122,16 @@ export default function Dashboard() {
   const dealsWon = trailing.reduce((s, m) => s + m.won, 0);
   const revenueWon = trailing.reduce((s, m) => s + m.actual, 0);
 
-  const funnel = useMemo(
-    () => pipelineFunnel(deals ?? [], months[0].key),
-    [deals, months],
-  );
+  const funnel = useMemo(() => {
+    const rows = pipelineFunnel(deals ?? [], months[0].key);
+    return rows.map((row, i) => ({
+      ...row,
+      label:
+        i === rows.length - 1
+          ? dealStageLabel(tc, row.name)
+          : `${dealStageLabel(tc, row.name)}+`,
+    }));
+  }, [deals, months, tc]);
   const rate = useMemo(
     () => winLoss(deals ?? [], months[0].key),
     [deals, months],
@@ -168,87 +178,87 @@ export default function Dashboard() {
     <>
       <PageHeader
         icon={<IconDashboard size={20} />}
-        title="Dashboard"
-        sub="How your sales are going at a glance"
+        title={tc("dashboardTitle")}
+        sub={tc("dashboardSub")}
       />
       <div className="stat-row">
         <StatTile
           tone="count"
           icon={<IconDeals size={17} />}
-          label="Open deals"
+          label={tc("openDeals")}
           value={String(openDeals.length)}
-          sub={`${String(orgsInPlay)} organizations in play`}
+          sub={tc.i("orgsInPlay", { n: orgsInPlay })}
         />
         <StatTile
           tone="open"
           icon={<IconPipeline size={17} />}
-          label="Pipeline value"
-          value={formatMoney(pipelineValue)}
-          sub={`${formatMoney(averageDeal)} average deal`}
+          label={tc("pipelineValue")}
+          value={formatMoney(pipelineValue, locale)}
+          sub={tc.i("averageDeal", {
+            amount: formatMoney(averageDeal, locale),
+          })}
           testId="dash-total"
         />
         <StatTile
           tone="forecast"
           icon={<IconForecast size={17} />}
-          label="Expected revenue"
-          value={formatMoney(expectedRevenue)}
-          sub={`${String(weighting)}% of the open pipeline`}
+          label={tc("expectedRevenue")}
+          value={formatMoney(expectedRevenue, locale)}
+          sub={tc.i("percentOpenPipeline", { n: weighting })}
           testId="dash-expected"
         />
         <StatTile
           tone="won"
           icon={<IconWon size={17} />}
-          label="Deals won (6 mo)"
+          label={tc("dealsWon6Mo")}
           value={String(dealsWon)}
-          sub={`${String(rate.rate)}% of everything closed`}
+          sub={tc.i("percentClosed", { n: rate.rate })}
         />
         <StatTile
           tone="won"
           icon={<IconRevenue size={17} />}
-          label="Revenue won (6 mo)"
-          value={formatMoney(revenueWon)}
-          sub={dealsWon ? `${formatMoney(revenueWon / dealsWon)} a win` : "—"}
+          label={tc("revenueWon6Mo")}
+          value={formatMoney(revenueWon, locale)}
+          sub={
+            dealsWon
+              ? tc.i("perWin", {
+                  amount: formatMoney(revenueWon / dealsWon, locale),
+                })
+              : tc("emDash")
+          }
         />
       </div>
       <div className="dash-grid">
         <div className="card">
-          <h2>Revenue and deal volume</h2>
-          <p className="card-sub">
-            Won revenue behind today, the weighted pipeline ahead of it, and the
-            number of deals closing each month.
-          </p>
+          <h2>{tc("revenueAndVolume")}</h2>
+          <p className="card-sub">{tc("revenueVolumeSub")}</p>
           <RevenueChart data={monthly} />
         </div>
         <div className="card">
-          <h2>Revenue funnel</h2>
-          <p className="card-sub">
-            Value at or past each stage: the open pipeline plus the last six
-            months of wins. Lost deals are excluded.
-          </p>
+          <h2>{tc("revenueFunnelTitle")}</h2>
+          <p className="card-sub">{tc("revenueFunnelSub")}</p>
           <RevenueFunnel data={funnel} />
         </div>
         <div className="card">
-          <h2>Win rate</h2>
-          <p className="card-sub">
-            Deals closed in the last six months, won against lost.
-          </p>
+          <h2>{tc("winRate")}</h2>
+          <p className="card-sub">{tc("winRateSub")}</p>
           {rate.won + rate.lost === 0 ? (
-            <p className="muted">Nothing has closed in the last six months.</p>
+            <p className="muted">{tc("nothingClosed6Mo")}</p>
           ) : (
             <WinRateDonut data={rate} />
           )}
         </div>
         <div className="card">
-          <h2>Top organizations</h2>
-          <p className="card-sub">Where the open pipeline is concentrated.</p>
+          <h2>{tc("topOrganizationsTitle")}</h2>
+          <p className="card-sub">{tc("topOrganizationsSub")}</p>
           {byOrg.length === 0 ? (
-            <p className="muted">No open deals against an organization.</p>
+            <p className="muted">{tc("noOpenDealsForOrg")}</p>
           ) : (
             <TopOrganizations data={byOrg} />
           )}
         </div>
         <div className="card">
-          <h2>Recent activity</h2>
+          <h2>{tc("recentActivities")}</h2>
           <div className="feed-list">
             {recent.map((a) => (
               <div key={a.id} className="feed-item">
@@ -256,7 +266,7 @@ export default function Dashboard() {
                 <div style={{ flex: 1 }}>
                   <div>{a.description}</div>
                   <div className="timeline-meta">
-                    <span>{formatDateTime(a.occurred_at)}</span>
+                    <span>{formatDateTime(a.occurred_at, locale)}</span>
                     {relatedLink(a)}
                   </div>
                 </div>
@@ -265,10 +275,8 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="card">
-          <h2>Follow-ups</h2>
-          {tasks.length === 0 && (
-            <p className="muted">Nothing due. Nice work.</p>
-          )}
+          <h2>{tc("followUps")}</h2>
+          {tasks.length === 0 && <p className="muted">{tc("nothingDue")}</p>}
           <div className="task-list">
             {[...overdue, ...upcoming].map((t) => (
               <div key={t.id} className="task-item">
@@ -276,7 +284,9 @@ export default function Dashboard() {
                   type="checkbox"
                   checked={false}
                   onChange={() => void toggleDone(t)}
-                  aria-label={`Mark done: ${t.description}`}
+                  aria-label={tc.i("markDoneAria", {
+                    description: t.description,
+                  })}
                 />
                 <div style={{ flex: 1 }}>
                   <div>{t.description}</div>
@@ -284,8 +294,10 @@ export default function Dashboard() {
                     <span
                       className={`due-chip${t.due_date! < today ? " overdue" : ""}`}
                     >
-                      {t.due_date! < today ? "Overdue: " : "Due "}
-                      {formatDate(t.due_date)}
+                      {t.due_date! < today
+                        ? tc("overduePrefix")
+                        : tc("duePrefix")}
+                      {formatDate(t.due_date, locale)}
                     </span>
                     {relatedLink(t)}
                   </div>

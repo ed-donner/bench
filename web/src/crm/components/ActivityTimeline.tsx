@@ -1,5 +1,7 @@
 import { api } from "../api";
+import { useLocale, useT } from "../../shared/useLocale";
 import { Activity } from "../types";
+import { activityTypeLabel } from "../i18n";
 import { formatDate, formatDateTime } from "../format";
 import ActivityIcon from "./ActivityIcon";
 
@@ -14,6 +16,9 @@ function isOverdue(activity: Activity): boolean {
 }
 
 export default function ActivityTimeline({ activities, onChanged }: Props) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
+
   async function toggleDone(activity: Activity) {
     await api.patch(`/api/crm/activities/${activity.id}`, {
       done: !activity.done,
@@ -21,7 +26,7 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
     onChanged();
   }
 
-  if (!activities.length) return <p className="muted">No activity yet.</p>;
+  if (!activities.length) return <p className="muted">{tc("noActivityYet")}</p>;
 
   return (
     <div className="timeline">
@@ -31,13 +36,13 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
           <div className="timeline-body">
             <div>{a.description}</div>
             <div className="timeline-meta">
-              <span style={{ textTransform: "capitalize" }}>{a.type}</span>
+              <span>{activityTypeLabel(tc, a.type)}</span>
               <span>·</span>
-              <span>{formatDateTime(a.occurred_at)}</span>
+              <span>{formatDateTime(a.occurred_at, locale)}</span>
               {a.due_date && (
                 <span className={`due-chip${isOverdue(a) ? " overdue" : ""}`}>
-                  {isOverdue(a) ? "Overdue: " : "Due "}
-                  {formatDate(a.due_date)}
+                  {isOverdue(a) ? tc("overduePrefix") : tc("duePrefix")}
+                  {formatDate(a.due_date, locale)}
                 </span>
               )}
             </div>
@@ -56,7 +61,7 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
                 checked={!!a.done}
                 onChange={() => void toggleDone(a)}
               />
-              Done
+              {tc("done")}
             </label>
           )}
         </div>

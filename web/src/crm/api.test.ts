@@ -1,5 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
 import { api, query } from "./api";
+
+const JSON_LOCALE_HEADERS = {
+  "Content-Type": "application/json",
+  "X-Bench-Locale": "en",
+};
 
 function mockFetch(response: Partial<Response>) {
   const fetchMock = vi.fn().mockResolvedValue({
@@ -11,6 +16,10 @@ function mockFetch(response: Partial<Response>) {
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
+
+beforeEach(() => {
+  document.documentElement.lang = "en";
+});
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -25,7 +34,7 @@ describe("request", () => {
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe("/api/crm/deals");
     expect(init.method).toBe("POST");
-    expect(init.headers).toEqual({ "Content-Type": "application/json" });
+    expect(init.headers).toEqual(JSON_LOCALE_HEADERS);
     expect(JSON.parse(init.body as string)).toEqual({ name: "New deal" });
   });
 

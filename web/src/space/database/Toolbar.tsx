@@ -1,6 +1,7 @@
 import { valueText } from "./valueText";
 import { useState } from "react";
 import { ArrowUpDown, Columns3, ListFilter, X } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import type {
   DatabaseData,
   Filter,
@@ -8,13 +9,8 @@ import type {
   ViewConfig,
   ViewKind,
 } from "../api";
+import { operatorLabel, viewLabel } from "../i18n";
 import { operatorsFor, TITLE_ID } from "./viewLogic";
-
-const VIEW_LABELS: Record<ViewKind, string> = {
-  table: "Table",
-  board: "Board",
-  list: "List",
-};
 
 interface Props {
   data: DatabaseData;
@@ -26,9 +22,10 @@ interface Props {
 
 function filterableProps(
   data: DatabaseData,
+  nameLabel: string,
 ): { id: string; name: string; type: Property["type"] | "title" }[] {
   return [
-    { id: TITLE_ID, name: "Name", type: "title" as const },
+    { id: TITLE_ID, name: nameLabel, type: "title" as const },
     ...data.properties.map((p) => ({ id: p.id, name: p.name, type: p.type })),
   ];
 }
@@ -37,20 +34,22 @@ function FilterValueInput({
   filter,
   property,
   onChange,
+  t,
 }: {
   filter: Filter;
   property?: Property;
   onChange: (value: unknown) => void;
+  t: ReturnType<typeof useT<"space">>;
 }) {
   if (property?.type === "select" || property?.type === "multi_select") {
     return (
       <select
         className="filter-input"
-        aria-label="Filter value"
+        aria-label={t("filterValue")}
         value={(filter.value as string | undefined) ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
       >
-        <option value="">option…</option>
+        <option value="">{t("filterOptionPlaceholder")}</option>
         {property.options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.name}
@@ -64,7 +63,7 @@ function FilterValueInput({
       <input
         type="date"
         className="filter-input"
-        aria-label="Filter value"
+        aria-label={t("filterValue")}
         value={(filter.value as string | undefined) ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
       />
@@ -74,7 +73,7 @@ function FilterValueInput({
     return (
       <input
         className="filter-input filter-number"
-        aria-label="Filter value"
+        aria-label={t("filterValue")}
         inputMode="decimal"
         value={valueText(filter.value)}
         onChange={(e) =>
@@ -86,18 +85,22 @@ function FilterValueInput({
   return (
     <input
       className="filter-input"
-      aria-label="Filter value"
-      placeholder="value…"
+      aria-label={t("filterValue")}
+      placeholder={t("filterValuePlaceholder")}
       value={(filter.value as string | undefined) ?? ""}
       onChange={(e) => onChange(e.target.value)}
     />
   );
 }
 
-type PanelProps = Pick<Props, "data" | "config" | "onConfigChange">;
+type PanelProps = Pick<Props, "data" | "config" | "onConfigChange"> & {
+  t: ReturnType<typeof useT<"space">>;
+  ts: ReturnType<typeof useT<"shared">>;
+};
 
-function FilterPanel({ data, config, onConfigChange }: PanelProps) {
-  const props = filterableProps(data);
+function FilterPanel({ data, config, onConfigChange, t, ts }: PanelProps) {
+  const props = filterableProps(data, ts("name"));
+  const opLabel = (op: string) => operatorLabel(op, t);
   const setFilter = (i: number, patch: Partial<Filter>) => {
     const filters = config.filters.map((f, j) =>
       j === i ? { ...f, ...patch } : f,
@@ -105,26 +108,30 @@ function FilterPanel({ data, config, onConfigChange }: PanelProps) {
     onConfigChange({ filters });
   };
   return (
-    <div className="popover filter-panel" role="dialog" aria-label="Filters">
+    <div
+      className="popover filter-panel"
+      role="dialog"
+      aria-label={t("filters")}
+    >
       {config.filters.length === 0 && (
-        <div className="popover-label">No filters yet</div>
+        <div className="popover-label">{t("noFiltersYet")}</div>
       )}
       {config.filters.map((f, i) => {
         const meta = props.find((p) => p.id === f.propertyId);
         const property = data.properties.find((p) => p.id === f.propertyId);
-        const ops = operatorsFor(meta?.type ?? "text");
+        const ops = operatorsFor(meta?.type ?? "text", opLabel);
         const op = ops.find((o) => o.op === f.operator) ?? ops[0];
         return (
           <div className="filter-row" key={i}>
             <select
               className="filter-input"
-              aria-label="Filter property"
+              aria-label={t("filterProperty")}
               value={f.propertyId}
               onChange={(e) => {
                 const next = props.find((p) => p.id === e.target.value)!;
                 setFilter(i, {
                   propertyId: next.id,
-                  operator: operatorsFor(next.type)[0].op,
+                  operator: operatorsFor(next.type, opLabel)[0].op,
                   value: null,
                 });
               }}
@@ -137,7 +144,7 @@ function FilterPanel({ data, config, onConfigChange }: PanelProps) {
             </select>
             <select
               className="filter-input"
-              aria-label="Filter operator"
+              aria-label={t("filterOperator")}
               value={op.op}
               onChange={(e) => setFilter(i, { operator: e.target.value })}
             >
@@ -152,11 +159,12 @@ function FilterPanel({ data, config, onConfigChange }: PanelProps) {
                 filter={f}
                 property={property}
                 onChange={(value) => setFilter(i, { value })}
+                t={t}
               />
             )}
             <button
               className="icon-btn"
-              aria-label="Remove filter"
+              aria-label={t("removeFilter")}
               onClick={() =>
                 onConfigChange({
                   filters: config.filters.filter((_, j) => j !== i),
@@ -179,20 +187,20 @@ function FilterPanel({ data, config, onConfigChange }: PanelProps) {
           })
         }
       >
-        + Add filter
+        + {t("addFilter")}
       </button>
     </div>
   );
 }
 
-function SortPanel({ data, config, onConfigChange }: PanelProps) {
-  const props = filterableProps(data);
+function SortPanel({ data, config, onConfigChange, t, ts }: PanelProps) {
+  const props = filterableProps(data, ts("name"));
   const sort = config.sort;
   return (
-    <div className="popover sort-panel" role="dialog" aria-label="Sort">
+    <div className="popover sort-panel" role="dialog" aria-label={ts("sort")}>
       <select
         className="filter-input"
-        aria-label="Sort property"
+        aria-label={t("sortProperty")}
         value={sort?.propertyId ?? ""}
         onChange={(e) =>
           onConfigChange({
@@ -205,7 +213,7 @@ function SortPanel({ data, config, onConfigChange }: PanelProps) {
           })
         }
       >
-        <option value="">No sort</option>
+        <option value="">{t("noSort")}</option>
         {props.map((p) => (
           <option key={p.id} value={p.id}>
             {p.name}
@@ -215,7 +223,7 @@ function SortPanel({ data, config, onConfigChange }: PanelProps) {
       {sort && (
         <select
           className="filter-input"
-          aria-label="Sort direction"
+          aria-label={t("sortDirection")}
           value={sort.direction}
           onChange={(e) =>
             onConfigChange({
@@ -223,20 +231,24 @@ function SortPanel({ data, config, onConfigChange }: PanelProps) {
             })
           }
         >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
+          <option value="asc">{t("ascending")}</option>
+          <option value="desc">{t("descending")}</option>
         </select>
       )}
     </div>
   );
 }
 
-function GroupPanel({ data, config, onConfigChange }: PanelProps) {
+function GroupPanel({ data, config, onConfigChange, t }: PanelProps) {
   const selects = data.properties.filter((p) => p.type === "select");
   return (
-    <div className="popover group-panel" role="dialog" aria-label="Group by">
+    <div
+      className="popover group-panel"
+      role="dialog"
+      aria-label={t("groupBy")}
+    >
       {selects.length === 0 && (
-        <div className="popover-label">Add a select property first</div>
+        <div className="popover-label">{t("addSelectPropertyFirst")}</div>
       )}
       {selects.map((p) => (
         <button
@@ -258,14 +270,17 @@ export default function Toolbar({
   onKindChange,
   onConfigChange,
 }: Props) {
+  const t = useT("space");
+  const ts = useT("shared");
   const [open, setOpen] = useState<"filter" | "sort" | "group" | null>(null);
   const toggle = (panel: "filter" | "sort" | "group") =>
     setOpen(open === panel ? null : panel);
+  const viewKinds: ViewKind[] = ["table", "board", "list"];
 
   return (
     <div className="db-toolbar">
-      <div className="view-tabs" role="tablist" aria-label="Views">
-        {(Object.keys(VIEW_LABELS) as ViewKind[]).map((k) => (
+      <div className="view-tabs" role="tablist" aria-label={t("views")}>
+        {viewKinds.map((k) => (
           <button
             key={k}
             role="tab"
@@ -273,7 +288,7 @@ export default function Toolbar({
             className={`view-tab${k === kind ? " active" : ""}`}
             onClick={() => onKindChange(k)}
           >
-            {VIEW_LABELS[k]}
+            {viewLabel(k, t)}
           </button>
         ))}
       </div>
@@ -285,7 +300,7 @@ export default function Toolbar({
               onClick={() => toggle("group")}
             >
               <Columns3 size={14} />
-              Group
+              {t("group")}
             </button>
             {open === "group" && (
               <>
@@ -298,6 +313,8 @@ export default function Toolbar({
                   data={data}
                   config={config}
                   onConfigChange={onConfigChange}
+                  t={t}
+                  ts={ts}
                 />
               </>
             )}
@@ -309,7 +326,7 @@ export default function Toolbar({
             onClick={() => toggle("filter")}
           >
             <ListFilter size={14} />
-            Filter
+            {ts("filter")}
             {config.filters.length > 0 ? ` (${config.filters.length})` : ""}
           </button>
           {open === "filter" && (
@@ -323,6 +340,8 @@ export default function Toolbar({
                 data={data}
                 config={config}
                 onConfigChange={onConfigChange}
+                t={t}
+                ts={ts}
               />
             </>
           )}
@@ -333,7 +352,7 @@ export default function Toolbar({
             onClick={() => toggle("sort")}
           >
             <ArrowUpDown size={14} />
-            Sort
+            {ts("sort")}
           </button>
           {open === "sort" && (
             <>
@@ -346,6 +365,8 @@ export default function Toolbar({
                 data={data}
                 config={config}
                 onConfigChange={onConfigChange}
+                t={t}
+                ts={ts}
               />
             </>
           )}

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   currentAge,
-  dateTypeLabel,
   daysUntil,
   effectiveDay,
   isLeapYear,
@@ -71,18 +70,5 @@ describe("daysUntil", () => {
     expect(daysUntil("2026-08-21", "2026-08-15")).toBe(6);
     expect(daysUntil("2026-08-15", "2026-08-15")).toBe(0);
     expect(daysUntil("2026-08-10", "2026-08-15")).toBe(-5);
-  });
-});
-
-describe("dateTypeLabel", () => {
-  it("uses the label where the type alone would not say enough", () => {
-    expect(dateTypeLabel("birthday", null)).toBe("Birthday");
-    expect(dateTypeLabel("other", "Sober anniversary")).toBe(
-      "Sober anniversary",
-    );
-    expect(dateTypeLabel("other", null)).toBe("Important date");
-    expect(dateTypeLabel("child_birthday", "Louise")).toBe("Louise's birthday");
-    expect(dateTypeLabel("child_birthday", null)).toBe("Child's birthday");
-    expect(dateTypeLabel("work_anniversary", null)).toBe("Work anniversary");
   });
 });

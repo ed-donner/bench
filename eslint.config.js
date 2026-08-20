@@ -112,7 +112,12 @@ export default tseslint.config(
   // Seed and patch modules are literal data - rows to insert, synth presets. Counting their lines
   // measures the size of the fixture, not the difficulty of the code.
   {
-    files: ["server/src/**/seed.ts", "web/src/groove/patches.ts"],
+    files: [
+      "server/src/**/seed.ts",
+      "server/src/**/seed/**",
+      "web/src/groove/patches.ts",
+      "web/src/shared/locales/**",
+    ],
     rules: { "max-lines": "off", "max-lines-per-function": "off" },
   },
 

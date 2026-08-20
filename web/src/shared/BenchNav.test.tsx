@@ -2,17 +2,30 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BenchNav from "./BenchNav";
+import { LocaleProvider } from "./LocaleContext";
 
-const nav = () => within(screen.getByRole("navigation", { name: "Primary" }));
+const nav = () =>
+  within(screen.getByRole("navigation", { name: /Primary|Principal/ }));
+
+function renderNav(
+  active: "home" | "crm" | "space" | "rolodex" | "groove" = "crm",
+) {
+  return render(
+    <LocaleProvider>
+      <BenchNav active={active} />
+    </LocaleProvider>,
+  );
+}
 
 beforeEach(() => {
   localStorage.clear();
   delete document.documentElement.dataset.theme;
+  document.documentElement.lang = "en";
 });
 
 describe("BenchNav", () => {
   it("offers the launcher and all four apps, in order", () => {
-    render(<BenchNav active="crm" />);
+    renderNav("crm");
     expect(
       nav()
         .getAllByRole("link")
@@ -27,7 +40,7 @@ describe("BenchNav", () => {
   });
 
   it("marks only the app it is rendered in", () => {
-    render(<BenchNav active="space" />);
+    renderNav("space");
     const current = nav()
       .getAllByRole("link")
       .filter((link) => link.getAttribute("aria-current") === "page");
@@ -35,18 +48,42 @@ describe("BenchNav", () => {
   });
 
   it("names the project", () => {
-    render(<BenchNav active="home" />);
+    renderNav("home");
     expect(screen.getByText("Bench")).toBeInTheDocument();
   });
 
   it("toggles the theme for every app and remembers the choice", async () => {
-    render(<BenchNav active="rolodex" />);
-    await userEvent.click(screen.getByRole("button", { name: /Switch to/ }));
+    renderNav("rolodex");
+    const theme = screen.getByRole("button", {
+      name: /Switch to dark|Cambiar a oscuro/,
+    });
+    await userEvent.click(theme);
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(localStorage.getItem("bench.theme")).toBe("dark");
 
-    await userEvent.click(screen.getByRole("button", { name: /Switch to/ }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /Switch to light|Cambiar a claro/ }),
+    );
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(localStorage.getItem("bench.theme")).toBe("light");
+  });
+
+  it("shows ES and switches the document language to Spanish", async () => {
+    renderNav("crm");
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: /Switch to Spanish|Cambiar a español/,
+      }),
+    );
+    expect(document.documentElement.lang).toBe("es");
+    expect(localStorage.getItem("bench.locale")).toBe("es");
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: /Switch to English|Cambiar a inglés/,
+      }),
+    );
+    expect(
+      nav().getByRole("link", { name: /Inicio|Home/ }),
+    ).toBeInTheDocument();
   });
 });

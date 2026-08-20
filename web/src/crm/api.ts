@@ -1,9 +1,10 @@
 /** Thin fetch helpers for the local API. */
+import { apiHeaders } from "../shared/apiHeaders";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: apiHeaders(options?.headers as Record<string, string>),
   });
   if (!res.ok)
     throw new Error(

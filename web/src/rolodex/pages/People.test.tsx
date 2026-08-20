@@ -6,7 +6,7 @@ import { format, subDays } from "date-fns";
 import People from "./People";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
-import { person } from "../test/helpers";
+import { person, withLocale } from "../test/helpers";
 
 vi.mock("../api");
 
@@ -32,20 +32,22 @@ const refresh = vi.fn().mockResolvedValue(undefined);
 
 function renderPeople(rows = people) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{
-          people: rows,
-          tags: ["design", "university"],
-          loaded: true,
-          refresh,
-        }}
-      >
-        <ToastContext.Provider value={vi.fn()}>
-          <People />
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{
+            people: rows,
+            tags: ["design", "university"],
+            loaded: true,
+            refresh,
+          }}
+        >
+          <ToastContext.Provider value={vi.fn()}>
+            <People />
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 
@@ -85,7 +87,7 @@ describe("People", () => {
 
   it("filters by tag", async () => {
     renderPeople();
-    await userEvent.selectOptions(screen.getByLabelText("Tag"), "design");
+    await userEvent.selectOptions(screen.getByLabelText("Tags"), "design");
     expect(rowNames()).toHaveLength(1);
     expect(rowNames()[0]).toContain("Maya Chen");
   });

@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import { useT } from "../../shared/useLocale";
 
 interface Props {
   title: string;
@@ -13,15 +14,16 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
+  const ts = useT("shared");
   return (
     <Modal title={title} onClose={onCancel}>
       <p style={{ marginTop: 0 }}>{message}</p>
       <div className="modal-actions">
         <button className="btn btn-ghost" onClick={onCancel}>
-          Cancel
+          {ts("cancel")}
         </button>
         <button className="btn btn-danger" onClick={onConfirm}>
-          Delete
+          {ts("delete")}
         </button>
       </div>
     </Modal>

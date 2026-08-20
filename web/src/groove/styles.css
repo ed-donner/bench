@@ -149,6 +149,7 @@ button {
   font-size: var(--f-md);
   font-weight: 700;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .brand-model {
@@ -170,6 +171,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.16em;
   color: var(--text);
+  text-transform: uppercase;
 }
 
 .play-btn:hover {
@@ -241,6 +243,7 @@ button {
   font-size: var(--f-xs);
   color: var(--dim);
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .master-leds {
@@ -410,6 +413,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.2em;
   color: var(--accent);
+  text-transform: uppercase;
 }
 
 .unit-model {

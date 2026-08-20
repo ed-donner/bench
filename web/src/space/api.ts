@@ -1,3 +1,18 @@
+import { apiHeaders } from "../shared/apiHeaders";
+
+async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: apiHeaders(),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(detail.error ?? `${method} ${url} failed (${res.status})`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export type PageType = "page" | "database" | "row";
 
 export interface TreeNode {
@@ -82,20 +97,6 @@ export interface RowData {
   title: string;
   properties: Property[];
   values: Record<string, unknown>;
-}
-
-async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method,
-    headers:
-      body === undefined ? undefined : { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const detail = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(detail.error ?? `${method} ${url} failed (${res.status})`);
-  }
-  return res.json() as Promise<T>;
 }
 
 export const api = {

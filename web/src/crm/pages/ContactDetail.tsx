@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useT } from "../../shared/useLocale";
 import { api } from "../api";
 import { useFetch } from "../hooks";
 import { Activity, Contact, Deal, Organization } from "../types";
@@ -19,26 +20,28 @@ function ContactFacts({
   contact: Contact;
   org?: Organization;
 }) {
+  const ts = useT("shared");
+  const tc = useT("crm");
   return (
     <dl className="props">
-      <dt>Status</dt>
+      <dt>{ts("status")}</dt>
       <dd>
         <StatusChip status={contact.status} />
       </dd>
-      <dt>Email</dt>
-      <dd>{contact.email || "—"}</dd>
-      <dt>Phone</dt>
-      <dd>{contact.phone || "—"}</dd>
-      <dt>Job title</dt>
-      <dd>{contact.job_title || "—"}</dd>
-      <dt>Organization</dt>
+      <dt>{tc("email")}</dt>
+      <dd>{contact.email || tc("emDash")}</dd>
+      <dt>{tc("phone")}</dt>
+      <dd>{contact.phone || tc("emDash")}</dd>
+      <dt>{tc("jobTitle")}</dt>
+      <dd>{contact.job_title || tc("emDash")}</dd>
+      <dt>{tc("organization")}</dt>
       <dd>
         {org ? (
           <Link className="entity-link" to={`/organizations/${org.id}`}>
             {org.name}
           </Link>
         ) : (
-          "—"
+          tc("emDash")
         )}
       </dd>
     </dl>
@@ -46,6 +49,8 @@ function ContactFacts({
 }
 
 export default function ContactDetail() {
+  const ts = useT("shared");
+  const tc = useT("crm");
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -60,7 +65,7 @@ export default function ContactDetail() {
     `/api/crm/activities?contact_id=${id}`,
   );
   const org = orgs?.find((o) => o.id === contact?.organization_id);
-  const atOrg = org ? ` at ${org.name}` : "";
+  const atOrg = org ? tc.i("atOrganization", { name: org.name }) : "";
 
   if (!contact) return null;
 
@@ -72,36 +77,38 @@ export default function ContactDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/contacts">Contacts</Link> / {contact.name}
+        <Link to="/contacts">{tc("navContacts")}</Link> / {contact.name}
       </div>
       <PageHeader
         icon={<IconContacts size={20} />}
         title={contact.name}
-        sub={(contact.job_title || "Contact") + atOrg}
+        sub={(contact.job_title || tc("contactFallback")) + atOrg}
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {tc("logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {ts("edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {ts("delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{tc("details")}</h2>
           <ContactFacts contact={contact} org={org} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {tc("sectionDeals")} ({deals?.length ?? 0})
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
         <div className="card full">
-          <h2>Activity</h2>
+          <h2>{tc("activitySection")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -125,8 +132,8 @@ export default function ContactDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete "${contact.name}"? This cannot be undone.`}
+          title={tc("deleteContact")}
+          message={tc.i("deleteNamedMessage", { name: contact.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

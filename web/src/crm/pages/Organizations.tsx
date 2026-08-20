@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api, query } from "../api";
 import { useFetch } from "../hooks";
 import { Contact, Deal, Organization, isOpen, sumValue } from "../types";
@@ -18,6 +19,9 @@ interface OrgRow extends Organization {
 }
 
 export default function Organizations() {
+  const { locale } = useLocale();
+  const ts = useT("shared");
+  const tc = useT("crm");
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Organization | null>(null);
@@ -77,48 +81,50 @@ export default function Organizations() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: ts("name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "website",
-        header: "Website",
+        header: tc("website"),
         cell: (c) => {
           const site = c.getValue<string>();
           return site ? (
             <span className="cell-muted">{site}</span>
           ) : (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{tc("emDash")}</span>
           );
         },
       },
       {
         accessorKey: "industry",
-        header: "Industry",
+        header: tc("industry"),
         cell: (c) =>
-          c.getValue<string>() || <span className="cell-empty">—</span>,
+          c.getValue<string>() || (
+            <span className="cell-empty">{tc("emDash")}</span>
+          ),
       },
       {
         accessorKey: "contact_count",
-        header: "Contacts",
+        header: tc("contactsTitle"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_count",
-        header: "Open deals",
+        header: tc("openDealsCol"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_value",
-        header: "Pipeline",
+        header: tc("navPipeline"),
         cell: (c) => (
           <span className="cell-money">
-            {formatMoney(c.getValue<number>())}
+            {formatMoney(c.getValue<number>(), locale)}
           </span>
         ),
       },
     ],
-    [],
+    [ts, tc, locale],
   );
 
   const remove = async () => {
@@ -135,12 +141,12 @@ export default function Organizations() {
     <>
       <PageHeader
         icon={<IconOrganizations size={20} />}
-        title="Organizations"
-        sub="The companies you do business with"
+        title={tc("organizationsTitle")}
+        sub={tc("organizationsSub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add organization
+          {tc("addOrganization")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -149,7 +155,7 @@ export default function Organizations() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search organizations…"
+            placeholder={tc("searchOrganizations")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -163,10 +169,14 @@ export default function Organizations() {
         onRowClick={(o) => void navigate(`/organizations/${o.id}`)}
         onEdit={(o) => setEditing(o)}
         onDelete={(o) => setDeleting(o)}
-        emptyMessage={
-          q ? `No organizations match “${q}”.` : "No organizations yet."
+        emptyMessage={q ? tc.i("noOrgsMatch", { q }) : tc("noOrganizations")}
+        summary={
+          <>
+            {tc.i("openPipelineSummary", {
+              amount: formatMoney(openPipeline, locale),
+            })}
+          </>
         }
-        summary={<>Open pipeline {formatMoney(openPipeline)}</>}
       />
       {adding && (
         <OrganizationForm onSaved={reload} onClose={() => setAdding(false)} />
@@ -180,8 +190,8 @@ export default function Organizations() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete ${deleting.name}? Its contacts and deals stay, but lose their link to it.`}
+          title={tc("deleteOrganization")}
+          message={tc.i("deleteOrgListMessage", { name: deleting.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

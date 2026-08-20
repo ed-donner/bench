@@ -1,7 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useT } from "../../shared/useLocale";
 import type { Block } from "../api";
+import { blockPlaceholder } from "../i18n";
 import ContentEditable from "./ContentEditable";
 
 interface BlockHandlers {
@@ -30,25 +32,13 @@ const CLASSES: Record<string, string> = {
   callout: "b-callout-text",
 };
 
-const PLACEHOLDERS: Record<string, string> = {
-  paragraph: "Type “/” for commands",
-  heading1: "Heading 1",
-  heading2: "Heading 2",
-  heading3: "Heading 3",
-  bulleted: "List item",
-  numbered: "List item",
-  todo: "To-do",
-  quote: "Quote",
-  code: "Code",
-  callout: "Callout",
-};
-
 export default function BlockRow({
   block,
   number,
   version,
   ...handlers
 }: Props) {
+  const t = useT("space");
   const {
     attributes,
     listeners,
@@ -66,7 +56,7 @@ export default function BlockRow({
       version={version}
       initialText={text}
       className={`block-text ${CLASSES[block.type] ?? "b-paragraph"}${extraClass}`}
-      placeholder={PLACEHOLDERS[block.type]}
+      placeholder={blockPlaceholder(block.type, t)}
       onTextInput={handlers.onTextInput}
       onKeyDown={handlers.onKeyDown}
       onBlur={handlers.onBlur}
@@ -105,7 +95,7 @@ export default function BlockRow({
               type="checkbox"
               className="b-checkbox"
               checked={checked}
-              aria-label={text || "To-do"}
+              aria-label={text || t("placeholderTodo")}
               onChange={(e) =>
                 handlers.onToggleTodo(block.id, e.target.checked)
               }
@@ -142,7 +132,7 @@ export default function BlockRow({
     >
       <button
         className="drag-handle"
-        aria-label="Drag block"
+        aria-label={t("dragBlock")}
         {...attributes}
         {...listeners}
       >

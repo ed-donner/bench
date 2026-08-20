@@ -1,11 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Master } from "./Master";
 import { PATCHES } from "../patches";
 import { MASTER_GROUPS } from "../params";
 import { filterLabel } from "../filter";
+import { masterGroupLabel, type GrooveT } from "../i18n";
+import { t } from "../../shared/useLocale";
 import { SWEEP_BARS } from "../types";
+import { renderGroove } from "../test/render";
 
 // The scope is a canvas render loop with its own suite; this one is about the master panel.
 vi.mock("./Scope", () => ({
@@ -26,7 +29,7 @@ function renderMaster(overrides: Partial<MasterProps> = {}) {
     sweepPhase: 0,
     ...overrides,
   };
-  const { container, rerender } = render(<Master {...props} />);
+  const { container, rerender } = renderGroove(<Master {...props} />);
   const show = (next: Partial<MasterProps>) =>
     rerender(<Master {...props} {...next} />);
   return { ...props, container, show };
@@ -45,7 +48,7 @@ describe("Master", () => {
     const { container, onParam } = renderMaster({ liveFilter: 0.75 });
     const display = container.querySelector(".hero-display")!;
 
-    expect(display).toHaveTextContent("CUTOFF");
+    expect(display).toHaveTextContent("Cutoff");
     expect(display).toHaveTextContent(filterLabel(0.75));
 
     await dragKnob(container.querySelector(".hero-knob .knob")!, 20);
@@ -55,8 +58,13 @@ describe("Master", () => {
 
   it("names every master group and its knobs", () => {
     renderMaster();
+    const gt = Object.assign((k: Parameters<GrooveT>[0]) => t("groove", k), {
+      i: (k: Parameters<GrooveT>[0]) => t("groove", k),
+    }) as GrooveT;
     for (const group of MASTER_GROUPS) {
-      expect(screen.getAllByText(group.title).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByText(masterGroupLabel(gt, group.titleKey)).length,
+      ).toBeGreaterThan(0);
       for (const spec of group.specs) {
         expect(screen.getByText(spec.label)).toBeInTheDocument();
       }
@@ -78,7 +86,7 @@ describe("Master", () => {
       params: { ...PATCHES[0].master, sweepBars: 0 },
     });
     expect(container.querySelector(".sweep-meter")).toHaveClass("off");
-    expect(screen.getByText("SWEEP OFF")).toBeInTheDocument();
+    expect(screen.getByText("Sweep off")).toBeInTheDocument();
   });
 
   it("lights the segment the sweep is currently in", () => {

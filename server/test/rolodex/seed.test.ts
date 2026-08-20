@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { openDb, type Repo } from "../../src/rolodex/db/index.js";
-import { seedIfEmpty } from "../../src/rolodex/seed.js";
+import { seedIfEmpty } from "../../src/rolodex/seed/index.js";
 import { todayISO } from "../../src/rolodex/dates.js";
 import { upcomingDates } from "../../src/rolodex/importantDates.js";
 
@@ -12,7 +12,7 @@ let repo: Repo;
 
 beforeEach(() => {
   repo = openDb(":memory:");
-  seedIfEmpty(repo);
+  seedIfEmpty(repo, "en");
 });
 
 describe("the seeded rolodex", () => {
@@ -68,7 +68,7 @@ describe("the seeded rolodex", () => {
 
   it("does not seed a second time over an existing rolodex", () => {
     const before = repo.personCount();
-    seedIfEmpty(repo);
+    seedIfEmpty(repo, "en");
     expect(repo.personCount()).toBe(before);
   });
 

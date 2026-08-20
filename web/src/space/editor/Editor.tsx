@@ -19,8 +19,9 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { api, type Block } from "../api";
+import { useT } from "../../shared/useLocale";
 import { caretOffset, focusBlock, selectionCollapsed } from "./caret";
-import { filterBlockTypes } from "./blockTypes";
+import { filterBlockTypes } from "../i18n";
 import BlockRow from "./BlockRow";
 import SlashMenu from "./SlashMenu";
 import { applyReorder } from "./reorder";
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export default function Editor({ pageId, initialBlocks }: Props) {
+  const t = useT("space");
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initialBlocks.map((b) => {
       // Typed as an object, but it arrives as JSON and an older block may hold anything.
@@ -347,7 +349,7 @@ export default function Editor({ pageId, initialBlocks }: Props) {
   /** The slash menu's own keys while it is open. True means it consumed the event. */
   const handleSlashKey = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>, s: SlashState) => {
-      const items = filterBlockTypes(s.query);
+      const items = filterBlockTypes(s.query, t);
       if (e.key === "ArrowDown" && items.length > 0) {
         e.preventDefault();
         setSlash({ ...s, selected: (s.selected + 1) % items.length });
@@ -373,7 +375,7 @@ export default function Editor({ pageId, initialBlocks }: Props) {
       }
       return false;
     },
-    [pickSlash],
+    [pickSlash, t],
   );
 
   const onKeyDown = useCallback(

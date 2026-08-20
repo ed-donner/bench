@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Transport } from "./Transport";
 import { PATCHES } from "../patches";
+import { renderGroove } from "../test/render";
 
 type TransportProps = Parameters<typeof Transport>[0];
 
@@ -22,20 +23,20 @@ function renderTransport(overrides: Partial<TransportProps> = {}) {
     onRevert: vi.fn(),
     ...overrides,
   };
-  const { container, rerender } = render(<Transport {...props} />);
+  const { container, rerender } = renderGroove(<Transport {...props} />);
   const show = (next: Partial<TransportProps>) =>
     rerender(<Transport {...props} {...next} />);
   return { ...props, container, show };
 }
 
 describe("Transport", () => {
-  it("offers PLAY when stopped and STOP when playing", async () => {
+  it("offers Play when stopped and Stop when playing", async () => {
     const { onPlay, show } = renderTransport();
-    await userEvent.click(screen.getByRole("button", { name: /PLAY/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Play/ }));
     expect(onPlay).toHaveBeenCalledOnce();
 
     show({ playing: true });
-    expect(screen.getByRole("button", { name: /STOP/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Stop/ })).toBeInTheDocument();
   });
 
   it("steps the tempo one BPM at a time", async () => {
@@ -88,10 +89,10 @@ describe("Transport", () => {
 
   it("only offers revert once the patch has been edited", async () => {
     const { onRevert, show } = renderTransport({ edited: false });
-    expect(screen.getByRole("button", { name: "SAVED" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saved" })).toBeDisabled();
 
     show({ edited: true });
-    await userEvent.click(screen.getByRole("button", { name: "REVERT" }));
+    await userEvent.click(screen.getByRole("button", { name: "Revert" }));
     expect(onRevert).toHaveBeenCalledOnce();
   });
 });

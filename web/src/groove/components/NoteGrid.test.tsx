@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NoteGrid } from "./NoteGrid";
 import { STEPS, type MelodicStep } from "../types";
 import { CHORD_SHAPES, noteName } from "../music";
+import { renderGroove } from "../test/render";
 
 function melodic(partial: Partial<MelodicStep> = {}): MelodicStep {
   return { on: false, note: 60, chord: 0, vel: 0.8, ...partial };
@@ -12,7 +13,7 @@ function melodic(partial: Partial<MelodicStep> = {}): MelodicStep {
 function renderGrid(steps: MelodicStep[], showChord = false) {
   const onChange = vi.fn();
   const onAudition = vi.fn();
-  render(
+  renderGroove(
     <NoteGrid
       unit="BASS"
       steps={steps}

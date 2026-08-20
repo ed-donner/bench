@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ActivityTimeline from "./ActivityTimeline";
 import { api } from "../api";
 import { formatDateTime } from "../format";
-import { activity } from "../test/helpers";
+import { activity, renderCrm } from "../test/helpers";
 
 vi.mock("../api", () => ({ api: { patch: vi.fn() } }));
 
@@ -24,7 +24,7 @@ function dayOffset(days: number): string {
 }
 
 const show = (activities = [activity()], onChanged = vi.fn()) => {
-  render(<ActivityTimeline activities={activities} onChanged={onChanged} />);
+  renderCrm(<ActivityTimeline activities={activities} onChanged={onChanged} />);
   return onChanged;
 };
 
@@ -37,7 +37,7 @@ describe("ActivityTimeline", () => {
   it("shows the description, the type and when it happened", () => {
     show([activity({ type: "call", description: "Discovery call" })]);
     expect(screen.getByText("Discovery call")).toBeInTheDocument();
-    expect(screen.getByText("call")).toBeInTheDocument();
+    expect(screen.getByText("Call")).toBeInTheDocument();
     expect(
       screen.getByText(formatDateTime("2026-06-02 14:30:00")),
     ).toBeInTheDocument();

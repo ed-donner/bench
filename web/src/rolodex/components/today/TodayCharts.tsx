@@ -9,7 +9,9 @@ import {
   YAxis,
 } from "recharts";
 import { Sparkles } from "lucide-react";
+import { useT } from "../../../shared/useLocale";
 import type { StatsPayload } from "../../api";
+import { statusLabel } from "../../i18n";
 
 const AXIS = { fontSize: 11, fill: "var(--muted)" };
 const TOOLTIP = {
@@ -39,14 +41,16 @@ function Frame({
 }
 
 export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
+  const t = useT("rolodex");
+
   return (
     <div className="card card-pad span2">
       <h2 className="card-title chart-heading">
-        <Sparkles size={16} /> How you’re doing
+        <Sparkles size={16} /> {t("howYoureDoing")}
       </h2>
       {stats ? (
         <div className="chart-pair">
-          <Frame title="Interactions logged per month">
+          <Frame title={t("chartInteractionsMonth")}>
             <BarChart
               data={stats.months}
               margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
@@ -74,13 +78,13 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
               />
               <Bar
                 dataKey="count"
-                name="Interactions"
+                name={t("chartInteractions")}
                 fill="var(--blue)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </Frame>
-          <Frame title="People per circle, by check-in status">
+          <Frame title={t("chartPeopleCircle")}>
             <BarChart
               data={stats.circles}
               margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
@@ -109,26 +113,25 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Bar
                 dataKey="in_touch"
-                name="In touch"
+                name={statusLabel(t, "in_touch")}
                 stackId="s"
                 fill="var(--green)"
               />
               <Bar
                 dataKey="due_soon"
-                name="Due soon"
+                name={statusLabel(t, "due_soon")}
                 stackId="s"
                 fill="var(--amber)"
               />
               <Bar
                 dataKey="overdue"
-                name="Overdue"
+                name={statusLabel(t, "overdue")}
                 stackId="s"
                 fill="var(--red)"
-                radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="snoozed"
-                name="Snoozed"
+                name={statusLabel(t, "snoozed")}
                 stackId="s"
                 fill="var(--slate)"
               />
@@ -136,7 +139,7 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
           </Frame>
         </div>
       ) : (
-        <div className="muted small">Loading charts…</div>
+        <div className="muted small">{t("loadingCharts")}</div>
       )}
     </div>
   );

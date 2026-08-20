@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import DatabaseView from "./DatabaseView";
@@ -59,7 +60,7 @@ const dbData = (): DatabaseData => ({
 
 function renderDb() {
   vi.mocked(api.getDatabase).mockResolvedValue(dbData());
-  return render(
+  return renderSpace(
     <MemoryRouter>
       <DatabaseView databaseId="db1" />
     </MemoryRouter>,
@@ -100,7 +101,7 @@ describe("DatabaseView table", () => {
     });
     renderDb();
     await userEvent.click(
-      await screen.findByRole("button", { name: /New row/ }),
+      await screen.findByRole("button", { name: /Add row/ }),
     );
     expect(api.addRow).toHaveBeenCalledWith("db1");
     await waitFor(() =>

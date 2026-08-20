@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import Editor from "./Editor";
 import { applyReorder } from "./reorder";
@@ -42,7 +43,7 @@ const makeBlocks = (): Block[] => [
 ];
 
 function renderEditor(blocks = makeBlocks()) {
-  return render(<Editor pageId="p1" initialBlocks={blocks} />);
+  return renderSpace(<Editor pageId="p1" initialBlocks={blocks} />);
 }
 
 function blockText(id: string): HTMLElement {

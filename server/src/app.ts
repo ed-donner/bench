@@ -3,6 +3,8 @@ import type Database from "better-sqlite3";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { benchRouter } from "./bench/routes.js";
+import { markDirtyOnWrite } from "./bench/middleware.js";
 import { crmRouter } from "./crm/routes.js";
 import { rolodexRouter } from "./rolodex/routes/index.js";
 import type { Repo } from "./rolodex/db/index.js";
@@ -36,9 +38,14 @@ export function createApp(dbs: Dbs): express.Express {
     next();
   });
 
-  app.use("/api/crm", crmRouter(dbs.crm));
-  app.use("/api/space", spaceRouter(dbs.space));
-  app.use("/api/rolodex", rolodexRouter(dbs.rolodex));
+  app.use("/api/bench", benchRouter(dbs));
+  app.use("/api/crm", markDirtyOnWrite(dbs.crm), crmRouter(dbs.crm));
+  app.use("/api/space", markDirtyOnWrite(dbs.space), spaceRouter(dbs.space));
+  app.use(
+    "/api/rolodex",
+    markDirtyOnWrite(dbs.rolodex.db),
+    rolodexRouter(dbs.rolodex),
+  );
 
   if (existsSync(webDist)) {
     app.use(express.static(webDist));

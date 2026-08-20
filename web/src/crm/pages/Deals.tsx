@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api, query } from "../api";
 import { useFetch } from "../hooks";
 import {
@@ -12,6 +13,7 @@ import {
   sumExpected,
   sumValue,
 } from "../types";
+import { dealStageLabel } from "../i18n";
 import DataTable from "../components/DataTable";
 import DealForm from "../components/DealForm";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -21,6 +23,8 @@ import { IconDeals, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
 
 export default function Deals() {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   const [q, setQ] = useState("");
   const [stage, setStage] = useState("");
   const [adding, setAdding] = useState(false);
@@ -46,34 +50,34 @@ export default function Deals() {
     () => [
       {
         accessorKey: "name",
-        header: "Deal",
+        header: tc("deal"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "organization_id",
-        header: "Organization",
+        header: tc("organization"),
         cell: (c) =>
           orgName.get(c.getValue<number>()) ?? (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{tc("emDash")}</span>
           ),
       },
       {
         accessorKey: "stage",
-        header: "Stage",
+        header: tc("stage"),
         cell: (c) => <StageChip stage={c.row.original.stage} />,
       },
       {
         accessorKey: "value",
-        header: "Value",
+        header: tc("value"),
         cell: (c) => (
           <span className="cell-money">
-            {formatMoney(c.getValue<number>())}
+            {formatMoney(c.getValue<number>(), locale)}
           </span>
         ),
       },
       {
         accessorKey: "probability",
-        header: "Probability",
+        header: tc("probability"),
         cell: (c) => {
           const p = c.getValue<number>();
           return (
@@ -88,29 +92,29 @@ export default function Deals() {
       },
       {
         id: "expected",
-        header: "Expected",
+        header: tc("expectedCol"),
         accessorFn: (d) => expectedValue(d),
         cell: (c) => (
           <span className="cell-money">
-            {formatMoney(c.getValue<number>())}
+            {formatMoney(c.getValue<number>(), locale)}
           </span>
         ),
       },
       {
         accessorKey: "close_date",
-        header: "Close date",
-        cell: (c) => formatDate(c.getValue<string>()),
+        header: tc("closeDate"),
+        cell: (c) => formatDate(c.getValue<string>(), locale),
       },
       {
         accessorKey: "contact_id",
-        header: "Contact",
+        header: tc("contact"),
         cell: (c) =>
           contactName.get(c.getValue<number>()) ?? (
-            <span className="cell-empty">—</span>
+            <span className="cell-empty">{tc("emDash")}</span>
           ),
       },
     ],
-    [orgName, contactName],
+    [tc, locale, orgName, contactName],
   );
 
   const remove = async () => {
@@ -124,12 +128,12 @@ export default function Deals() {
     <>
       <PageHeader
         icon={<IconDeals size={20} />}
-        title="Deals"
-        sub="The potential sales you're working on"
+        title={tc("dealsTitle")}
+        sub={tc("dealsSub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add deal
+          {tc("addDeal")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -138,21 +142,21 @@ export default function Deals() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search deals…"
+            placeholder={tc("searchDeals")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
         <select
           className="filter-select"
-          aria-label="Filter by stage"
+          aria-label={tc("filterByStage")}
           value={stage}
           onChange={(e) => setStage(e.target.value)}
         >
-          <option value="">All stages</option>
+          <option value="">{tc("allStages")}</option>
           {DEAL_STAGES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {dealStageLabel(tc, s)}
             </option>
           ))}
         </select>
@@ -165,13 +169,13 @@ export default function Deals() {
         onRowClick={(d) => void navigate(`/deals/${d.id}`)}
         onEdit={(d) => setEditing(d)}
         onDelete={(d) => setDeleting(d)}
-        emptyMessage={
-          q || stage ? "No deals match these filters." : "No deals yet."
-        }
+        emptyMessage={q || stage ? tc("noDealsMatch") : tc("noDeals")}
         summary={
           <>
-            Total {formatMoney(sumValue(deals))} · Expected{" "}
-            {formatMoney(sumExpected(deals))}
+            {tc.i("summaryTotalExpected", {
+              total: formatMoney(sumValue(deals), locale),
+              expected: formatMoney(sumExpected(deals), locale),
+            })}
           </>
         }
       />
@@ -194,8 +198,8 @@ export default function Deals() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete deal"
-          message={`Delete ${deleting.name}? This cannot be undone.`}
+          title={tc("deleteDeal")}
+          message={tc.i("deleteNamedMessage", { name: deleting.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

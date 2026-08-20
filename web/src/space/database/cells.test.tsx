@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import Cell, { Chip } from "./cells";
 import { nextColor, OPTION_COLORS } from "./optionColors";
@@ -29,7 +30,7 @@ function renderCell(
   onChange = vi.fn(),
   onCreateOption = vi.fn(),
 ) {
-  render(
+  renderSpace(
     <Cell
       property={p}
       value={value}
@@ -98,7 +99,7 @@ describe("text-like cells", () => {
 describe("date and checkbox cells", () => {
   it("saves a picked date and clears it", () => {
     const onChange = vi.fn();
-    render(
+    renderSpace(
       <Cell
         property={prop("date")}
         value="2026-01-01"
@@ -149,7 +150,7 @@ describe("select cell", () => {
     const created = option("o3", "Abandoned", "red");
     const onCreateOption = vi.fn().mockResolvedValue(created);
     const onChange = vi.fn();
-    render(
+    renderSpace(
       <Cell
         property={prop("select", options)}
         value={null}
@@ -166,7 +167,7 @@ describe("select cell", () => {
       "Abandoned",
     );
     await userEvent.click(
-      screen.getByRole("button", { name: /Create “Abandoned”/ }),
+      screen.getByRole("button", { name: /Create "Abandoned"/ }),
     );
     expect(onCreateOption).toHaveBeenCalledWith("Abandoned");
     await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith("o3"));
@@ -215,7 +216,9 @@ describe("multi-select cell", () => {
 describe("Chip", () => {
   it("renders the color class and remove control", async () => {
     const onRemove = vi.fn();
-    render(<Chip option={option("x", "Tag", "purple")} onRemove={onRemove} />);
+    renderSpace(
+      <Chip option={option("x", "Tag", "purple")} onRemove={onRemove} />,
+    );
     expect(screen.getByText("Tag").className).toContain("chip-purple");
     await userEvent.click(screen.getByRole("button", { name: "Remove Tag" }));
     expect(onRemove).toHaveBeenCalled();

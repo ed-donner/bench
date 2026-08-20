@@ -13,7 +13,7 @@ external services, no secrets. Data lives in local SQLite files.
 
 A launcher at `/` links to all four, and every page carries the same navigation strip: the Bench
 mark, then Home, CRM, Space, Rolodex and Groove, each with the icon that identifies it inside its
-own app too, and one theme toggle on the right.
+own app too, an English/Spanish toggle and the theme toggle on the right.
 
 ## Detailed app documentation
 
@@ -42,7 +42,7 @@ web/                ONE Vite project, multi-page (MPA)
   space/index.html    -> src/space/main.tsx
   rolodex/index.html  -> src/rolodex/main.tsx
   groove/index.html   -> src/groove/main.tsx
-  src/shared/         the navigation strip and the theme - the only code all five documents share
+  src/shared/         the navigation strip, locale and theme - the only code all five documents share
 server/             ONE Express app
   src/index.ts        opens the three DBs, listens on :8100
   src/app.ts          mounts routers, serves web/dist with per-prefix SPA fallback
@@ -128,6 +128,14 @@ These are settled. Changing one is a project-level decision, not an implementati
   defines its palette twice - once on `:root`, once under `[data-theme="dark"]` - and sets
   `color-scheme` so native controls follow. Groove is the exception in direction only: it is dark
   by default and defines `[data-theme="light"]`.
+- **One locale, chosen once.** `web/src/shared/locale.ts` writes `lang` on the document element and
+  remembers the choice in `localStorage` under `bench.locale`; each entry point calls
+  `initLocale()` **before it renders**, the same way theme does. The first visit follows the browser
+  language (`es*` → Spanish, otherwise English). UI strings live in `web/src/shared/locales/` and
+  are read through `LocaleProvider` / `useT()`. API calls send `X-Bench-Locale`. Demo seed data is
+  stored in `server/src/*/seed/en.ts` and `es.ts`; `POST /api/bench/locale` re-seeds all three
+  databases when they are still pristine (unchanged since seeding). `SEED_LOCALE` env var picks the
+  language on first boot (default `en`, used by e2e).
 - **Colour means state, not identity.** In the strip and on the launcher, amber marks the app you
   are in and nothing else; the apps are told apart by their glyph. That is what keeps a fifth app
   from needing a fifth brand colour. Inside an app, its own accents are its own business.

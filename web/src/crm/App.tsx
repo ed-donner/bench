@@ -1,5 +1,6 @@
 import { NavLink, Route, Routes } from "react-router";
 import BenchNav from "../shared/BenchNav";
+import { useT } from "../shared/useLocale";
 import { IconCrm } from "../shared/AppIcons";
 import {
   IconContacts,
@@ -17,15 +18,21 @@ import Deals from "./pages/Deals";
 import DealDetail from "./pages/DealDetail";
 import Pipeline from "./pages/Pipeline";
 
-const NAV = [
-  { to: "/", label: "Dashboard", end: true, Icon: IconDashboard },
-  { to: "/organizations", label: "Organizations", Icon: IconOrganizations },
-  { to: "/contacts", label: "Contacts", Icon: IconContacts },
-  { to: "/deals", label: "Deals", Icon: IconDeals },
-  { to: "/pipeline", label: "Pipeline", Icon: IconPipeline },
-];
-
 export default function App() {
+  const t = useT("crm");
+
+  const nav = [
+    { to: "/", label: t("navDashboard"), end: true, Icon: IconDashboard },
+    {
+      to: "/organizations",
+      label: t("navOrganizations"),
+      Icon: IconOrganizations,
+    },
+    { to: "/contacts", label: t("navContacts"), Icon: IconContacts },
+    { to: "/deals", label: t("navDeals"), Icon: IconDeals },
+    { to: "/pipeline", label: t("navPipeline"), Icon: IconPipeline },
+  ];
+
   return (
     <>
       <BenchNav active="crm" />
@@ -33,10 +40,10 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <IconCrm size={19} />
-            Personal CRM
+            {t("brand")}
           </div>
           <nav>
-            {NAV.map(({ to, label, end, Icon }) => (
+            {nav.map(({ to, label, end, Icon }) => (
               <NavLink key={to} to={to} end={end} className="nav-link">
                 <Icon size={17} />
                 <span>{label}</span>

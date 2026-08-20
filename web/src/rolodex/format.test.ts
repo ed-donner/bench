@@ -7,7 +7,6 @@ import {
   initials,
   localTimeIn,
   monthShort,
-  relativeDays,
   todayISO,
 } from "./format";
 
@@ -15,19 +14,15 @@ describe("dates as words", () => {
   it("formats a date, and falls back when there is not one", () => {
     expect(fmtDate("2026-03-15")).toBe("15 Mar 2026");
     expect(fmtDate(null)).toBe("—");
-    expect(fmtDate(null, "never")).toBe("never");
+    expect(fmtDate(null, "en", "never")).toBe("never");
     expect(fmtDate("not a date")).toBe("—");
     expect(fmtDateShort("2026-03-15")).toBe("15 Mar");
     expect(fmtDateShort(null)).toBe("—");
   });
 
-  it("says how long ago something was, relative to a given day", () => {
-    expect(relativeDays("2026-08-15", "2026-08-15")).toBe("today");
-    expect(relativeDays("2026-08-14", "2026-08-15")).toBe("yesterday");
-    expect(relativeDays("2026-08-16", "2026-08-15")).toBe("tomorrow");
-    expect(relativeDays("2026-08-05", "2026-08-15")).toBe("10 days ago");
-    expect(relativeDays("2026-08-25", "2026-08-15")).toBe("in 10 days");
-    expect(relativeDays(null)).toBe("never contacted");
+  it("formats dates in Spanish when asked", () => {
+    expect(fmtDate("2026-03-15", "es")).toMatch(/15 mar/i);
+    expect(monthShort(3, "es")).toMatch(/mar/i);
   });
 
   it("names a month and today", () => {

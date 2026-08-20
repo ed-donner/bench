@@ -19,7 +19,7 @@ describe("param specs", () => {
   it("describes every unit and names it for the panel", () => {
     for (const id of UNIT_IDS) {
       expect(UNIT_PARAMS[id].length).toBeGreaterThan(0);
-      expect(UNIT_META[id].name).not.toBe("");
+      expect(UNIT_META[id].nameKey).not.toBe("");
       expect(UNIT_META[id].model).not.toBe("");
     }
   });
@@ -60,7 +60,7 @@ describe("param specs", () => {
   it("groups the master controls under non-empty titles", () => {
     expect(MASTER_GROUPS.length).toBeGreaterThan(0);
     for (const group of MASTER_GROUPS) {
-      expect(group.title).not.toBe("");
+      expect(group.titleKey).not.toBe("");
       expect(group.specs.length).toBeGreaterThan(0);
     }
   });

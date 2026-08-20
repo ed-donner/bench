@@ -1,5 +1,6 @@
 /** Launcher: one card per app. Plain anchors - each app is its own document. */
 import BenchNav from "../shared/BenchNav";
+import { useT } from "../shared/useLocale";
 import {
   IconCrm,
   IconGroove,
@@ -7,66 +8,68 @@ import {
   IconSpace,
 } from "../shared/AppIcons";
 
-interface AppCard {
-  href: string;
-  name: string;
-  tagline: string;
-  detail: string;
-  facts: string[];
-  Icon: (p: { size?: number }) => React.ReactElement;
-}
-
-const APPS: AppCard[] = [
-  {
-    href: "/crm/",
-    name: "CRM",
-    tagline: "Deals, and the people behind them",
-    detail:
-      "Organizations, contacts and a drag-and-drop pipeline, with a dashboard that adds up what is actually in play.",
-    facts: ["Pipeline", "Dashboard", "Activities"],
-    Icon: IconCrm,
-  },
-  {
-    href: "/space/",
-    name: "Space",
-    tagline: "Everything you know, in one place",
-    detail:
-      "Pages and blocks that nest as deep as you like, databases with table, board and list views, and search across the lot.",
-    facts: ["Pages", "Databases", "Search"],
-    Icon: IconSpace,
-  },
-  {
-    href: "/rolodex/",
-    name: "Rolodex",
-    tagline: "The people in your life, kept close",
-    detail:
-      "Who you are due to contact, what is going on with them, birthdays coming up, and a timeline of every conversation.",
-    facts: ["Check-ins", "Circles", "Calendar"],
-    Icon: IconRolodex,
-  },
-  {
-    href: "/groove/",
-    name: "Groove",
-    tagline: "A groovebox in the browser",
-    detail:
-      "Four synth units, one transport and a master DJ filter. Pure Web Audio — no samples, no plugins, no latency budget.",
-    facts: ["4 units", "16 steps", "Web Audio"],
-    Icon: IconGroove,
-  },
-];
-
 export default function App() {
+  const th = useT("home");
+
+  const APPS = [
+    {
+      href: "/crm/",
+      name: "CRM",
+      tagline: th("crmTagline"),
+      detail: th("crmDetail"),
+      facts: [
+        th("crmFactPipeline"),
+        th("crmFactDashboard"),
+        th("crmFactActivities"),
+      ],
+      Icon: IconCrm,
+    },
+    {
+      href: "/space/",
+      name: "Space",
+      tagline: th("spaceTagline"),
+      detail: th("spaceDetail"),
+      facts: [
+        th("spaceFactPages"),
+        th("spaceFactDatabases"),
+        th("spaceFactSearch"),
+      ],
+      Icon: IconSpace,
+    },
+    {
+      href: "/rolodex/",
+      name: "Rolodex",
+      tagline: th("rolodexTagline"),
+      detail: th("rolodexDetail"),
+      facts: [
+        th("rolodexFactCheckins"),
+        th("rolodexFactCircles"),
+        th("rolodexFactCalendar"),
+      ],
+      Icon: IconRolodex,
+    },
+    {
+      href: "/groove/",
+      name: "Groove",
+      tagline: th("grooveTagline"),
+      detail: th("grooveDetail"),
+      facts: [
+        th("grooveFactUnits"),
+        th("grooveFactSteps"),
+        th("grooveFactWebAudio"),
+      ],
+      Icon: IconGroove,
+    },
+  ];
+
   return (
     <>
       <BenchNav active="home" />
       <div className="home">
         <header className="home-header">
-          <p className="home-eyebrow">Local-first · no login · no cloud</p>
+          <p className="home-eyebrow">{th("eyebrow")}</p>
           <h1>Bench</h1>
-          <p className="home-lede">
-            Four apps, one server, one machine. Your data lives in SQLite files
-            on this disk and goes nowhere else.
-          </p>
+          <p className="home-lede">{th("lede")}</p>
         </header>
 
         <div className="home-grid">
@@ -84,7 +87,7 @@ export default function App() {
                 </ul>
               </div>
               <span className="home-open">
-                Open
+                {th("open")}
                 <svg
                   width="15"
                   height="15"
@@ -105,9 +108,9 @@ export default function App() {
 
         <footer className="home-footer">
           <span>
-            <strong>npm run dev</strong> · API on 8100, Vite on 8101
+            <strong>npm run dev</strong> · {th("footerDev")}
           </span>
-          <span>SQLite in ./data</span>
+          <span>{th("footerData")}</span>
         </footer>
       </div>
     </>

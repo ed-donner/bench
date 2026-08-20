@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import { renderSpace } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import Sidebar from "./Sidebar";
@@ -30,7 +31,7 @@ function renderSidebar(
   initialPath = "/",
   onSearch = vi.fn(),
 ) {
-  render(
+  renderSpace(
     <MemoryRouter initialEntries={[initialPath]}>
       <Sidebar tree={tree} onChange={onChange} onSearch={onSearch} />
     </MemoryRouter>,

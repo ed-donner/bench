@@ -1,6 +1,20 @@
+import { createElement, type ReactElement } from "react";
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from "@testing-library/react";
+import { LocaleProvider } from "../../shared/LocaleContext";
 import type { Activity, Contact, Deal, Organization } from "../types";
 
 /** Fixture builders. Every field has a default, so a test names only what it is about. */
+
+export function renderCrm(
+  ui: ReactElement,
+  options?: RenderOptions,
+): RenderResult {
+  return render(createElement(LocaleProvider, null, ui), options);
+}
 
 /**
  * Stands in for `api.get` across the several endpoints a page loads. Longest path first, so

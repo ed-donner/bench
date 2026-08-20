@@ -94,6 +94,46 @@
   background: rgba(236, 173, 10, 0.16);
 }
 
+.bench-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.bench-nav-locale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #5b636e;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .bench-nav-locale {
+  color: #98a1ad;
+}
+
+.bench-nav-locale:hover {
+  color: #1c2128;
+  background: #f0f2f5;
+}
+
+[data-theme="dark"] .bench-nav-locale:hover {
+  color: #ffffff;
+  background: #272d36;
+}
+
 .bench-nav-theme {
   display: flex;
   align-items: center;

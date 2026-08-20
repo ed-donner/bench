@@ -1,7 +1,9 @@
 import { SubmitEvent, useState } from "react";
 import Modal from "./Modal";
 import { api } from "../api";
+import { useT } from "../../shared/useLocale";
 import { ACTIVITY_TYPES, ActivityType } from "../types";
+import { activityTypeLabel } from "../i18n";
 
 interface Props {
   contactId?: number;
@@ -16,6 +18,8 @@ export default function ActivityForm({
   onSaved,
   onClose,
 }: Props) {
+  const ts = useT("shared");
+  const tc = useT("crm");
   const [form, setForm] = useState({
     type: "note" as ActivityType,
     description: "",
@@ -36,11 +40,11 @@ export default function ActivityForm({
   }
 
   return (
-    <Modal title="Log activity" onClose={onClose}>
+    <Modal title={tc("logActivity")} onClose={onClose}>
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="act-type">Type</label>
+            <label htmlFor="act-type">{ts("type")}</label>
             <select
               id="act-type"
               value={form.type}
@@ -50,13 +54,13 @@ export default function ActivityForm({
             >
               {ACTIVITY_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {activityTypeLabel(tc, t)}
                 </option>
               ))}
             </select>
           </div>
           <div className="field">
-            <label htmlFor="act-due">Follow-up due date (optional)</label>
+            <label htmlFor="act-due">{tc("followUpDueOptional")}</label>
             <input
               id="act-due"
               type="date"
@@ -66,7 +70,7 @@ export default function ActivityForm({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="act-desc">Description</label>
+          <label htmlFor="act-desc">{ts("description")}</label>
           <textarea
             id="act-desc"
             rows={3}
@@ -77,10 +81,10 @@ export default function ActivityForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {ts("cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {ts("save")}
           </button>
         </div>
       </form>

@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import Organizations from "./Organizations";
 import { api } from "../api";
-import { contact, deal, org, routes } from "../test/helpers";
+import { contact, deal, org, routes, renderCrm } from "../test/helpers";
 
 vi.mock("../api", async () => {
   const actual = await vi.importActual<typeof import("../api")>("../api");
@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 function show() {
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={["/organizations"]}>
       <Routes>
         <Route path="/organizations" element={<Organizations />} />
@@ -111,7 +111,7 @@ describe("Organizations", () => {
     );
 
     expect(
-      await screen.findByText("No organizations match “zzz”."),
+      await screen.findByText('No organizations match "zzz".'),
     ).toBeInTheDocument();
     expect(api.get).toHaveBeenCalledWith("/api/crm/organizations?q=zzz");
   });

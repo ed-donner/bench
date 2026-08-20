@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { StageChip, StatusChip } from "./Chips";
+import { renderCrm } from "../test/helpers";
 
 describe("chips", () => {
   it("names the status and carries its class, which is what colours it", () => {
-    render(<StatusChip status="customer" />);
-    const chip = screen.getByText("customer");
+    renderCrm(<StatusChip status="customer" />);
+    const chip = screen.getByText("Customer");
     expect(chip).toHaveClass("chip", "chip-customer");
   });
 
   it("names the stage and carries its class", () => {
-    render(<StageChip stage="Negotiation" />);
+    renderCrm(<StageChip stage="Negotiation" />);
     expect(screen.getByText("Negotiation")).toHaveClass(
       "chip",
       "stage-Negotiation",

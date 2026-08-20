@@ -165,6 +165,9 @@ export function pipelineFunnel(deals: Deal[], sinceMonth: string): FunnelRow[] {
   });
 }
 
+import type { Locale } from "../shared/locale";
+import { localeTag } from "./format";
+
 export interface Month {
   key: string;
   label: string;
@@ -172,13 +175,18 @@ export interface Month {
 }
 
 /** Months from `back` before `from` to `forward` after it, oldest first, keyed 'YYYY-MM'. */
-export function monthRange(from: Date, back: number, forward: number): Month[] {
+export function monthRange(
+  from: Date,
+  back: number,
+  forward: number,
+  locale: Locale = "en",
+): Month[] {
   const months: Month[] = [];
   for (let i = -back; i <= forward; i++) {
     const d = new Date(from.getFullYear(), from.getMonth() + i, 1);
     months.push({
       key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleDateString("en-US", { month: "short" }),
+      label: d.toLocaleDateString(localeTag(locale), { month: "short" }),
       future: i > 0,
     });
   }

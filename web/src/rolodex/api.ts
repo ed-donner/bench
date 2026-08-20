@@ -16,12 +16,13 @@ import type {
   TimelineEntry,
 } from "./types";
 import type { UpcomingDate } from "./types";
+import { apiHeaders } from "../shared/apiHeaders";
 
 /** Paths are relative to the app's own namespace on the one Bench server. */
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api/rolodex${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: apiHeaders(options?.headers as Record<string, string>),
   });
   if (!res.ok) {
     // The API answers a bad request with { error }, and that message is what the toast shows.

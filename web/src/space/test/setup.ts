@@ -25,6 +25,22 @@ if (!(Blob.prototype.text as unknown))
   };
 
 beforeEach(() => {
+  // Node 22+ jsdom may omit localStorage unless --localstorage-file is set.
+  if (typeof localStorage === "undefined") {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => {
+        store.set(k, v);
+      },
+      clear: () => {
+        store.clear();
+      },
+      removeItem: (k: string) => {
+        store.delete(k);
+      },
+    });
+  }
   // The editor flushes pending block edits with a raw keepalive fetch when it unmounts. Node's
   // fetch rejects relative URLs, so keep every test off the real one; suites that assert on
   // requests stub it again themselves.
@@ -40,6 +56,6 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
-  localStorage.clear();
+  if (typeof localStorage !== "undefined") localStorage.clear();
   delete document.documentElement.dataset.theme;
 });

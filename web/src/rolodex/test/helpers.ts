@@ -10,6 +10,14 @@ import type {
   UpcomingDate,
 } from "../types";
 import type { PersonDetail, TodayPayload, StatsPayload } from "../api";
+import type { ReactElement } from "react";
+import { createElement } from "react";
+import { LocaleProvider } from "../../shared/LocaleContext";
+
+/** Wrap a component tree with LocaleProvider for tests. */
+export function withLocale(ui: ReactElement) {
+  return createElement(LocaleProvider, null, ui);
+}
 
 /** Fixture builders. Every field has a default, so a test names only what it is about. */
 

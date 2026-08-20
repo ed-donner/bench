@@ -1,7 +1,14 @@
 /** Display formatting for the money and date values the CRM shows. */
 
-export function formatMoney(value: number): string {
-  return value.toLocaleString("en-US", {
+import type { Locale } from "../shared/locale";
+import { t } from "../shared/useLocale";
+
+export function localeTag(locale: Locale): string {
+  return locale === "es" ? "es-ES" : "en-US";
+}
+
+export function formatMoney(value: number, locale: Locale = "en"): string {
+  return value.toLocaleString(localeTag(locale), {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
@@ -18,15 +25,21 @@ function parse(iso: string): Date {
 }
 
 /** Rounded to thousands, for the pipeline cards where the exact figure is already above it. */
-export function formatMoneyCompact(value: number): string {
-  if (Math.abs(value) < 1000) return formatMoney(value);
+export function formatMoneyCompact(
+  value: number,
+  locale: Locale = "en",
+): string {
+  if (Math.abs(value) < 1000) return formatMoney(value, locale);
   const thousands = (value / 1000).toFixed(1).replace(/\.0$/, "");
   return `$${thousands}k`;
 }
 
-export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  return parse(iso).toLocaleDateString("en-US", {
+export function formatDate(
+  iso: string | null | undefined,
+  locale: Locale = "en",
+): string {
+  if (!iso) return t("crm", "emDash", locale);
+  return parse(iso).toLocaleDateString(localeTag(locale), {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -34,17 +47,20 @@ export function formatDate(iso: string | null | undefined): string {
 }
 
 /** Month and day only, for the pipeline cards, where a year would not earn its width. */
-export function formatDateShort(iso: string | null | undefined): string {
-  if (!iso) return "No close date";
-  return parse(iso).toLocaleDateString("en-US", {
+export function formatDateShort(
+  iso: string | null | undefined,
+  locale: Locale = "en",
+): string {
+  if (!iso) return t("crm", "noCloseDate", locale);
+  return parse(iso).toLocaleDateString(localeTag(locale), {
     month: "short",
     day: "numeric",
   });
 }
 
-export function formatDateTime(iso: string): string {
+export function formatDateTime(iso: string, locale: Locale = "en"): string {
   const d = new Date(iso.replace(" ", "T") + "Z");
-  return d.toLocaleString("en-US", {
+  return d.toLocaleString(localeTag(locale), {
     month: "short",
     day: "numeric",
     year: "numeric",

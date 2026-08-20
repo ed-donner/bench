@@ -17,6 +17,7 @@ import {
   news,
   person,
   reminder,
+  withLocale,
 } from "../../test/helpers";
 
 vi.mock("../../api");
@@ -28,11 +29,15 @@ const maya = person({ id: 1, name: "Maya Chen" });
 describe("adding news and facts", () => {
   it("will not save an empty note, and saves a trimmed one", async () => {
     vi.mocked(api.addNews).mockResolvedValue(news());
-    render(<AddNewsModal person={maya} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddNewsModal person={maya} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
 
     expect(screen.getByRole("button", { name: "Save news" })).toBeDisabled();
     await userEvent.type(
-      screen.getByRole("textbox", { name: /What’s new with them/ }),
+      screen.getByRole("textbox", { name: /What's new with them/ }),
       "  Moved to Berlin  ",
     );
     await userEvent.click(screen.getByRole("button", { name: "Save news" }));
@@ -40,13 +45,21 @@ describe("adding news and facts", () => {
   });
 
   it("names the person it is about", () => {
-    render(<AddNewsModal person={maya} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddNewsModal person={maya} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     expect(screen.getByText("Record news about Maya")).toBeInTheDocument();
   });
 
   it("saves a fact", async () => {
     vi.mocked(api.addFact).mockResolvedValue(fact());
-    render(<AddFactModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddFactModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     await userEvent.type(
       screen.getByRole("textbox", { name: "Fact" }),
       "Runs marathons",
@@ -60,7 +73,9 @@ describe("adding a reminder", () => {
   it("saves the text with the due date", async () => {
     vi.mocked(api.addReminder).mockResolvedValue(reminder());
     render(
-      <AddReminderModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      withLocale(
+        <AddReminderModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
     );
 
     await userEvent.type(
@@ -81,7 +96,11 @@ describe("adding a reminder", () => {
 describe("adding a gift", () => {
   it("saves what it is, what kind, and the occasion", async () => {
     vi.mocked(api.addGift).mockResolvedValue(gift());
-    render(<AddGiftModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddGiftModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
 
     await userEvent.type(
       screen.getByRole("textbox", { name: "What?" }),
@@ -110,7 +129,11 @@ describe("adding a gift", () => {
 
 describe("adding an important date", () => {
   it("refuses a day and month it cannot make sense of", async () => {
-    render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     await userEvent.click(screen.getByRole("button", { name: "Save date" }));
     expect(
       screen.getByText("Please give a valid day and month"),
@@ -119,7 +142,11 @@ describe("adding an important date", () => {
   });
 
   it("refuses a year from the wrong century", async () => {
-    render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     await userEvent.type(
       screen.getByRole("spinbutton", { name: "Day *" }),
       "15",
@@ -138,7 +165,11 @@ describe("adding an important date", () => {
 
   it("saves a birthday", async () => {
     vi.mocked(api.addDate).mockResolvedValue(importantDate());
-    render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
 
     await userEvent.type(
       screen.getByRole("spinbutton", { name: "Day *" }),
@@ -164,19 +195,27 @@ describe("adding an important date", () => {
   });
 
   it("asks for a name when the date belongs to a child", async () => {
-    render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     await userEvent.selectOptions(
       screen.getByRole("combobox", { name: "Type" }),
       "child_birthday",
     );
     expect(
-      screen.getByRole("textbox", { name: /child’s name/ }),
+      screen.getByRole("textbox", { name: /child's name/ }),
     ).toBeInTheDocument();
   });
 
   it("shows what the server refused", async () => {
     vi.mocked(api.addDate).mockRejectedValue(new Error("31/2 is not a date"));
-    render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
+    render(
+      withLocale(
+        <AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />,
+      ),
+    );
     await userEvent.type(
       screen.getByRole("spinbutton", { name: "Day *" }),
       "31",
@@ -194,12 +233,14 @@ describe("connecting two people", () => {
   const ben = person({ id: 2, name: "Ben Foster" });
   const renderConnect = () =>
     render(
-      <AddConnectionModal
-        person={maya}
-        people={[maya, ben]}
-        onClose={onClose}
-        onSaved={onSaved}
-      />,
+      withLocale(
+        <AddConnectionModal
+          person={maya}
+          people={[maya, ben]}
+          onClose={onClose}
+          onSaved={onSaved}
+        />,
+      ),
     );
 
   it("needs someone to connect to", async () => {
@@ -272,7 +313,7 @@ describe("connecting two people", () => {
       "other",
     );
     await userEvent.type(
-      screen.getByRole("textbox", { name: "On Maya’s page" }),
+      screen.getByRole("textbox", { name: "On Maya's page" }),
       "Introduced me to",
     );
     await userEvent.click(

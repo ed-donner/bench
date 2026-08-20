@@ -105,6 +105,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(-1);
   const [engine, setEngine] = useState<Engine | null>(null);
+  const [audioHint, setAudioHint] = useState(true);
 
   const patch = patches[index];
   const stateRef = useRef<EngineState>({ patch, mutes, volume });
@@ -134,6 +135,7 @@ export default function App() {
   const togglePlay = useCallback(async () => {
     if (!engine) return;
     await engine.resume();
+    setAudioHint(false);
     if (engine.playing) {
       engine.stop();
       setPlaying(false);
@@ -219,6 +221,7 @@ export default function App() {
         current={current}
         edited={edited}
         onRevert={() => edit(() => clonePatch(PATCHES[index]))}
+        audioHint={audioHint}
       />
 
       <main className="deck">

@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { useT } from "../../shared/useLocale";
 import type { ParamSpec } from "../types";
 
 const START = -135;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function Knob({ spec, value, onChange, onTouch }: Props) {
+  const t = useT("groove");
   const drag = useRef<{ y: number; start: number } | null>(null);
   const range = spec.max - spec.min;
   const norm = (value - spec.min) / range;
@@ -58,7 +60,7 @@ export function Knob({ spec, value, onChange, onTouch }: Props) {
   return (
     <div
       className="knob"
-      title={`${spec.label} — drag up/down, hold shift for fine`}
+      title={t.i("knobHint", { label: spec.label })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}

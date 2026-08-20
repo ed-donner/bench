@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { VelocityLane } from "./VelocityLane";
 import { STEPS, type MelodicStep } from "../types";
+import { renderGroove } from "../test/render";
 
 const WIDTH = 320;
 const HEIGHT = 100;
@@ -28,7 +28,7 @@ beforeEach(() => {
 
 function renderLane(steps: MelodicStep[]) {
   const onChange = vi.fn();
-  const { container } = render(
+  const { container } = renderGroove(
     <VelocityLane steps={steps} current={-1} onChange={onChange} />,
   );
   return { onChange, track: container.querySelector(".vel-track")! };

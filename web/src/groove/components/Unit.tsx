@@ -1,5 +1,7 @@
 import type { DrumLane, MelodicStep, Patch, UnitId } from "../types";
 import { DRUM_LANES } from "../types";
+import { useT } from "../../shared/useLocale";
+import { paramLabel, unitLabel } from "../i18n";
 import { UNIT_META, UNIT_PARAMS } from "../params";
 import { Knob } from "./Knob";
 import { Fader } from "./Fader";
@@ -45,28 +47,33 @@ function isHitting(patch: Patch, id: UnitId, current: number): boolean {
 
 export function Unit(props: Props) {
   const { id, patch, current, muted, onMute, onParam } = props;
+  const t = useT("groove");
   const meta = UNIT_META[id];
   const specs = UNIT_PARAMS[id];
   const params = patch[id].params;
   const readout = useReadout();
+  const unitName = unitLabel(t, id);
 
   const knobs = specs.filter((s) => s.kind === "knob");
   const faders = specs.filter((s) => s.kind === "slider");
   const hits = activeCount(patch, id);
-  // What the display shows when no knob is being turned: drums count hits, the rest count steps.
-  const idleLabel = id === "drums" ? "HITS" : "STEPS";
+  const idleLabel = id === "drums" ? t("displayHits") : t("displaySteps");
   const idleValue = id === "drums" ? `${hits}` : `${hits}/16`;
+  const labeled = (spec: (typeof specs)[number]) => ({
+    ...spec,
+    label: paramLabel(t, spec.key, spec.label),
+  });
 
   return (
     <section
       className={`unit u-${id}${muted ? " muted" : ""}`}
-      aria-label={meta.name}
+      aria-label={unitName}
     >
       <header className="unit-head">
         <span
           className={`sig-led${isHitting(patch, id, current) ? " on" : ""}`}
         />
-        <span className="unit-name">{meta.name}</span>
+        <span className="unit-name">{unitName}</span>
         <span className="unit-model">{meta.model}</span>
         <div className="unit-display">
           <span className="disp-label">
@@ -81,36 +88,42 @@ export function Unit(props: Props) {
           className={`mute-btn${muted ? " active" : ""}`}
           onClick={onMute}
         >
-          MUTE
+          {t("mute")}
         </button>
       </header>
 
       <div className="unit-controls">
         <div className="knob-bank">
-          {knobs.map((spec) => (
-            <Knob
-              key={spec.key}
-              spec={spec}
-              value={params[spec.key]}
-              onChange={(v) => {
-                onParam(spec.key, v);
-                readout.show(spec, v);
-              }}
-            />
-          ))}
+          {knobs.map((spec) => {
+            const labeledSpec = labeled(spec);
+            return (
+              <Knob
+                key={spec.key}
+                spec={labeledSpec}
+                value={params[spec.key]}
+                onChange={(v) => {
+                  onParam(spec.key, v);
+                  readout.show(labeledSpec, v);
+                }}
+              />
+            );
+          })}
         </div>
         <div className="fader-bank">
-          {faders.map((spec) => (
-            <Fader
-              key={spec.key}
-              spec={spec}
-              value={params[spec.key]}
-              onChange={(v) => {
-                onParam(spec.key, v);
-                readout.show(spec, v);
-              }}
-            />
-          ))}
+          {faders.map((spec) => {
+            const labeledSpec = labeled(spec);
+            return (
+              <Fader
+                key={spec.key}
+                spec={labeledSpec}
+                value={params[spec.key]}
+                onChange={(v) => {
+                  onParam(spec.key, v);
+                  readout.show(labeledSpec, v);
+                }}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -125,7 +138,7 @@ export function Unit(props: Props) {
         ) : (
           <>
             <NoteGrid
-              unit={meta.name}
+              unit={unitName}
               steps={patch[id].steps}
               current={current}
               showChord={id === "pads"}

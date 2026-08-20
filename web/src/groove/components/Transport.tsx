@@ -1,6 +1,8 @@
 import { useCallback, useRef } from "react";
 import { IconGroove } from "../../shared/AppIcons";
+import { useT } from "../../shared/useLocale";
 import type { Patch } from "../types";
+import { paramLabel } from "../i18n";
 import { Knob } from "./Knob";
 import { LedStrip } from "./LedStrip";
 
@@ -17,14 +19,19 @@ interface Props {
   current: number;
   edited: boolean;
   onRevert: () => void;
+  audioHint?: boolean;
 }
 
 function TempoDial({
   bpm,
   onBpm,
+  dragHint,
+  bpmUnit,
 }: {
   bpm: number;
   onBpm: (v: number) => void;
+  dragHint: string;
+  bpmUnit: string;
 }) {
   const drag = useRef<{ y: number; start: number } | null>(null);
   const down = useCallback(
@@ -59,14 +66,14 @@ function TempoDial({
       </button>
       <div
         className="tempo-read"
-        title="Drag up/down to change tempo"
+        title={dragHint}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       >
         <span className="tempo-value">{bpm}</span>
-        <span className="tempo-unit">BPM</span>
+        <span className="tempo-unit">{bpmUnit}</span>
       </div>
       <button
         type="button"
@@ -80,37 +87,47 @@ function TempoDial({
 }
 
 export function Transport(p: Props) {
+  const t = useT("groove");
+  const swingSpec = {
+    key: "swing",
+    label: paramLabel(t, "swing", "SWING"),
+    kind: "knob" as const,
+    min: 0,
+    max: 1,
+  };
+
   return (
     <header className="transport">
       <div className="brand">
         <IconGroove />
-        <span className="brand-name">GROOVEBOX</span>
-        <span className="brand-model">GX-4</span>
+        <span className="brand-name">{t("brandName")}</span>
+        <span className="brand-model">{t("brandModel")}</span>
       </div>
 
       <button
         type="button"
         className={`play-btn${p.playing ? " playing" : ""}`}
-        title="Spacebar"
+        title={p.audioHint ? t("initAudio") : t("playShortcut")}
         onClick={p.onPlay}
       >
         <span className="play-glyph">{p.playing ? "■" : "▶"}</span>
-        {p.playing ? "STOP" : "PLAY"}
+        {p.playing ? t("transportStop") : t("transportPlay")}
       </button>
 
-      <TempoDial bpm={p.bpm} onBpm={p.onBpm} />
+      <TempoDial
+        bpm={p.bpm}
+        onBpm={p.onBpm}
+        dragHint={t("tempoDragHint")}
+        bpmUnit={t("transportBpm")}
+      />
 
       <div className="swing-bank">
-        <Knob
-          spec={{ key: "swing", label: "SWING", kind: "knob", min: 0, max: 1 }}
-          value={p.swing}
-          onChange={p.onSwing}
-        />
+        <Knob spec={swingSpec} value={p.swing} onChange={p.onSwing} />
       </div>
 
       <div className="master-leds">
         <LedStrip current={p.current} />
-        <span className="master-leds-label">STEP</span>
+        <span className="master-leds-label">{t("transportStep")}</span>
       </div>
 
       <div className="patch-bank">
@@ -119,7 +136,11 @@ export function Transport(p: Props) {
             key={patch.name}
             type="button"
             className={`patch-btn${i === p.index ? " active" : ""}`}
-            title={`${patch.name} — ${patch.subtitle} (key ${i + 1})`}
+            title={t.i("patchKeyHint", {
+              name: patch.name,
+              subtitle: patch.subtitle,
+              n: i + 1,
+            })}
             onClick={() => p.onSelect(i)}
           >
             <span className="patch-slot">{"ABCD"[i]}</span>
@@ -134,9 +155,9 @@ export function Transport(p: Props) {
           className="revert-btn"
           onClick={p.onRevert}
           disabled={!p.edited}
-          title="Restore this patch to its factory settings"
+          title={t("revertHint")}
         >
-          {p.edited ? "REVERT" : "SAVED"}
+          {p.edited ? t("revert") : t("saved")}
         </button>
       </div>
     </header>

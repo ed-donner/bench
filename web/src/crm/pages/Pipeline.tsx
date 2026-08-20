@@ -6,8 +6,10 @@ import {
 } from "@hello-pangea/dnd";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useLocale, useT } from "../../shared/useLocale";
 import { api } from "../api";
 import { useFetch } from "../hooks";
+import { dealStageLabel } from "../i18n";
 import {
   DEAL_STAGES,
   Deal,
@@ -36,6 +38,8 @@ function DealCard({
   index: number;
   orgName: string;
 }) {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   const navigate = useNavigate();
   const open = () => void navigate(`/deals/${deal.id}`);
   const late = isOpen(deal) && (deal.close_date ?? "") < today();
@@ -61,17 +65,20 @@ function DealCard({
           }}
         >
           <div className="deal-name">{deal.name}</div>
-          <div className="deal-org">{orgName || "No organization"}</div>
+          <div className="deal-org">{orgName || tc("noOrganization")}</div>
           <div className="deal-figures">
-            <span className="deal-value">{formatMoney(deal.value)}</span>
+            <span className="deal-value">
+              {formatMoney(deal.value, locale)}
+            </span>
             <span className="deal-prob">{deal.probability}%</span>
           </div>
           <div className="deal-meta">
             <span className={`deal-date${late ? " late" : ""}`}>
-              {formatDateShort(deal.close_date)}
+              {formatDateShort(deal.close_date, locale)}
             </span>
             <span className="deal-expected">
-              {formatMoneyCompact(expectedValue(deal))} expected
+              {formatMoneyCompact(expectedValue(deal), locale)}{" "}
+              {tc("expectedSuffix")}
             </span>
           </div>
         </div>
@@ -81,6 +88,8 @@ function DealCard({
 }
 
 export default function Pipeline() {
+  const { locale } = useLocale();
+  const tc = useT("crm");
   const { data: fetched } = useFetch<Deal[]>("/api/crm/deals");
   // Once a card has been dropped the local order wins; until then the fetched list is what shows.
   // Derived rather than copied into state by an effect, which would render twice on every load.
@@ -115,23 +124,23 @@ export default function Pipeline() {
     <>
       <PageHeader
         icon={<IconPipeline size={20} />}
-        title="Pipeline"
-        sub="Drag a card to another column to change its stage, or up and down to order a column your way"
+        title={tc("pipelineTitle")}
+        sub={tc("pipelineSub")}
       >
         <div className="pipeline-totals">
           <div className="total-block">
-            <span className="total-label">Total pipeline</span>
+            <span className="total-label">{tc("totalPipeline")}</span>
             <span className="total-value" data-testid="pipeline-total">
-              {formatMoney(sumValue(open))}
+              {formatMoney(sumValue(open), locale)}
             </span>
           </div>
           <div className="total-block">
-            <span className="total-label">Expected revenue</span>
+            <span className="total-label">{tc("expectedRevenue")}</span>
             <span
               className="total-value accent"
               data-testid="pipeline-expected"
             >
-              {formatMoney(sumExpected(open))}
+              {formatMoney(sumExpected(open), locale)}
             </span>
           </div>
         </div>
@@ -155,19 +164,19 @@ export default function Pipeline() {
                     <div className="board-column-header">
                       <span className="col-title">
                         <span className="col-dot" />
-                        {stage}
+                        {dealStageLabel(tc, stage)}
                       </span>
                       <span className="col-count">{inStage.length}</span>
                     </div>
                     <div className="board-column-totals">
                       <span data-testid={`stage-total-${stage}`}>
-                        {formatMoney(total)}
+                        {formatMoney(total, locale)}
                       </span>
                       <span
                         className="col-expected"
                         data-testid={`stage-expected-${stage}`}
                       >
-                        {formatMoney(expected)}
+                        {formatMoney(expected, locale)}
                       </span>
                     </div>
                     {/* The scrolling list is the drop target, so a long column auto-scrolls as
@@ -189,7 +198,7 @@ export default function Pipeline() {
                       ))}
                       {provided.placeholder}
                       {inStage.length === 0 && !snapshot.isDraggingOver && (
-                        <p className="board-empty">Drop a deal here</p>
+                        <p className="board-empty">{tc("dropDealHere")}</p>
                       )}
                     </div>
                   </div>

@@ -26,6 +26,12 @@ async function waitForServer(url: string, timeoutMs = 60_000) {
  * parallel never share state. Ports start at 8150.
  */
 export const test = base.extend<object, { appServer: string }>({
+  page: async ({ page }, use) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("bench.locale", "en");
+    });
+    await use(page);
+  },
   appServer: [
     async ({}, use, workerInfo) => {
       const port = 8150 + workerInfo.workerIndex;

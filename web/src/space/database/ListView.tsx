@@ -1,5 +1,6 @@
 import { valueText } from "./valueText";
 import { useNavigate } from "react-router";
+import { useT } from "../../shared/useLocale";
 import type { DbRow, Property } from "../api";
 import { Chip } from "./cells";
 
@@ -42,6 +43,7 @@ function ValuePreview({
 }
 
 export default function ListView({ rows, properties }: Props) {
+  const t = useT("space");
   const navigate = useNavigate();
   const shown = properties.slice(0, 2);
   return (
@@ -52,7 +54,7 @@ export default function ListView({ rows, properties }: Props) {
           className="list-row"
           onClick={() => void navigate(`/p/${row.id}`)}
         >
-          <span className="list-title">{row.title || "Untitled"}</span>
+          <span className="list-title">{row.title || t("untitled")}</span>
           <span className="list-props">
             {shown.map((p) => (
               <ValuePreview key={p.id} property={p} value={row.values[p.id]} />
@@ -60,7 +62,9 @@ export default function ListView({ rows, properties }: Props) {
           </span>
         </button>
       ))}
-      {rows.length === 0 && <div className="list-empty">No rows match.</div>}
+      {rows.length === 0 && (
+        <div className="list-empty">{t("listNoRowsMatch")}</div>
+      )}
     </div>
   );
 }

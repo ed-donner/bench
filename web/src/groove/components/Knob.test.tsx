@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Knob } from "./Knob";
 import type { ParamSpec } from "../types";
+import { renderGroove } from "../test/render";
 
 const cutoff: ParamSpec = {
   key: "cutoff",
@@ -24,7 +25,7 @@ const wave: ParamSpec = {
 function renderKnob(spec: ParamSpec, value: number) {
   const onChange = vi.fn();
   const onTouch = vi.fn();
-  const { container } = render(
+  const { container } = renderGroove(
     <Knob spec={spec} value={value} onChange={onChange} onTouch={onTouch} />,
   );
   return { onChange, onTouch, knob: container.querySelector(".knob")! };
@@ -100,7 +101,7 @@ describe("Knob", () => {
   });
 
   it("sweeps the pointer and the value arc as the value rises", () => {
-    const { container, rerender } = render(
+    const { container, rerender } = renderGroove(
       <Knob spec={cutoff} value={0} onChange={vi.fn()} />,
     );
     const pointer = () =>

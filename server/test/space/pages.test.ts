@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import request from "supertest";
 import { openDb } from "../../src/space/db.js";
 import { appWithSpace } from "./app.js";
-import { seedIfEmpty } from "../../src/space/seed.js";
+import { seedIfEmpty } from "../../src/space/seed/index.js";
 import { buildTree, type PageRow } from "../../src/space/routes/pages.js";
 import type Database from "better-sqlite3";
 import type express from "express";
@@ -106,11 +106,11 @@ describe("pages API", () => {
 
 describe("seed", () => {
   it("populates an empty database once, several levels deep, with icons", () => {
-    seedIfEmpty(db);
+    seedIfEmpty(db, "en");
     const count = (db.prepare("SELECT COUNT(*) AS c FROM pages").get() as Count)
       .c;
     expect(count).toBeGreaterThan(10);
-    seedIfEmpty(db);
+    seedIfEmpty(db, "en");
     expect(
       (db.prepare("SELECT COUNT(*) AS c FROM pages").get() as Count).c,
     ).toBe(count);
