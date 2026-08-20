@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ReactNode, useState } from "react";
+import { useT } from "../../shared/useLocale";
 import { IconEdit, IconTrash } from "./Icons";
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
@@ -32,11 +33,14 @@ export default function DataTable<T>({
   onEdit,
   onDelete,
   rowLabel,
-  emptyMessage = "Nothing here yet.",
+  emptyMessage,
   summary,
-  noun = "record",
+  noun,
 }: Props<T>) {
+  const t = useT();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const resolvedEmpty = emptyMessage ?? t("shared.common.nothingHereYet");
+  const resolvedNoun = noun ?? t("shared.common.record");
   // React Compiler cannot memoize what useReactTable() returns, so the rule flags every call site.
   // There is nothing to change here - it is the library's only API, and Bench does not run the
   // compiler. Kept as a disable rather than switching the rule off, so it still reports a
@@ -114,8 +118,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn"
-                          aria-label={`Edit ${label(row.original)}`}
-                          title="Edit"
+                          aria-label={t("shared.common.editNamed", {
+                            name: label(row.original),
+                          })}
+                          title={t("shared.common.edit")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onEdit(row.original);
@@ -128,8 +134,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn icon-btn-danger"
-                          aria-label={`Delete ${label(row.original)}`}
-                          title="Delete"
+                          aria-label={t("shared.common.deleteNamed", {
+                            name: label(row.original),
+                          })}
+                          title={t("shared.common.delete")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDelete(row.original);
@@ -146,12 +154,15 @@ export default function DataTable<T>({
           </tbody>
         </table>
       </div>
-      {data.length === 0 && <div className="empty-state">{emptyMessage}</div>}
+      {data.length === 0 && <div className="empty-state">{resolvedEmpty}</div>}
       {data.length > 0 && (
         <div className="table-foot">
           <span>
-            {data.length} {noun}
-            {data.length === 1 ? "" : "s"}
+            {t("crm.tableFoot.count", {
+              count: data.length,
+              noun: resolvedNoun,
+              plural: data.length === 1 ? "" : "s",
+            })}
           </span>
           {summary && <span className="table-summary">{summary}</span>}
         </div>

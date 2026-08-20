@@ -16,7 +16,6 @@ import {
   Users2,
 } from "lucide-react";
 import { api, type PersonDetail } from "../../api";
-import { CIRCLE_META } from "../../types";
 import {
   currentAge,
   dateTypeLabel,
@@ -25,7 +24,14 @@ import {
 } from "../../dates";
 import { Avatar } from "../Avatar";
 import { EmptyState } from "../Modal";
-import { fmtDate, monthShort, relativeDays, todayISO } from "../../format";
+import {
+  circleLabel,
+  fmtDate,
+  monthShort,
+  relativeDays,
+  todayISO,
+} from "../../format";
+import { useT } from "../../../shared/useLocale";
 
 type AddWhat = "date" | "reminder" | "gift" | "connection";
 
@@ -33,10 +39,12 @@ function DetailRow({
   icon,
   label,
   value,
+  empty,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string | null;
+  empty: string;
 }) {
   return (
     <div className="detail-row">
@@ -44,7 +52,7 @@ function DetailRow({
         <span className="detail-icon">{icon}</span>
         {label}
       </span>
-      <span className="v">{value || "—"}</span>
+      <span className="v">{value || empty}</span>
     </div>
   );
 }
@@ -59,13 +67,14 @@ export default function PersonSide({
   after: () => Promise<void>;
   onAdd: (what: AddWhat) => void;
 }) {
+  const t = useT();
   const { person } = detail;
   const today = todayISO();
   const openReminders = detail.reminders.filter((r) => !r.done);
   const doneReminders = detail.reminders.filter((r) => r.done);
   const giftIdeas = detail.gifts.filter((g) => g.kind === "idea");
+  const dash = t("shared.common.emDash");
 
-  // Gift ideas are worth surfacing only when an occasion for them is actually coming up.
   const soonest = detail.dates
     .map((d) => ({ date: d, occurrence: nextOccurrence(d, today) }))
     .sort((a, b) => a.occurrence.date.localeCompare(b.occurrence.date))
@@ -75,44 +84,50 @@ export default function PersonSide({
     <div className="person-col">
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Details</h2>
+          <h2 className="card-title">{t("rolodex.person.detailsTitle")}</h2>
         </div>
         <div className="card-body">
           <DetailRow
             icon={<Mail size={14} />}
-            label="Email"
+            label={t("rolodex.person.details.email")}
             value={person.email}
+            empty={dash}
           />
           <DetailRow
             icon={<Phone size={14} />}
-            label="Phone"
+            label={t("rolodex.person.details.phone")}
             value={person.phone}
+            empty={dash}
           />
           <DetailRow
             icon={<MapPin size={14} />}
-            label="City"
+            label={t("rolodex.person.details.city")}
             value={person.city}
+            empty={dash}
           />
           <DetailRow
             icon={<Clock3 size={14} />}
-            label="Time zone"
+            label={t("rolodex.person.details.timezone")}
             value={person.timezone}
+            empty={dash}
           />
           <DetailRow
             icon={<Users2 size={14} />}
-            label="Circle"
-            value={CIRCLE_META[person.circle].label}
+            label={t("rolodex.person.details.circle")}
+            value={circleLabel(person.circle, t)}
+            empty={dash}
           />
           <DetailRow
             icon={<ArrowRight size={14} />}
-            label="How we met"
+            label={t("rolodex.person.details.howMet")}
             value={[
               person.how_met,
               person.met_where,
-              person.met_on ? fmtDate(person.met_on) : null,
+              person.met_on ? fmtDate(person.met_on, undefined, t) : null,
             ]
               .filter(Boolean)
               .join(" · ")}
+            empty={dash}
           />
         </div>
       </div>
@@ -120,15 +135,15 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Cake size={16} /> Important dates
+            <Cake size={16} /> {t("rolodex.person.datesTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("date")}>
-            <Plus size={13} /> Add date
+            <Plus size={13} /> {t("rolodex.person.addDate")}
           </button>
         </div>
         {detail.dates.length === 0 ? (
           <EmptyState icon={<Cake />}>
-            No dates yet — birthdays, anniversaries, the works.
+            {t("rolodex.person.datesEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -143,23 +158,31 @@ export default function PersonSide({
                   </div>
                   <div className="body">
                     <div className="strong">
-                      {dateTypeLabel(d.type, d.label)}
+                      {dateTypeLabel(d.type, d.label, t)}
                       {occurrence.milestone && (
                         <span className="badge status-due_soon milestone">
-                          turns {occurrence.ageTurning} — milestone
+                          {t("rolodex.person.milestone", {
+                            age: occurrence.ageTurning ?? 0,
+                          })}
                         </span>
                       )}
                     </div>
                     <div className="small muted">
-                      {d.year ? `Born/started ${d.year} · ` : ""}
-                      {age != null ? `${age} now, ` : ""}
-                      next: {fmtDate(occurrence.date)} (
-                      {relativeDays(occurrence.date)})
+                      {d.year
+                        ? t("rolodex.person.dateBornStarted", { year: d.year })
+                        : ""}
+                      {age != null
+                        ? t("rolodex.person.dateAgeNow", { age })
+                        : ""}
+                      {t("rolodex.person.dateNext", {
+                        date: fmtDate(occurrence.date, undefined, t),
+                        relative: relativeDays(occurrence.date, undefined, t),
+                      })}
                     </div>
                   </div>
                   <button
                     className="icon-btn danger actions"
-                    aria-label="Delete date"
+                    aria-label={t("rolodex.person.deleteDate")}
                     onClick={() => {
                       void api.deleteDate(d.id).then(after);
                     }}
@@ -176,15 +199,15 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Bell size={16} /> Reminders
+            <Bell size={16} /> {t("rolodex.person.remindersTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("reminder")}>
-            <Plus size={13} /> Add reminder
+            <Plus size={13} /> {t("rolodex.person.addReminder")}
           </button>
         </div>
         {openReminders.length === 0 ? (
           <EmptyState icon={<Bell />}>
-            Nothing to do — set a reminder and it’ll appear on Today too.
+            {t("rolodex.person.remindersEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -192,8 +215,10 @@ export default function PersonSide({
               <div key={r.id} className="list-row">
                 <button
                   className="reminder-check"
-                  title="Mark done"
-                  aria-label={`Mark done: ${r.text}`}
+                  title={t("shared.common.done")}
+                  aria-label={t("shared.common.markDone", {
+                    description: r.text,
+                  })}
                   onClick={() => {
                     void api.setReminderDone(r.id, true).then(after);
                   }}
@@ -203,12 +228,17 @@ export default function PersonSide({
                   <div
                     className={`small ${r.due_date < today ? "reminder-overdue" : "muted"}`}
                   >
-                    due {fmtDate(r.due_date)} · {relativeDays(r.due_date)}
+                    {t("rolodex.time.dueDate", {
+                      date: fmtDate(r.due_date, undefined, t),
+                    })}{" "}
+                    · {relativeDays(r.due_date, undefined, t)}
                   </div>
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={t("rolodex.person.deleteReminder", {
+                    text: r.text,
+                  })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -221,14 +251,18 @@ export default function PersonSide({
         )}
         {doneReminders.length > 0 && (
           <div className="card-body">
-            <div className="small muted section-label">Done</div>
+            <div className="small muted section-label">
+              {t("rolodex.person.remindersDone")}
+            </div>
             {doneReminders.map((r) => (
               <div key={r.id} className="fact-row">
                 <BadgeCheck size={13} className="done-tick" />
                 <span className="reminder-done-text grow">{r.text}</span>
                 <button
                   className="icon-btn danger"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={t("rolodex.person.deleteReminder", {
+                    text: r.text,
+                  })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -244,27 +278,29 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Gift size={16} /> Gifts
+            <Gift size={16} /> {t("rolodex.person.giftsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("gift")}>
-            <Plus size={13} /> Add gift
+            <Plus size={13} /> {t("rolodex.person.addGift")}
           </button>
         </div>
         {soonest && giftIdeas.length > 0 && (
           <div className="gift-surface">
             <div className="strong row">
               <Cake size={14} />{" "}
-              {dateTypeLabel(soonest.date.type, soonest.date.label)}{" "}
-              {relativeDays(soonest.occurrence.date)}
+              {dateTypeLabel(soonest.date.type, soonest.date.label, t)}{" "}
+              {relativeDays(soonest.occurrence.date, undefined, t)}
             </div>
             <div className="small gift-ideas">
-              Gift ideas: {giftIdeas.map((g) => g.name).join(" · ")}
+              {t("rolodex.person.giftIdeas", {
+                names: giftIdeas.map((g) => g.name).join(" · "),
+              })}
             </div>
           </div>
         )}
         {detail.gifts.length === 0 ? (
           <EmptyState icon={<Gift />}>
-            No gifts recorded — ideas, things given, things received.
+            {t("rolodex.person.giftsEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -275,31 +311,33 @@ export default function PersonSide({
                   <div className="body">
                     <div className="row" style={{ gap: 8 }}>
                       <span className={`gift-kind gift-${g.kind}`}>
-                        {g.kind}
+                        {t(`rolodex.giftKind.${g.kind}`)}
                       </span>
                       <span className="strong">{g.name}</span>
                     </div>
                     <div className="small muted">
                       {g.occasion ? `${g.occasion} · ` : ""}
-                      {fmtDate(g.date)}
+                      {fmtDate(g.date, undefined, t)}
                     </div>
                   </div>
                   {g.kind === "idea" && (
                     <button
                       className="btn btn-sm actions"
-                      title="Mark as given"
+                      title={t("rolodex.person.markGivenTitle")}
                       onClick={() => {
                         void api
                           .updateGift(g.id, { kind: "given", date: todayISO() })
                           .then(after);
                       }}
                     >
-                      Mark given
+                      {t("rolodex.person.markGiven")}
                     </button>
                   )}
                   <button
                     className="icon-btn danger actions"
-                    aria-label={`Delete gift: ${g.name}`}
+                    aria-label={t("rolodex.person.deleteGift", {
+                      name: g.name,
+                    })}
                     onClick={() => {
                       void api.deleteGift(g.id).then(after);
                     }}
@@ -315,15 +353,15 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Link2 size={16} /> Connections
+            <Link2 size={16} /> {t("rolodex.person.connectionsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("connection")}>
-            <Plus size={13} /> Add connection
+            <Plus size={13} /> {t("rolodex.person.addConnection")}
           </button>
         </div>
         {detail.connections.length === 0 ? (
           <EmptyState icon={<Link2 />}>
-            No connections — link partners, family, colleagues.
+            {t("rolodex.person.connectionsEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -341,7 +379,9 @@ export default function PersonSide({
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete connection to ${c.other_name}`}
+                  aria-label={t("rolodex.person.deleteConnection", {
+                    name: c.other_name,
+                  })}
                   onClick={() => {
                     void api.deleteConnection(c.id).then(after);
                   }}
@@ -357,7 +397,7 @@ export default function PersonSide({
       {person.notes && (
         <div className="card card-pad">
           <h2 className="card-title notes-title">
-            <StickyNote size={16} /> Notes
+            <StickyNote size={16} /> {t("rolodex.person.notesTitle")}
           </h2>
           <p className="muted person-notes">{person.notes}</p>
         </div>

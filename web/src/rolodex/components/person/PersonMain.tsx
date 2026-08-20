@@ -9,7 +9,9 @@ import {
 import { api, type PersonDetail } from "../../api";
 import { EmptyState } from "../Modal";
 import InteractionIcon from "../InteractionIcon";
-import { INTERACTION_META, fmtDate, relativeDays } from "../../format";
+import { fmtDate, interactionVerb, relativeDays } from "../../format";
+import { useT } from "../../../shared/useLocale";
+import type { TranslateFn } from "../../../shared/i18n";
 
 interface TimelineItem {
   key: string;
@@ -22,14 +24,14 @@ interface TimelineItem {
 }
 
 /** Everything logged about one person, newest first: interactions, news and finished reminders. */
-function personTimeline(detail: PersonDetail): TimelineItem[] {
+function personTimeline(detail: PersonDetail, t: TranslateFn): TimelineItem[] {
   const items: TimelineItem[] = [
     ...detail.interactions.map((i) => ({
       key: `i-${i.id}`,
       kind: "interaction" as const,
       date: i.date,
       icon: <InteractionIcon type={i.type} />,
-      label: INTERACTION_META[i.type].verb,
+      label: interactionVerb(i.type, t),
       text: i.notes ?? "",
       interactionId: i.id,
     })),
@@ -38,7 +40,7 @@ function personTimeline(detail: PersonDetail): TimelineItem[] {
       kind: "news" as const,
       date: n.date,
       icon: <Megaphone size={15} />,
-      label: "News",
+      label: t("rolodex.person.timelineNews"),
       text: n.text,
     })),
     ...detail.reminders
@@ -48,7 +50,7 @@ function personTimeline(detail: PersonDetail): TimelineItem[] {
         kind: "reminder_done" as const,
         date: r.done_at?.slice(0, 10) ?? r.due_date,
         icon: <BadgeCheck size={15} />,
-        label: "Reminder done",
+        label: t("rolodex.person.timelineReminderDone"),
         text: r.text,
       })),
   ];
@@ -65,23 +67,24 @@ export default function PersonMain({
   after: () => Promise<void>;
   onAdd: (what: "fact" | "news") => void;
 }) {
+  const t = useT();
   const firstName = detail.person.name.split(" ")[0];
-  const timeline = personTimeline(detail);
+  const timeline = personTimeline(detail, t);
 
   return (
     <div className="person-col">
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <StickyNote size={16} /> Timeline
+            <StickyNote size={16} /> {t("rolodex.person.timelineTitle")}
           </h2>
           <span className="card-sub">
-            everything logged with {firstName}, newest first
+            {t("rolodex.person.timelineSub", { firstName })}
           </span>
         </div>
         {timeline.length === 0 ? (
           <EmptyState icon={<StickyNote />}>
-            Nothing logged yet — log an interaction to start their story.
+            {t("rolodex.person.timelineEmpty")}
           </EmptyState>
         ) : (
           <div className="feed">
@@ -92,7 +95,8 @@ export default function PersonMain({
                   <div className="feed-top">
                     <span className="feed-type">{item.label}</span>
                     <span className="feed-date">
-                      {fmtDate(item.date)} · {relativeDays(item.date)}
+                      {fmtDate(item.date, undefined, t)} ·{" "}
+                      {relativeDays(item.date, undefined, t)}
                     </span>
                   </div>
                   {item.text && <div className="feed-text">{item.text}</div>}
@@ -100,8 +104,8 @@ export default function PersonMain({
                 {item.interactionId != null && (
                   <button
                     className="icon-btn danger"
-                    title="Delete interaction"
-                    aria-label="Delete interaction"
+                    title={t("rolodex.person.deleteInteraction")}
+                    aria-label={t("rolodex.person.deleteInteraction")}
                     onClick={() => {
                       void api
                         .deleteInteraction(item.interactionId!)
@@ -120,16 +124,15 @@ export default function PersonMain({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Sparkles size={16} /> Facts worth remembering
+            <Sparkles size={16} /> {t("rolodex.person.factsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("fact")}>
-            <Plus size={13} /> Add fact
+            <Plus size={13} /> {t("rolodex.person.addFact")}
           </button>
         </div>
         {detail.facts.length === 0 ? (
           <EmptyState icon={<Sparkles />}>
-            No facts yet — small, durable things: “allergic to shellfish”,
-            “supports Arsenal”.
+            {t("rolodex.person.factsEmpty")}
           </EmptyState>
         ) : (
           <div className="card-body">
@@ -139,7 +142,7 @@ export default function PersonMain({
                 <span className="grow">{f.text}</span>
                 <button
                   className="icon-btn danger"
-                  aria-label={`Delete fact: ${f.text}`}
+                  aria-label={t("rolodex.person.deleteFact", { text: f.text })}
                   onClick={() => {
                     void api.deleteFact(f.id).then(after);
                   }}
@@ -155,15 +158,15 @@ export default function PersonMain({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Megaphone size={16} /> News
+            <Megaphone size={16} /> {t("rolodex.person.newsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("news")}>
-            <Plus size={13} /> Add news
+            <Plus size={13} /> {t("rolodex.person.addNews")}
           </button>
         </div>
         {detail.news.length === 0 ? (
           <EmptyState icon={<Megaphone />}>
-            No news recorded — the latest shows at the top of their page.
+            {t("rolodex.person.newsEmpty")}
           </EmptyState>
         ) : (
           <div className="feed">
@@ -174,11 +177,13 @@ export default function PersonMain({
                 </div>
                 <div className="feed-body">
                   <div className="feed-text strong">{n.text}</div>
-                  <div className="feed-date">{fmtDate(n.date)}</div>
+                  <div className="feed-date">
+                    {fmtDate(n.date, undefined, t)}
+                  </div>
                 </div>
                 <button
                   className="icon-btn danger"
-                  aria-label="Delete news"
+                  aria-label={t("rolodex.person.deleteNews")}
                   onClick={() => {
                     void api.deleteNews(n.id).then(after);
                   }}

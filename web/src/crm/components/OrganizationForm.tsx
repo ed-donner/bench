@@ -1,4 +1,5 @@
 import { SubmitEvent, useState } from "react";
+import { useT } from "../../shared/useLocale";
 import Modal from "./Modal";
 import { api } from "../api";
 import { Organization } from "../types";
@@ -14,6 +15,7 @@ export default function OrganizationForm({
   onSaved,
   onClose,
 }: Props) {
+  const t = useT();
   const [form, setForm] = useState({
     name: existing?.name ?? "",
     website: existing?.website ?? "",
@@ -31,12 +33,16 @@ export default function OrganizationForm({
 
   return (
     <Modal
-      title={existing ? "Edit organization" : "Add organization"}
+      title={
+        existing
+          ? t("crm.form.editOrganization")
+          : t("crm.form.addOrganization")
+      }
       onClose={onClose}
     >
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="field">
-          <label htmlFor="org-name">Name</label>
+          <label htmlFor="org-name">{t("shared.common.name")}</label>
           <input
             id="org-name"
             required
@@ -46,7 +52,7 @@ export default function OrganizationForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="org-website">Website</label>
+            <label htmlFor="org-website">{t("crm.form.website")}</label>
             <input
               id="org-website"
               value={form.website}
@@ -54,7 +60,7 @@ export default function OrganizationForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="org-industry">Industry</label>
+            <label htmlFor="org-industry">{t("crm.form.industry")}</label>
             <input
               id="org-industry"
               value={form.industry}
@@ -63,7 +69,7 @@ export default function OrganizationForm({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="org-notes">Notes</label>
+          <label htmlFor="org-notes">{t("crm.form.notes")}</label>
           <textarea
             id="org-notes"
             rows={3}
@@ -73,10 +79,10 @@ export default function OrganizationForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t("shared.common.cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {t("shared.common.save")}
           </button>
         </div>
       </form>

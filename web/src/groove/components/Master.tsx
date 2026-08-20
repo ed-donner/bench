@@ -1,7 +1,8 @@
+import { useT } from "../../shared/useLocale";
 import type { Params } from "../types";
 import { SWEEP_BARS } from "../types";
 import { FILTER_SPEC, MASTER_GROUPS } from "../params";
-import { filterLabel } from "../filter";
+import { filterDisplayLabel, masterGroupLabel } from "../i18n";
 import { Knob } from "./Knob";
 import { Fader } from "./Fader";
 import { Scope } from "./Scope";
@@ -21,10 +22,12 @@ interface Props {
 
 /** Segmented phrase counter showing where the sweep is in its cycle. */
 function SweepMeter({ bars, phase }: { bars: number; phase: number }) {
+  const t = useT();
+
   if (bars === 0) {
     return (
       <div className="sweep-meter off">
-        <span className="sweep-off">SWEEP OFF</span>
+        <span className="sweep-off">{t("groove.master.sweepOff")}</span>
       </div>
     );
   }
@@ -46,7 +49,8 @@ function SweepMeter({ bars, phase }: { bars: number; phase: number }) {
 }
 
 export function Master(p: Props) {
-  const readout = useReadout();
+  const t = useT();
+  const readout = useReadout("master");
   const bars = SWEEP_BARS[Math.round(p.params.sweepBars)] ?? 0;
 
   return (
@@ -56,6 +60,7 @@ export function Master(p: Props) {
           <Knob
             spec={FILTER_SPEC}
             value={p.params.filter}
+            labelContext="master"
             onChange={(v) => {
               p.onParam("filter", v);
               readout.show(FILTER_SPEC, v);
@@ -63,13 +68,15 @@ export function Master(p: Props) {
           />
         </div>
         <div className="hero-side">
-          <span className="bank-label">MASTER FILTER</span>
+          <span className="bank-label">{t("groove.master.filter")}</span>
           <div className="hero-display">
             <span className="disp-label">
-              {readout.value ? readout.value.label : "CUTOFF"}
+              {readout.value ? readout.value.label : t("groove.master.cutoff")}
             </span>
             <span className="disp-value">
-              {readout.value ? readout.value.value : filterLabel(p.liveFilter)}
+              {readout.value
+                ? readout.value.value
+                : filterDisplayLabel(t, p.liveFilter)}
             </span>
           </div>
           <SweepMeter bars={bars} phase={p.sweepPhase} />
@@ -77,14 +84,15 @@ export function Master(p: Props) {
       </div>
 
       {MASTER_GROUPS.map((group) => (
-        <div className="master-group" key={group.title}>
-          <span className="bank-label">{group.title}</span>
+        <div className="master-group" key={group.id}>
+          <span className="bank-label">{masterGroupLabel(t, group.id)}</span>
           <div className="master-knobs">
             {group.specs.map((spec) => (
               <Knob
                 key={spec.key}
                 spec={spec}
                 value={p.params[spec.key]}
+                labelContext="master"
                 onChange={(v) => {
                   p.onParam(spec.key, v);
                   readout.show(spec, v);
@@ -98,10 +106,17 @@ export function Master(p: Props) {
       <Scope analyser={p.analyser} getFilter={p.getFilter} />
 
       <div className="master-out">
-        <span className="bank-label">OUT</span>
+        <span className="bank-label">{t("groove.master.out")}</span>
         <Fader
-          spec={{ key: "volume", label: "VOL", kind: "slider", min: 0, max: 1 }}
+          spec={{
+            key: "volume",
+            label: "VOL",
+            kind: "slider",
+            min: 0,
+            max: 1,
+          }}
           value={p.volume}
+          labelContext="master"
           onChange={p.onVolume}
         />
       </div>

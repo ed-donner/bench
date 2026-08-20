@@ -3,27 +3,37 @@ import { Phone } from "lucide-react";
 import type { ToContactRow, TodayPayload } from "../../api";
 import type { PersonComputed } from "../../types";
 import { Avatar } from "../Avatar";
-import { CIRCLE_LABEL, relativeDays } from "../../format";
+import { useT } from "../../../shared/useLocale";
+import type { TranslateFn } from "../../../shared/i18n";
+import { circleLabel, relativeDays } from "../../format";
 
 /** The one line under the heading: who is worst, or that there is nobody to chase. */
-function summary(payload: TodayPayload): string {
+function summary(payload: TodayPayload, t: TranslateFn): string {
   if (payload.to_contact.length === 0)
-    return "everyone is in touch — go enjoy your day";
+    return t("rolodex.today.hero.allInTouch");
   const top = payload.to_contact[0];
   if (top.status === "overdue")
     return top.overdue_days
-      ? `most overdue: ${top.name} · ${top.overdue_days} days`
-      : `most overdue: ${top.name} · never contacted`;
+      ? t("rolodex.today.hero.mostOverdue", {
+          name: top.name,
+          days: top.overdue_days,
+        })
+      : t("rolodex.today.hero.mostOverdueNever", { name: top.name });
   const overdue = payload.to_contact.filter((p) => p.status === "overdue");
-  return `${overdue.length} overdue · ${payload.to_contact.length - overdue.length} due soon`;
+  return t("rolodex.today.hero.summary", {
+    overdue: overdue.length,
+    dueSoon: payload.to_contact.length - overdue.length,
+  });
 }
 
-function urgency(row: ToContactRow, today: string): string {
+function urgency(row: ToContactRow, today: string, t: TranslateFn): string {
   if (row.status !== "overdue")
-    return `due ${relativeDays(row.next_due, today)}`;
+    return t("rolodex.time.due", {
+      when: relativeDays(row.next_due, today, t),
+    });
   return row.overdue_days > 0
-    ? `${row.overdue_days} days overdue`
-    : "never contacted";
+    ? t("rolodex.time.daysOverdue", { count: row.overdue_days })
+    : t("rolodex.time.neverContacted");
 }
 
 const SHOWN = 8;
@@ -38,20 +48,32 @@ export default function ContactHero({
   peopleById: Map<number, PersonComputed>;
   onLog: (person: PersonComputed) => void;
 }) {
+  const t = useT();
+
   return (
     <div className="hero">
       <div className="hero-head">
         <h2 className="hero-title">
           <Phone size={18} />
-          Who to contact
+          {t("rolodex.today.hero.title")}
         </h2>
-        <div className="hero-count">{summary(payload)}</div>
+        <div className="hero-count">{summary(payload, t)}</div>
       </div>
       {payload.to_contact.length === 0 ? (
         <div className="hero-empty">
-          Nobody needs your attention right now. Everyone’s inside their
-          check-in window — have a look at the{" "}
-          <Link to="/circles">Circles board</Link> if you fancy getting ahead.
+          {(() => {
+            const linkText = t("rolodex.today.hero.circlesLink");
+            const [before = "", after = ""] = t(
+              "rolodex.today.hero.empty",
+            ).split(linkText);
+            return (
+              <>
+                {before}
+                <Link to="/circles">{linkText}</Link>
+                {after}
+              </>
+            );
+          })()}
         </div>
       ) : (
         <div className="hero-list">
@@ -65,13 +87,19 @@ export default function ContactHero({
                     <div className="row" style={{ gap: 8 }}>
                       <span className="name">{row.name}</span>
                       <span className="chip hero-chip">
-                        {CIRCLE_LABEL[row.circle]}
+                        {circleLabel(row.circle, t)}
                       </span>
                     </div>
                     <div className="meta">
                       {row.last_contacted
-                        ? `last contacted ${relativeDays(row.last_contacted, payload.today)}`
-                        : "never contacted"}
+                        ? t("rolodex.time.lastContacted", {
+                            when: relativeDays(
+                              row.last_contacted,
+                              payload.today,
+                              t,
+                            ),
+                          })
+                        : t("rolodex.time.neverContacted")}
                       {row.latest_news ? ` · ${row.latest_news.text}` : ""}
                     </div>
                   </div>
@@ -79,14 +107,14 @@ export default function ContactHero({
                 <div
                   className={`hero-urgency ${row.status === "overdue" ? "overdue" : "due"}`}
                 >
-                  {urgency(row, payload.today)}
+                  {urgency(row, payload.today, t)}
                 </div>
                 {person && (
                   <button
                     className="btn btn-sm btn-amber"
                     onClick={() => onLog(person)}
                   >
-                    <Phone size={13} /> Log contact
+                    <Phone size={13} /> {t("rolodex.today.hero.logContact")}
                   </button>
                 )}
               </div>
@@ -95,7 +123,9 @@ export default function ContactHero({
           {payload.to_contact.length > SHOWN && (
             <div className="hero-more">
               <Link to="/people">
-                and {payload.to_contact.length - SHOWN} more →
+                {t("rolodex.today.hero.andMore", {
+                  count: payload.to_contact.length - SHOWN,
+                })}
               </Link>
             </div>
           )}

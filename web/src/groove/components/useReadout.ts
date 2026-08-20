@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "../../shared/useLocale";
+import { formatParamValue, paramLabel, type LabelContext } from "../i18n";
 import type { ParamSpec } from "../types";
 
 export interface Readout {
@@ -7,7 +9,8 @@ export interface Readout {
 }
 
 /** Shows the last touched control on a panel display, then fades back. */
-export function useReadout(holdMs = 1600): Readout {
+export function useReadout(context?: LabelContext, holdMs = 1600): Readout {
+  const t = useT();
   const [value, setValue] = useState<{ label: string; value: string } | null>(
     null,
   );
@@ -18,13 +21,13 @@ export function useReadout(holdMs = 1600): Readout {
   const show = useCallback(
     (spec: ParamSpec, v: number) => {
       setValue({
-        label: spec.label,
-        value: spec.format ? spec.format(v) : v.toFixed(2),
+        label: paramLabel(t, spec.key, context),
+        value: formatParamValue(t, spec, v),
       });
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => setValue(null), holdMs);
     },
-    [holdMs],
+    [context, holdMs, t],
   );
 
   return { value, show };

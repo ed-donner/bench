@@ -4,6 +4,9 @@
  * their dates locally, without a round trip.
  */
 import type { ImportantDate, ImportantDateType } from "./types";
+import type { TranslateFn } from "../shared/i18n";
+import { translate } from "../shared/i18n";
+import { currentLocale } from "../shared/locale";
 
 export interface Occurrence {
   date: string;
@@ -66,19 +69,20 @@ export function currentAge(d: AnnualDate, today: string): number | null {
   return (thisYear <= today ? year : year - 1) - d.year;
 }
 
-const DATE_TYPE_LABEL: Record<ImportantDateType, string> = {
-  birthday: "Birthday",
-  anniversary: "Anniversary",
-  work_anniversary: "Work anniversary",
-  child_birthday: "Child's birthday",
-  other: "Important date",
-};
+function defaultT(
+  key: Parameters<TranslateFn>[0],
+  params?: Record<string, string | number>,
+) {
+  return translate(currentLocale(), key, params);
+}
 
 export function dateTypeLabel(
   type: ImportantDateType,
   label: string | null,
+  t: TranslateFn = defaultT,
 ): string {
   if (type === "other" && label) return label;
-  if (type === "child_birthday" && label) return `${label}'s birthday`;
-  return DATE_TYPE_LABEL[type];
+  if (type === "child_birthday" && label)
+    return t("rolodex.dateType.childNamed", { name: label });
+  return t(`rolodex.dateType.${type}`);
 }

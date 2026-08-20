@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
+import { LocaleProvider } from "../../shared/LocaleProvider";
 import TimelinePage from "./TimelinePage";
 import CalendarPage from "./CalendarPage";
 import { api } from "../api";
@@ -14,13 +15,15 @@ const maya = person({ id: 1, name: "Maya Chen" });
 
 function renderWithStore(ui: React.ReactElement) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
-      >
-        <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    <LocaleProvider>
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
+        >
+          <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>
+    </LocaleProvider>,
   );
 }
 
@@ -37,7 +40,7 @@ describe("Timeline", () => {
     ]);
     renderWithStore(<TimelinePage />);
     expect(
-      await screen.findByText("2 entries across everyone, newest first"),
+      await screen.findByText("2 entries across everyone"),
     ).toBeInTheDocument();
     expect(screen.getByText("Talked about the move")).toBeInTheDocument();
     expect(screen.getByText("News recorded")).toBeInTheDocument();
