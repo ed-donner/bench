@@ -1,28 +1,13 @@
 import { useState } from "react";
 import { Cake } from "lucide-react";
+import { useLocale } from "../../../shared/useLocale";
 import { api } from "../../api";
 import type { ImportantDateType } from "../../types";
 import { DATE_TYPES } from "../../types";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
-import { DATE_TYPE_LABEL } from "../../format";
+import { dateTypeLabel, monthName } from "../../format";
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-/** Why a year is optional: plenty of birthdays are known as a day and month and nothing more. */
 export default function AddDateModal({
   personId,
   onClose,
@@ -32,6 +17,7 @@ export default function AddDateModal({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLocale();
   const [type, setType] = useState<ImportantDateType>("birthday");
   const [label, setLabel] = useState("");
   const [day, setDay] = useState("");
@@ -45,12 +31,12 @@ export default function AddDateModal({
     const m = Number(month);
     const d = Number(day);
     if (!m || !d || d < 1 || d > 31) {
-      setError("Please give a valid day and month");
+      setError(t("addDate.invalidDayMonth"));
       return;
     }
     const y = year ? Number(year) : null;
     if (y != null && (y < 1850 || y > 2100)) {
-      setError("Year looks off — between 1850 and 2100 please");
+      setError(t("addDate.invalidYear"));
       return;
     }
     setBusy(true);
@@ -72,79 +58,78 @@ export default function AddDateModal({
 
   const labelHint =
     type === "child_birthday" || type === "other"
-      ? "(e.g. child’s name)"
-      : "(optional)";
+      ? t("addDate.labelChildHint")
+      : t("addDate.labelOptional");
 
   return (
     <Modal
-      title="Add an important date"
+      title={t("addDate.title")}
       icon={<Cake size={17} className="modal-icon amber" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={busy}
           >
-            Save date
+            {t("addDate.save")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <Field label="Type">
+        <Field label={t("addDate.type")}>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as ImportantDateType)}
           >
-            {DATE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {DATE_TYPE_LABEL[t]}
+            {DATE_TYPES.map((dateType) => (
+              <option key={dateType} value={dateType}>
+                {dateTypeLabel(t, dateType, null)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label={`Label ${labelHint}`}>
+        <Field label={t("addDate.labelField", { hint: labelHint })}>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder={type === "child_birthday" ? "Louise" : ""}
+            placeholder={
+              type === "child_birthday" ? t("addDate.childPlaceholder") : ""
+            }
           />
         </Field>
-        <Field label="Day *">
+        <Field label={t("addDate.day")}>
           <input
             type="number"
             min={1}
             max={31}
             value={day}
             onChange={(e) => setDay(e.target.value)}
-            placeholder="14"
+            placeholder={t("addDate.dayPlaceholder")}
           />
         </Field>
-        <Field label="Month *">
+        <Field label={t("addDate.month")}>
           <select value={month} onChange={(e) => setMonth(e.target.value)}>
-            <option value="">—</option>
-            {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
+            <option value="">{t("common.dash")}</option>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+              <option key={m} value={m}>
+                {monthName(t, m)}
               </option>
             ))}
           </select>
         </Field>
-        <Field
-          label="Year (optional)"
-          hint="With a year we can show their age and flag milestone birthdays."
-        >
+        <Field label={t("addDate.year")} hint={t("addDate.yearHint")}>
           <input
             type="number"
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            placeholder="1990"
+            placeholder={t("addDate.yearPlaceholder")}
           />
         </Field>
       </div>

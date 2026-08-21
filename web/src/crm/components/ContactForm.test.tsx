@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ContactForm from "./ContactForm";
 import { api } from "../api";
-import { contact, org } from "../test/helpers";
+import { renderCrm, contact, org } from "../test/helpers";
 
 vi.mock("../api", () => ({ api: { post: vi.fn(), put: vi.fn() } }));
 
@@ -24,7 +24,7 @@ afterEach(() => {
 function show(props: Partial<Parameters<typeof ContactForm>[0]> = {}) {
   const onSaved = vi.fn();
   const onClose = vi.fn();
-  render(
+  renderCrm(
     <ContactForm
       organizations={organizations}
       onSaved={onSaved}

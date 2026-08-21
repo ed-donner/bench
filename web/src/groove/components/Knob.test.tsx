@@ -1,19 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Knob } from "./Knob";
 import type { ParamSpec } from "../types";
+import { renderWithLocale } from "../i18n/test-utils";
 
-const cutoff: ParamSpec = {
+const cutoff: ParamSpec & { label: string } = {
   key: "cutoff",
+  labelKey: "groove.param.cutoff",
   label: "CUTOFF",
   kind: "knob",
   min: 0,
   max: 1,
 };
 
-const wave: ParamSpec = {
+const wave: ParamSpec & { label: string } = {
   key: "wave",
+  labelKey: "groove.param.wave",
   label: "WAVE",
   kind: "knob",
   min: 0,
@@ -21,10 +24,10 @@ const wave: ParamSpec = {
   options: ["SAW", "SQUARE", "TRI", "SINE"],
 };
 
-function renderKnob(spec: ParamSpec, value: number) {
+function renderKnob(spec: ParamSpec & { label: string }, value: number) {
   const onChange = vi.fn();
   const onTouch = vi.fn();
-  const { container } = render(
+  const { container } = renderWithLocale(
     <Knob spec={spec} value={value} onChange={onChange} onTouch={onTouch} />,
   );
   return { onChange, onTouch, knob: container.querySelector(".knob")! };
@@ -100,7 +103,7 @@ describe("Knob", () => {
   });
 
   it("sweeps the pointer and the value arc as the value rises", () => {
-    const { container, rerender } = render(
+    const { container, rerender } = renderWithLocale(
       <Knob spec={cutoff} value={0} onChange={vi.fn()} />,
     );
     const pointer = () =>

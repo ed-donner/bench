@@ -1,6 +1,8 @@
 import type { DrumLane, MelodicStep, Patch, UnitId } from "../types";
 import { DRUM_LANES } from "../types";
 import { UNIT_META, UNIT_PARAMS } from "../params";
+import { useLocale } from "../../shared/useLocale";
+import { resolveSpec } from "../i18n/resolve";
 import { Knob } from "./Knob";
 import { Fader } from "./Fader";
 import { LedStrip } from "./LedStrip";
@@ -45,28 +47,30 @@ function isHitting(patch: Patch, id: UnitId, current: number): boolean {
 
 export function Unit(props: Props) {
   const { id, patch, current, muted, onMute, onParam } = props;
+  const { t } = useLocale();
   const meta = UNIT_META[id];
-  const specs = UNIT_PARAMS[id];
+  const unitName = t(meta.nameKey);
+  const specs = UNIT_PARAMS[id].map((s) => resolveSpec(s, t));
   const params = patch[id].params;
   const readout = useReadout();
 
   const knobs = specs.filter((s) => s.kind === "knob");
   const faders = specs.filter((s) => s.kind === "slider");
   const hits = activeCount(patch, id);
-  // What the display shows when no knob is being turned: drums count hits, the rest count steps.
-  const idleLabel = id === "drums" ? "HITS" : "STEPS";
+  const idleLabel =
+    id === "drums" ? t("groove.display.hits") : t("groove.display.steps");
   const idleValue = id === "drums" ? `${hits}` : `${hits}/16`;
 
   return (
     <section
       className={`unit u-${id}${muted ? " muted" : ""}`}
-      aria-label={meta.name}
+      aria-label={unitName}
     >
       <header className="unit-head">
         <span
           className={`sig-led${isHitting(patch, id, current) ? " on" : ""}`}
         />
-        <span className="unit-name">{meta.name}</span>
+        <span className="unit-name">{unitName}</span>
         <span className="unit-model">{meta.model}</span>
         <div className="unit-display">
           <span className="disp-label">
@@ -81,7 +85,7 @@ export function Unit(props: Props) {
           className={`mute-btn${muted ? " active" : ""}`}
           onClick={onMute}
         >
-          MUTE
+          {t("groove.display.mute")}
         </button>
       </header>
 
@@ -125,7 +129,7 @@ export function Unit(props: Props) {
         ) : (
           <>
             <NoteGrid
-              unit={meta.name}
+              unit={unitName}
               steps={patch[id].steps}
               current={current}
               showChord={id === "pads"}

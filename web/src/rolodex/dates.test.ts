@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { createT } from "../shared/i18n";
+import { rolodexMessages } from "./i18n";
 import {
   currentAge,
   dateTypeLabel,
@@ -7,6 +9,10 @@ import {
   isLeapYear,
   nextOccurrence,
 } from "./dates";
+
+const en = createT(rolodexMessages);
+const t = (key: string, vars?: Record<string, string | number>) =>
+  en("en", key, vars);
 
 const birthday = { month: 3, day: 15, year: 1990 };
 
@@ -76,13 +82,15 @@ describe("daysUntil", () => {
 
 describe("dateTypeLabel", () => {
   it("uses the label where the type alone would not say enough", () => {
-    expect(dateTypeLabel("birthday", null)).toBe("Birthday");
-    expect(dateTypeLabel("other", "Sober anniversary")).toBe(
+    expect(dateTypeLabel(t, "birthday", null)).toBe("Birthday");
+    expect(dateTypeLabel(t, "other", "Sober anniversary")).toBe(
       "Sober anniversary",
     );
-    expect(dateTypeLabel("other", null)).toBe("Important date");
-    expect(dateTypeLabel("child_birthday", "Louise")).toBe("Louise's birthday");
-    expect(dateTypeLabel("child_birthday", null)).toBe("Child's birthday");
-    expect(dateTypeLabel("work_anniversary", null)).toBe("Work anniversary");
+    expect(dateTypeLabel(t, "other", null)).toBe("Important date");
+    expect(dateTypeLabel(t, "child_birthday", "Louise")).toBe(
+      "Louise's birthday",
+    );
+    expect(dateTypeLabel(t, "child_birthday", null)).toBe("Child's birthday");
+    expect(dateTypeLabel(t, "work_anniversary", null)).toBe("Work anniversary");
   });
 });

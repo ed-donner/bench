@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
+import { useLocale } from "../../shared/useLocale";
 import { api, type PageData } from "../api";
 import EmojiPicker from "./EmojiPicker";
 import Editor from "../editor/Editor";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function PageView({ onTreeChange }: Props) {
+  const { t } = useLocale();
   const { pageId } = useParams<{ pageId: string }>();
   const location = useLocation();
   // The loaded id travels with the page, so "loading the next one" and "that page is gone" are
@@ -69,7 +71,7 @@ export default function PageView({ onTreeChange }: Props) {
   if (missing) {
     return (
       <div className="page">
-        <div className="page-missing">This page does not exist anymore.</div>
+        <div className="page-missing">{t("page.missing")}</div>
       </div>
     );
   }
@@ -80,7 +82,7 @@ export default function PageView({ onTreeChange }: Props) {
       <div className="page-icon-wrap">
         <button
           className="page-icon"
-          aria-label="Change icon"
+          aria-label={t("page.changeIcon")}
           onClick={() => setPickerOpen((v) => !v)}
         >
           {page.icon ?? (page.type === "database" ? "🗃️" : "📄")}
@@ -96,8 +98,8 @@ export default function PageView({ onTreeChange }: Props) {
         ref={titleRef}
         className="page-title"
         value={page.title}
-        placeholder="Untitled"
-        aria-label="Page title"
+        placeholder={t("common.untitled")}
+        aria-label={t("page.titleLabel")}
         onChange={(e) => saveTitle(e.target.value)}
       />
     </header>

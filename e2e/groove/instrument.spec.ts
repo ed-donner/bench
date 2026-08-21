@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-const UNITS = ["RHYTHM", "BASS", "PADS", "LEAD"];
+const UNITS = [/RHYTHM|ताल/, /BASS|बास/, /PADS|पैड/, /LEAD|लीड/];
 
 /**
  * How many of a bar's 16 steps have to light before we accept that the sequencer ran.
@@ -39,7 +39,7 @@ function playhead(page: Page): Promise<number> {
 }
 
 const transport = (page: Page) =>
-  page.getByRole("button", { name: /(PLAY|STOP)/ });
+  page.getByRole("button", { name: /(PLAY|STOP|चलाएँ|रोकें)/ });
 
 /**
  * Accumulates every step the LED strip lights, from inside the page.
@@ -80,7 +80,7 @@ test("the instrument boots with all four units", async ({ page }) => {
   for (const unit of UNITS) {
     await expect(page.getByRole("region", { name: unit })).toBeVisible();
   }
-  await expect(transport(page)).toContainText("PLAY");
+  await expect(transport(page)).toContainText(/PLAY|चलाएँ/);
 });
 
 test("the transport starts and stops, and the playhead follows it", async ({
@@ -90,7 +90,7 @@ test("the transport starts and stops, and the playhead follows it", async ({
   expect(await playhead(page)).toBe(-1);
 
   await transport(page).click();
-  await expect(transport(page)).toContainText("STOP");
+  await expect(transport(page)).toContainText(/STOP|रोकें/);
 
   // The clock is running if a step lights at all, then moves on.
   await expect
@@ -100,7 +100,7 @@ test("the transport starts and stops, and the playhead follows it", async ({
   await expect.poll(() => playhead(page), { timeout: 5000 }).not.toBe(first);
 
   await transport(page).click();
-  await expect(transport(page)).toContainText("PLAY");
+  await expect(transport(page)).toContainText(/PLAY|चलाएँ/);
   await expect.poll(() => playhead(page), { timeout: 3000 }).toBe(-1);
 });
 
@@ -108,7 +108,10 @@ test("drum steps are individually addressable and toggle through their states", 
   page,
 }) => {
   await page.goto("/groove/");
-  const step = page.getByRole("button", { name: "KICK step 3", exact: true });
+  const step = page.getByRole("button", {
+    name: /KICK (step|स्टेप) 3/i,
+    exact: true,
+  });
   await expect(step).toBeVisible();
 
   const before = await step.getAttribute("aria-pressed");
@@ -120,9 +123,16 @@ test("melodic steps carry their unit name so the four grids stay distinguishable
   page,
 }) => {
   await page.goto("/groove/");
-  for (const unit of ["BASS", "PADS", "LEAD"]) {
+  for (const [en, hi] of [
+    ["BASS", "बास"],
+    ["PADS", "पैड"],
+    ["LEAD", "लीड"],
+  ]) {
     await expect(
-      page.getByRole("button", { name: `${unit} step 1`, exact: true }),
+      page.getByRole("button", {
+        name: new RegExp(`^(${en}|${hi}) (step|स्टेप) 1$`, "i"),
+        exact: true,
+      }),
     ).toHaveCount(1);
   }
 });
@@ -141,10 +151,10 @@ test("switching patches changes the tempo", async ({ page }) => {
 
 test("a unit can be muted and unmuted", async ({ page }) => {
   await page.goto("/groove/");
-  const rhythm = page.getByRole("region", { name: "RHYTHM" });
-  await rhythm.getByRole("button", { name: "MUTE" }).click();
+  const rhythm = page.getByRole("region", { name: /RHYTHM|ताल/ });
+  await rhythm.getByRole("button", { name: /MUTE|म्यूट/ }).click();
   await expect(rhythm).toHaveClass(/muted/);
-  await rhythm.getByRole("button", { name: "MUTE" }).click();
+  await rhythm.getByRole("button", { name: /MUTE|म्यूट/ }).click();
   await expect(rhythm).not.toHaveClass(/muted/);
 });
 

@@ -1,44 +1,92 @@
 import type {
   CheckInStatus,
   Circle,
+  CircleMeta,
   InteractionType,
   ImportantDateType,
 } from "./types";
 import { format, parseISO, isValid, differenceInCalendarDays } from "date-fns";
 
-export const STATUS_LABEL: Record<CheckInStatus, string> = {
-  in_touch: "In touch",
-  due_soon: "Due soon",
-  overdue: "Overdue",
-  snoozed: "Snoozed",
-  off: "Check-ins off",
+import type { Translate } from "../shared/locales";
+
+const CIRCLE_CADENCE_DAYS: Record<Circle, number> = {
+  inner: 30,
+  close: 91,
+  wider: 182,
+  distant: 365,
 };
 
-export const CIRCLE_LABEL: Record<Circle, string> = {
-  inner: "Inner",
-  close: "Close",
-  wider: "Wider",
-  distant: "Distant",
-};
+export function statusLabel(t: Translate, status: CheckInStatus): string {
+  return t(`status.${status}`);
+}
 
-export const INTERACTION_META: Record<
-  InteractionType,
-  { label: string; verb: string }
-> = {
-  call: { label: "Call", verb: "Called" },
-  message: { label: "Message", verb: "Messaged" },
-  email: { label: "Email", verb: "Emailed" },
-  met: { label: "Met up", verb: "Met up" },
-  other: { label: "Other", verb: "Other contact" },
-};
+export function circleLabel(t: Translate, circle: Circle): string {
+  return t(`circle.${circle}.label`);
+}
 
-export const DATE_TYPE_LABEL: Record<ImportantDateType, string> = {
-  birthday: "Birthday",
-  anniversary: "Anniversary",
-  work_anniversary: "Work anniversary",
-  child_birthday: "Child's birthday",
-  other: "Important date",
-};
+export function circleMeta(t: Translate, circle: Circle): CircleMeta {
+  return {
+    key: circle,
+    label: t(`circle.${circle}.label`),
+    cadenceDays: CIRCLE_CADENCE_DAYS[circle],
+    cadenceDescription: t(`circle.${circle}.cadence`),
+    blurb: t(`circle.${circle}.blurb`),
+  };
+}
+
+export function interactionMeta(
+  t: Translate,
+  type: InteractionType,
+): { label: string; verb: string } {
+  return {
+    label: t(`interaction.${type}.label`),
+    verb: t(`interaction.${type}.verb`),
+  };
+}
+
+export function dateTypeLabel(
+  t: Translate,
+  type: ImportantDateType,
+  label: string | null,
+): string {
+  if (type === "other" && label) return label;
+  if (type === "child_birthday" && label)
+    return t("dateType.childNamed", { name: label });
+  return t(`dateType.${type}`);
+}
+
+export function relativeDays(
+  t: Translate,
+  iso: string | null | undefined,
+  fromToday?: string,
+): string {
+  if (!iso) return t("relative.neverContacted");
+  const ref = fromToday ? parseISO(fromToday) : new Date();
+  const diff = differenceInCalendarDays(parseISO(iso), ref);
+  if (diff === 0) return t("relative.today");
+  if (diff === 1) return t("relative.tomorrow");
+  if (diff === -1) return t("relative.yesterday");
+  if (diff < 0) return t("relative.daysAgo", { days: -diff });
+  return t("relative.inDays", { days: diff });
+}
+
+/** Table shorthand for an overdue check-in, e.g. "12d overdue". */
+export function checkInOverdueShort(
+  t: Translate,
+  nextDue: string | null,
+): string {
+  if (!nextDue) return t("relative.neverContacted");
+  const ref = new Date();
+  const diff = differenceInCalendarDays(parseISO(nextDue), ref);
+  if (diff >= 0)
+    return t("people.checkInDue", { when: relativeDays(t, nextDue) });
+  return t("people.checkInOverdue", { days: -diff });
+}
+
+export function checkInDueText(t: Translate, nextDue: string | null): string {
+  if (!nextDue) return t("relative.neverContacted");
+  return t("people.checkInDue", { when: relativeDays(t, nextDue) });
+}
 
 export function fmtDate(
   iso: string | null | undefined,
@@ -53,21 +101,6 @@ export function fmtDateShort(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = parseISO(iso);
   return isValid(d) ? format(d, "d MMM") : "—";
-}
-
-export function relativeDays(
-  iso: string | null | undefined,
-  fromToday?: string,
-): string {
-  if (!iso) return "never contacted";
-  const ref = fromToday ? parseISO(fromToday) : new Date();
-  // Positive is the future: the date is that many days after the day we are counting from.
-  const diff = differenceInCalendarDays(parseISO(iso), ref);
-  if (diff === 0) return "today";
-  if (diff === 1) return "tomorrow";
-  if (diff === -1) return "yesterday";
-  if (diff < 0) return `${-diff} days ago`;
-  return `in ${diff} days`;
 }
 
 const AVATAR_COLORS = [
@@ -115,6 +148,10 @@ export function localTimeIn(
 
 export function monthShort(month: number): string {
   return format(new Date(2001, month - 1, 1), "MMM");
+}
+
+export function monthName(t: Translate, month: number): string {
+  return t(`month.${month}`);
 }
 
 export function todayISO(): string {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { ContactList, DealList } from "./RelatedLists";
-import { contact, deal } from "../test/helpers";
+import { renderCrm, contact, deal } from "../test/helpers";
 
 const show = (ui: React.ReactElement) =>
-  render(<MemoryRouter>{ui}</MemoryRouter>);
+  renderCrm(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe("DealList", () => {
   it("says so when there are none", () => {

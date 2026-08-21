@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderCrm } from "../test/helpers";
 import userEvent from "@testing-library/user-event";
 import ActivityForm from "./ActivityForm";
 import { api } from "../api";
@@ -17,7 +18,7 @@ afterEach(() => {
 function show(props: Partial<Parameters<typeof ActivityForm>[0]> = {}) {
   const onSaved = vi.fn();
   const onClose = vi.fn();
-  render(<ActivityForm onSaved={onSaved} onClose={onClose} {...props} />);
+  renderCrm(<ActivityForm onSaved={onSaved} onClose={onClose} {...props} />);
   return { onSaved, onClose };
 }
 

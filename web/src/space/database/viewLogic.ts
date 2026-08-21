@@ -11,7 +11,6 @@ export const TITLE_ID = "__title";
 
 export interface OperatorDef {
   op: string;
-  label: string;
   needsValue: boolean;
 }
 
@@ -22,31 +21,31 @@ export function operatorsFor(type: PropertyType | "title"): OperatorDef[] {
     case "text":
     case "url":
       return [
-        { op: "contains", label: "contains", needsValue: true },
-        { op: "not_contains", label: "does not contain", needsValue: true },
+        { op: "contains", needsValue: true },
+        { op: "not_contains", needsValue: true },
       ];
     case "number":
       return [
-        { op: "eq", label: "=", needsValue: true },
-        { op: "gt", label: ">", needsValue: true },
-        { op: "lt", label: "<", needsValue: true },
+        { op: "eq", needsValue: true },
+        { op: "gt", needsValue: true },
+        { op: "lt", needsValue: true },
       ];
     case "select":
       return [
-        { op: "is", label: "is", needsValue: true },
-        { op: "is_not", label: "is not", needsValue: true },
+        { op: "is", needsValue: true },
+        { op: "is_not", needsValue: true },
       ];
     case "multi_select":
-      return [{ op: "has", label: "contains", needsValue: true }];
+      return [{ op: "has", needsValue: true }];
     case "date":
       return [
-        { op: "before", label: "is before", needsValue: true },
-        { op: "after", label: "is after", needsValue: true },
+        { op: "before", needsValue: true },
+        { op: "after", needsValue: true },
       ];
     case "checkbox":
       return [
-        { op: "checked", label: "is checked", needsValue: false },
-        { op: "unchecked", label: "is unchecked", needsValue: false },
+        { op: "checked", needsValue: false },
+        { op: "unchecked", needsValue: false },
       ];
   }
 }

@@ -46,16 +46,21 @@ export const SWEEP_BARS = [0, 1, 2, 4, 8, 16];
 
 export interface ParamSpec {
   key: string;
-  label: string;
+  /** i18n key resolved to a display label in components */
+  labelKey: string;
   /** knobs sit on the panel face, sliders in the mixer strip */
   kind: "knob" | "slider";
   min: number;
   max: number;
-  /** discrete option names; when present the value is an index */
+  /** discrete option i18n keys; when present the value is an index */
+  optionKeys?: string[];
+  /** resolved at render time for knobs and readouts */
   options?: string[];
+  label?: string;
   /** snap to whole numbers without naming each position */
   integer?: boolean;
-  /** formats the value for the unit display */
+  /** how to format the value for the unit display */
+  formatKind?: "pct" | "filter" | "delay";
   format?: (v: number) => string;
 }
 

@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useLocale } from "../../shared/useLocale";
 import type { Block } from "../api";
 import ContentEditable from "./ContentEditable";
 
@@ -30,17 +31,17 @@ const CLASSES: Record<string, string> = {
   callout: "b-callout-text",
 };
 
-const PLACEHOLDERS: Record<string, string> = {
-  paragraph: "Type “/” for commands",
-  heading1: "Heading 1",
-  heading2: "Heading 2",
-  heading3: "Heading 3",
-  bulleted: "List item",
-  numbered: "List item",
-  todo: "To-do",
-  quote: "Quote",
-  code: "Code",
-  callout: "Callout",
+const PLACEHOLDER_KEYS: Record<string, string> = {
+  paragraph: "blockPlaceholder.commands",
+  heading1: "blockPlaceholder.heading1",
+  heading2: "blockPlaceholder.heading2",
+  heading3: "blockPlaceholder.heading3",
+  bulleted: "blockPlaceholder.listItem",
+  numbered: "blockPlaceholder.listItem",
+  todo: "blockPlaceholder.todo",
+  quote: "blockPlaceholder.quote",
+  code: "blockPlaceholder.code",
+  callout: "blockPlaceholder.callout",
 };
 
 export default function BlockRow({
@@ -49,6 +50,7 @@ export default function BlockRow({
   version,
   ...handlers
 }: Props) {
+  const { t } = useLocale();
   const {
     attributes,
     listeners,
@@ -59,6 +61,8 @@ export default function BlockRow({
   } = useSortable({ id: block.id });
   const text = (block.content.text as string | undefined) ?? "";
   const checked = Boolean(block.content.checked);
+  const placeholderKey = PLACEHOLDER_KEYS[block.type];
+  const placeholder = placeholderKey ? t(placeholderKey) : undefined;
 
   const editable = (extraClass = "") => (
     <ContentEditable
@@ -66,7 +70,7 @@ export default function BlockRow({
       version={version}
       initialText={text}
       className={`block-text ${CLASSES[block.type] ?? "b-paragraph"}${extraClass}`}
-      placeholder={PLACEHOLDERS[block.type]}
+      placeholder={placeholder}
       onTextInput={handlers.onTextInput}
       onKeyDown={handlers.onKeyDown}
       onBlur={handlers.onBlur}
@@ -105,7 +109,7 @@ export default function BlockRow({
               type="checkbox"
               className="b-checkbox"
               checked={checked}
-              aria-label={text || "To-do"}
+              aria-label={text || t("block.todoAria")}
               onChange={(e) =>
                 handlers.onToggleTodo(block.id, e.target.checked)
               }
@@ -142,7 +146,7 @@ export default function BlockRow({
     >
       <button
         className="drag-handle"
-        aria-label="Drag block"
+        aria-label={t("block.dragHandle")}
         {...attributes}
         {...listeners}
       >

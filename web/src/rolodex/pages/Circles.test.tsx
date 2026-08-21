@@ -4,6 +4,7 @@ import { MemoryRouter } from "react-router";
 import Circles from "./Circles";
 import { StoreContext, ToastContext } from "../store";
 import { person } from "../test/helpers";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -20,15 +21,17 @@ const people = [
 
 function renderCircles(rows = people) {
   const { container } = render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{ people: rows, tags: [], loaded: true, refresh: vi.fn() }}
-      >
-        <ToastContext.Provider value={vi.fn()}>
-          <Circles />
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{ people: rows, tags: [], loaded: true, refresh: vi.fn() }}
+        >
+          <ToastContext.Provider value={vi.fn()}>
+            <Circles />
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
   // The circle name also appears on every card in the column, so columns are found by their
   // own heading rather than by the first match for the word.

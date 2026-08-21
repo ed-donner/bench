@@ -1,10 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import ContactDetail from "./ContactDetail";
 import { api } from "../api";
-import { activity, contact, deal, org, routes } from "../test/helpers";
+import {
+  renderCrm,
+  activity,
+  contact,
+  deal,
+  org,
+  routes,
+} from "../test/helpers";
 
 vi.mock("../api", () => ({
   api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -34,7 +41,7 @@ afterEach(() => {
 });
 
 function show() {
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={["/contacts/1"]}>
       <Routes>
         <Route path="/contacts/:id" element={<ContactDetail />} />

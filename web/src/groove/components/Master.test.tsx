@@ -1,11 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Master } from "./Master";
 import { PATCHES } from "../patches";
 import { MASTER_GROUPS } from "../params";
 import { filterLabel } from "../filter";
 import { SWEEP_BARS } from "../types";
+import { grooveEn } from "../i18n/en";
+import { resolveSpec } from "../i18n/resolve";
+import { renderWithLocale } from "../i18n/test-utils";
+
+const t = (key: string) => grooveEn[key] ?? key;
 
 // The scope is a canvas render loop with its own suite; this one is about the master panel.
 vi.mock("./Scope", () => ({
@@ -26,7 +31,7 @@ function renderMaster(overrides: Partial<MasterProps> = {}) {
     sweepPhase: 0,
     ...overrides,
   };
-  const { container, rerender } = render(<Master {...props} />);
+  const { container, rerender } = renderWithLocale(<Master {...props} />);
   const show = (next: Partial<MasterProps>) =>
     rerender(<Master {...props} {...next} />);
   return { ...props, container, show };
@@ -56,9 +61,9 @@ describe("Master", () => {
   it("names every master group and its knobs", () => {
     renderMaster();
     for (const group of MASTER_GROUPS) {
-      expect(screen.getAllByText(group.title).length).toBeGreaterThan(0);
-      for (const spec of group.specs) {
-        expect(screen.getByText(spec.label)).toBeInTheDocument();
+      expect(screen.getAllByText(t(group.titleKey)).length).toBeGreaterThan(0);
+      for (const raw of group.specs) {
+        expect(screen.getByText(resolveSpec(raw, t).label)).toBeInTheDocument();
       }
     }
   });

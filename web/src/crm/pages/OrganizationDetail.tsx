@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { api } from "../api";
 import { useFetch } from "../hooks";
+import { useLocale } from "../../shared/useLocale";
 import { Contact, Deal, Organization } from "../types";
 import OrganizationForm from "../components/OrganizationForm";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -10,19 +11,21 @@ import PageHeader from "../components/PageHeader";
 import { IconOrganizations } from "../components/Icons";
 
 function OrganizationFacts({ org }: { org: Organization }) {
+  const { t } = useLocale();
   return (
     <dl className="props">
-      <dt>Website</dt>
-      <dd>{org.website || "—"}</dd>
-      <dt>Industry</dt>
-      <dd>{org.industry || "—"}</dd>
-      <dt>Notes</dt>
-      <dd>{org.notes || "—"}</dd>
+      <dt>{t("common.website")}</dt>
+      <dd>{org.website || t("common.dash")}</dd>
+      <dt>{t("common.industry")}</dt>
+      <dd>{org.industry || t("common.dash")}</dd>
+      <dt>{t("common.notes")}</dt>
+      <dd>{org.notes || t("common.dash")}</dd>
     </dl>
   );
 }
 
 export default function OrganizationDetail() {
+  const { t } = useLocale();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -47,33 +50,38 @@ export default function OrganizationDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/organizations">Organizations</Link> / {org.name}
+        <Link to="/organizations">{t("breadcrumb.organizations")}</Link> /{" "}
+        {org.name}
       </div>
       <PageHeader
         icon={<IconOrganizations size={20} />}
         title={org.name}
-        sub={org.industry || "Organization"}
+        sub={org.industry || t("organizations.fallbackSub")}
       >
         <div className="header-actions">
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card full">
-          <h2>Details</h2>
+          <h2>{t("common.details")}</h2>
           <OrganizationFacts org={org} />
         </div>
         <div className="card">
-          <h2>Contacts ({contacts?.length ?? 0})</h2>
+          <h2>
+            {t("common.contacts")} ({contacts?.length ?? 0})
+          </h2>
           <ContactList contacts={contacts ?? []} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {t("common.deals")} ({deals?.length ?? 0})
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
       </div>
@@ -86,8 +94,8 @@ export default function OrganizationDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete "${org.name}"? Its contacts and deals will be kept but unlinked.`}
+          title={t("organizations.deleteTitle")}
+          message={t("organizations.deleteMessageQuoted", { name: org.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />
