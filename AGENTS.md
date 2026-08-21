@@ -11,7 +11,7 @@ commands run from the root.
   code and unit tests with coverage. There are no known failures to read past.
 - **`npm run format` before `check`** - formatting is not applied to agent edits automatically,
   and `check` fails on unformatted files.
-- **Never push.** The agent commits; Ed pushes and opens the pull request, and CI gates the merge.
+- **Never push.** The agent commits; the user pushes and opens the pull request, and CI gates the merge.
 - **If a session begins on `main`, branch before committing**, and say so in the reply.
 
 ## Commands
@@ -23,7 +23,7 @@ npm run typecheck    fast, run as you go
 npm test             unit tests, server and web
 npm run e2e          Playwright suite (npx playwright install chromium once, first)
 npm run format       prettier --write
-npm run check        the full pre-commit bar; needs the gitleaks binary (brew install gitleaks)
+npm run check        the full pre-commit bar; needs the gitleaks binary (see README.md)
 ```
 
 ## The working documents
