@@ -28,7 +28,14 @@ which is what makes running the checks locally a requirement rather than a court
   guess is the thing to test first.
 - Check whether the behaviour is already covered by a test. If it is, the test is your reproduction.
 
-## 2. Build it in increments
+## 2. If you are provided a SPEC.md, develop a PLAN.md from it
+
+If you are provided with a SPEC.md document for a change, then first write a PLAN.md document for that change,
+asking questions to the user as appropriate. The PLAN.md should divide the implementation into phases with
+success criteria for each phase, and overall success criteria. Do not proceed to build until the user has
+confirmed the PLAN.md. The PLAN.md belongs in the same directory as the SPEC.md
+
+## 3. Build it in increments
 
 Work from the data outwards, because each layer can be validated on its own:
 
@@ -42,7 +49,7 @@ Work from the data outwards, because each layer can be validated on its own:
 
 Typecheck as you go: `npm run typecheck`. It is fast and catches most breakage.
 
-## 3. Test
+## 4. Test
 
 Three layers, each with a different job. Add to whichever ones the change touches.
 
@@ -146,7 +153,7 @@ neighbours. When checking spacing or alignment, measure rather than eyeball:
 `getBoundingClientRect()` through `page.evaluate` gives numbers you can compare against the
 elements around it, above and below included.
 
-## 4. Maintaining the test suite
+## 5. Maintaining the test suite
 
 - **A bug fix gets a test that fails without it.** That is what stops it coming back.
 - **Fix flakiness at the root.** Every failure so far has been shared state, an unmet wait, or a
@@ -161,7 +168,7 @@ test --list` answers it on demand.
 - When you deliberately leave something uncovered, say so in `e2e/EXPLORATORY.md` rather than
   letting a green suite imply coverage it does not have. Groove's audio is the standing example.
 
-## 5. Finishing
+## 6. Finishing
 
 1. `npm run format` - formatting is not applied to agent edits automatically, and `check` fails on
    unformatted files.
@@ -185,6 +192,12 @@ just the root one, or a stale nested copy shadows the hoisted package inside tha
 [CONTROLS.md](./CONTROLS.md).
 
 See [CONTROLS.md](./CONTROLS.md) for what the checks are and how each layer is enforced.
+
+## 7. Self-improvement
+
+Based on feedback and experiences on the build, update this PROCESS.md to incorporate lessons learned,
+to ensure that you continuously improve. When you update PROCESS.md, also consider updating this very section on self-improvement
+to improve the way that you improve (recursive self-improvement).
 
 ## Related documents
 

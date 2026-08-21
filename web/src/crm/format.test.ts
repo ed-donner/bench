@@ -55,9 +55,13 @@ describe("formatDate", () => {
     expect(formatDate("2026-03-04")).toBe("Mar 4, 2026");
   });
 
+  // The stored timestamp is UTC and this renders it locally, so at UTC+5:30 and east the day is
+  // already the 5th. That both shapes read as the same instant is what this covers.
   it("accepts a SQLite timestamp and an ISO one alike", () => {
-    expect(formatDate("2026-03-04 18:30:00")).toBe("Mar 4, 2026");
-    expect(formatDate("2026-03-04T18:30:00")).toBe("Mar 4, 2026");
+    expect(formatDate("2026-03-04 18:30:00")).toBe(
+      formatDate("2026-03-04T18:30:00"),
+    );
+    expect(formatDate("2026-03-04 18:30:00")).toMatch(/^Mar [45], 2026$/);
   });
 });
 
