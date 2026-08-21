@@ -229,14 +229,9 @@ The repository is set up to brief the agent for you. `CLAUDE.md` and `AGENTS.md`
 the house rules, so your agent already knows the architecture, the coding standards and the process
 it is expected to follow. You should not need to explain any of that.
 
-**Your agent is instructed to run the tests itself.** The golden rule it reads says to run
-`npm run check` before handing work back, and a lint hook holds the turn open if anything is still
-red. Expect it to write the code, run the checks, and fix what it broke without being asked.
+If you want to build the Internationalization feature, the spec is already there. Just say to the LLM:
 
-Here is the suggested change to add internationalization:
-
-> Please plan the following feature:
-> Add a toggle to the UI next to the Light mode / dark mode toggle that switches all 4 products between English & Spanish. First write a detailed plan with success criteria.
+> Please make a plan for docs/changes/internationalization/SPEC.md
 
 Your Agent may ask questions, then will plan the work.
 
