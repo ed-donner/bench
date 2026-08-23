@@ -1,6 +1,8 @@
 import { useCallback, useRef } from "react";
+import { useT } from "../../shared/useLocale";
 import type { MelodicStep } from "../types";
 import { STEPS } from "../types";
+import { chordLabel } from "../i18n";
 import { CHORD_SHAPES, clampNote, noteName } from "../music";
 
 interface Props {
@@ -20,6 +22,7 @@ export function NoteGrid({
   onChange,
   onAudition,
 }: Props) {
+  const t = useT();
   const drag = useRef<{
     index: number;
     y: number;
@@ -87,6 +90,10 @@ export function NoteGrid({
     [steps, onChange],
   );
 
+  const stepTitle = showChord
+    ? t("groove.note.stepTitleChord")
+    : t("groove.note.stepTitle");
+
   return (
     <div className="note-grid">
       {Array.from({ length: STEPS }, (_, i) => {
@@ -98,11 +105,9 @@ export function NoteGrid({
             className={`pad note-pad${step.on ? " on" : ""}${i === current ? " playing" : ""}${
               i % 4 === 0 ? " beat" : ""
             }`}
-            aria-label={`${unit} step ${i + 1}`}
+            aria-label={t("groove.note.stepAria", { unit, step: i + 1 })}
             aria-pressed={step.on}
-            title={`Click to toggle · drag up/down or scroll to change pitch${
-              showChord ? " · shift-click to change chord" : ""
-            }`}
+            title={stepTitle}
             onPointerDown={(e) => down(e, i)}
             onPointerMove={move}
             onPointerUp={up}
@@ -114,7 +119,7 @@ export function NoteGrid({
             </span>
             {showChord && (
               <span className="note-chord">
-                {step.on ? CHORD_SHAPES[step.chord].name : ""}
+                {step.on ? chordLabel(t, CHORD_SHAPES[step.chord].name) : ""}
               </span>
             )}
           </button>

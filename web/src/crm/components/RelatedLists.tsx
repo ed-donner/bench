@@ -1,3 +1,4 @@
+import { useT } from "../../shared/useLocale";
 import { Link } from "react-router";
 import { Contact, Deal } from "../types";
 import { StageChip, StatusChip } from "./Chips";
@@ -6,7 +7,10 @@ import { formatMoney } from "../format";
 /** The deals and contacts panels shown on both the contact and the organization detail pages. */
 
 export function DealList({ deals }: { deals: Deal[] }) {
-  if (deals.length === 0) return <p className="muted">No deals yet.</p>;
+  const t = useT();
+
+  if (deals.length === 0)
+    return <p className="muted">{t("crm.related.dealsEmpty")}</p>;
   return (
     <div className="task-list">
       {deals.map((d) => (
@@ -25,7 +29,10 @@ export function DealList({ deals }: { deals: Deal[] }) {
 }
 
 export function ContactList({ contacts }: { contacts: Contact[] }) {
-  if (contacts.length === 0) return <p className="muted">No contacts yet.</p>;
+  const t = useT();
+
+  if (contacts.length === 0)
+    return <p className="muted">{t("crm.related.contactsEmpty")}</p>;
   return (
     <div className="task-list">
       {contacts.map((c) => (

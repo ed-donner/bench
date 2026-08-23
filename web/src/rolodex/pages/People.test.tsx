@@ -63,7 +63,7 @@ describe("People", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Figma")).toBeInTheDocument();
     expect(screen.getByText("Overdue")).toBeInTheDocument();
-    expect(screen.getByText("12d overdue")).toBeInTheDocument();
+    expect(screen.getByText("12 days ago")).toBeInTheDocument();
   });
 
   it("narrows the table as you search", async () => {

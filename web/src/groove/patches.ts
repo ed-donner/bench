@@ -554,6 +554,13 @@ const LATE_ORBIT: Patch = {
   },
 };
 
+export const PATCH_IDS = [
+  "neonRiviera",
+  "basalt",
+  "sunroom",
+  "lateOrbit",
+] as const;
+
 export const PATCHES: Patch[] = [NEON_RIVIERA, BASALT, SUNROOM, LATE_ORBIT];
 
 export function clonePatch(p: Patch): Patch {

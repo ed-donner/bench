@@ -13,6 +13,9 @@ const theme = (page: Page) =>
 const bodyBackground = (page: Page) =>
   page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
 
+const themeToggle = (page: Page) =>
+  page.getByRole("button", { name: /Switch to (light|dark)/i });
+
 test("the toggle switches the app you are in and every app after it", async ({
   page,
 }) => {
@@ -24,7 +27,7 @@ test("the toggle switches the app you are in and every app after it", async ({
   await page.reload();
   expect(await theme(page)).toBe("light");
 
-  await page.getByRole("button", { name: /Switch to/ }).click();
+  await themeToggle(page).click();
   expect(await theme(page)).toBe("dark");
 
   for (const path of APPS) {
@@ -38,7 +41,7 @@ test("each app repaints rather than only the strip", async ({ page }) => {
     await page.goto(path);
     // Start from a known theme, then flip it.
     const before = await bodyBackground(page);
-    await page.getByRole("button", { name: /Switch to/ }).click();
+    await themeToggle(page).click();
     const after = await bodyBackground(page);
     expect(after, `${path} kept the same background`).not.toBe(before);
   }
@@ -46,7 +49,7 @@ test("each app repaints rather than only the strip", async ({ page }) => {
 
 test("the choice survives a reload", async ({ page }) => {
   await page.goto("/rolodex/");
-  await page.getByRole("button", { name: /Switch to/ }).click();
+  await themeToggle(page).click();
   const chosen = await theme(page);
   await page.reload();
   expect(await theme(page)).toBe(chosen);
@@ -54,7 +57,7 @@ test("the choice survives a reload", async ({ page }) => {
 
 test("the strip says which way the toggle goes", async ({ page }) => {
   await page.goto("/space/");
-  const button = page.getByRole("button", { name: /Switch to/ });
+  const button = themeToggle(page);
   const label = await button.getAttribute("aria-label");
   await button.click();
   await expect(button).not.toHaveAttribute("aria-label", label!);

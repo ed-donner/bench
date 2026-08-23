@@ -6,6 +6,7 @@ import type { GiftKind, PersonComputed } from "../../types";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
 import { todayISO } from "../../format";
+import { useT } from "../../../shared/useLocale";
 
 interface AddProps {
   personId: number;
@@ -25,11 +26,12 @@ function SaveFooter({
   onSave: () => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   return (
     <>
       <button className="btn" onClick={onClose}>
-        Cancel
+        {t("shared.common.cancel")}
       </button>
       <button
         className="btn btn-primary"
@@ -52,6 +54,7 @@ export function AddNewsModal({
   onClose,
   onSaved,
 }: Omit<AddProps, "personId"> & { person: PersonComputed }) {
+  const t = useT();
   const [text, setText] = useState("");
   const save = async () => {
     await api.addNews(person.id, text.trim());
@@ -60,12 +63,14 @@ export function AddNewsModal({
   };
   return (
     <Modal
-      title={`Record news about ${person.name.split(" ")[0]}`}
+      title={t("rolodex.addNews.title", {
+        firstName: person.name.split(" ")[0],
+      })}
       icon={<Megaphone size={17} className="modal-icon purple" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save news"
+          label={t("rolodex.addNews.save")}
           disabled={!text.trim()}
           onSave={save}
           onClose={onClose}
@@ -73,13 +78,13 @@ export function AddNewsModal({
       }
     >
       <Field
-        label="What’s new with them?"
-        hint="The newest piece of news becomes their “latest news”, shown here and in the People table."
+        label={t("rolodex.addNews.label")}
+        hint={t("rolodex.addNews.hint")}
       >
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Started at Figma. Moved to Berlin. Second baby due in March…"
+          placeholder={t("rolodex.addNews.placeholder")}
         />
       </Field>
     </Modal>
@@ -87,6 +92,7 @@ export function AddNewsModal({
 }
 
 export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT();
   const [text, setText] = useState("");
   const save = async () => {
     await api.addFact(personId, text.trim());
@@ -95,12 +101,12 @@ export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Add a fact worth remembering"
+      title={t("rolodex.addFact.title")}
       icon={<Sparkles size={17} className="modal-icon amber" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save fact"
+          label={t("rolodex.addFact.save")}
           disabled={!text.trim()}
           onSave={save}
           onClose={onClose}
@@ -108,13 +114,13 @@ export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
       }
     >
       <Field
-        label="Fact"
-        hint="Small and durable — unlike news, facts don’t go stale."
+        label={t("rolodex.addFact.label")}
+        hint={t("rolodex.addFact.hint")}
       >
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Allergic to shellfish. Partner is Sam. Supports Arsenal."
+          placeholder={t("rolodex.addFact.placeholder")}
         />
       </Field>
     </Modal>
@@ -122,6 +128,7 @@ export function AddFactModal({ personId, onClose, onSaved }: AddProps) {
 }
 
 export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT();
   const [text, setText] = useState("");
   const [due, setDue] = useState(todayISO());
   const save = async () => {
@@ -131,12 +138,12 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Set a reminder"
+      title={t("rolodex.addReminder.title")}
       icon={<Bell size={17} className="modal-icon blue" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save reminder"
+          label={t("rolodex.addReminder.save")}
           disabled={!text.trim() || !due}
           onSave={save}
           onClose={onClose}
@@ -144,17 +151,17 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
       }
     >
       <div className="form-grid">
-        <Field label="What needs doing?" wide>
+        <Field label={t("rolodex.addReminder.what")} wide>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Book a table for her birthday"
+            placeholder={t("rolodex.addReminder.whatPlaceholder")}
           />
         </Field>
         <Field
-          label="Due date"
+          label={t("rolodex.addReminder.due")}
           wide
-          hint="Reminders due or overdue show up on Today."
+          hint={t("rolodex.addReminder.dueHint")}
         >
           <input
             type="date"
@@ -168,6 +175,7 @@ export function AddReminderModal({ personId, onClose, onSaved }: AddProps) {
 }
 
 export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
+  const t = useT();
   const [name, setName] = useState("");
   const [kind, setKind] = useState<GiftKind>("idea");
   const [occasion, setOccasion] = useState("");
@@ -183,12 +191,12 @@ export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
   };
   return (
     <Modal
-      title="Add a gift"
+      title={t("rolodex.addGift.title")}
       icon={<Gift size={17} className="modal-icon purple" />}
       onClose={onClose}
       footer={
         <SaveFooter
-          label="Save gift"
+          label={t("rolodex.addGift.save")}
           disabled={!name.trim()}
           onSave={save}
           onClose={onClose}
@@ -196,28 +204,30 @@ export function AddGiftModal({ personId, onClose, onSaved }: AddProps) {
       }
     >
       <div className="form-grid">
-        <Field label="What?" wide>
+        <Field label={t("rolodex.addGift.what")} wide>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ceramic ramen bowl set"
+            placeholder={t("rolodex.addGift.whatPlaceholder")}
           />
         </Field>
-        <Field label="Kind">
+        <Field label={t("rolodex.addGift.kind")}>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as GiftKind)}
           >
-            <option value="idea">Idea (not given yet)</option>
-            <option value="given">Given to them</option>
-            <option value="received">Received from them</option>
+            <option value="idea">{t("rolodex.giftKind.ideaOption")}</option>
+            <option value="given">{t("rolodex.giftKind.givenOption")}</option>
+            <option value="received">
+              {t("rolodex.giftKind.receivedOption")}
+            </option>
           </select>
         </Field>
-        <Field label="Occasion">
+        <Field label={t("rolodex.addGift.occasion")}>
           <input
             value={occasion}
             onChange={(e) => setOccasion(e.target.value)}
-            placeholder="Birthday"
+            placeholder={t("rolodex.addGift.occasionPlaceholder")}
           />
         </Field>
       </div>

@@ -9,20 +9,25 @@ import InteractionIcon from "../components/InteractionIcon";
 import {
   errorMessage,
   fmtDate,
+  interactionVerb,
   relativeDays,
-  INTERACTION_META,
 } from "../format";
+import { useT } from "../../shared/useLocale";
+import type { MessageKey, TranslateFn } from "../../shared/i18n";
 import { useStore } from "../store";
 
-const KIND_OPTIONS = [
-  { value: "all", label: "All activity" },
-  { value: "interaction_call", label: "Calls" },
-  { value: "interaction_message", label: "Messages" },
-  { value: "interaction_email", label: "Emails" },
-  { value: "interaction_met", label: "Meet-ups" },
-  { value: "interaction_other", label: "Other contact" },
-  { value: "news", label: "News" },
-  { value: "reminder_done", label: "Completed reminders" },
+const KIND_OPTIONS: { value: string; labelKey: MessageKey }[] = [
+  { value: "all", labelKey: "rolodex.timeline.kind.all" },
+  { value: "interaction_call", labelKey: "rolodex.timeline.kind.calls" },
+  { value: "interaction_message", labelKey: "rolodex.timeline.kind.messages" },
+  { value: "interaction_email", labelKey: "rolodex.timeline.kind.emails" },
+  { value: "interaction_met", labelKey: "rolodex.timeline.kind.meetups" },
+  {
+    value: "interaction_other",
+    labelKey: "rolodex.timeline.kind.otherContact",
+  },
+  { value: "news", labelKey: "rolodex.timeline.kind.news" },
+  { value: "reminder_done", labelKey: "rolodex.timeline.kind.remindersDone" },
 ];
 
 function entryIcon(e: TimelineEntry): React.ReactNode {
@@ -32,17 +37,15 @@ function entryIcon(e: TimelineEntry): React.ReactNode {
   return <History size={15} />;
 }
 
-const entryCount = (n: number) =>
-  `${n} ${n === 1 ? "entry" : "entries"} across everyone`;
-
-function entryLabel(e: TimelineEntry): string {
+function entryLabel(e: TimelineEntry, t: TranslateFn): string {
   if (e.kind === "interaction" && e.interaction_type)
-    return INTERACTION_META[e.interaction_type].verb;
-  if (e.kind === "news") return "News recorded";
-  return "Reminder completed";
+    return interactionVerb(e.interaction_type, t);
+  if (e.kind === "news") return t("rolodex.timeline.label.news");
+  return t("rolodex.timeline.label.reminderDone");
 }
 
 export default function TimelinePage() {
+  const t = useT();
   const { people, loaded } = useStore();
   const [personId, setPersonId] = useState<number | "">("");
   const [kind, setKind] = useState("all");
@@ -64,6 +67,11 @@ export default function TimelinePage() {
     return map;
   }, [people]);
 
+  const entryWord =
+    entries?.length === 1
+      ? t("rolodex.timeline.entry")
+      : t("rolodex.timeline.entries");
+
   return (
     <div className="page">
       <div className="page-header">
@@ -75,24 +83,27 @@ export default function TimelinePage() {
             >
               <History size={19} />
             </span>
-            Timeline
+            {t("rolodex.timeline.title")}
           </h1>
           <p className="page-desc">
             {entries
-              ? `${entryCount(entries.length)}, newest first`
-              : "Loading…"}
+              ? t("rolodex.timeline.subCount", {
+                  count: entries.length,
+                  entryWord,
+                })
+              : t("shared.common.loading")}
           </p>
         </div>
         <div className="page-actions">
           <select
             className="filter-select"
-            aria-label="Person"
+            aria-label={t("rolodex.timeline.filterPersonAria")}
             value={personId}
             onChange={(e) =>
               setPersonId(e.target.value === "" ? "" : Number(e.target.value))
             }
           >
-            <option value="">Everyone</option>
+            <option value="">{t("rolodex.timeline.everyone")}</option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -101,13 +112,13 @@ export default function TimelinePage() {
           </select>
           <select
             className="filter-select"
-            aria-label="Activity"
+            aria-label={t("rolodex.timeline.filterActivityAria")}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
             {KIND_OPTIONS.map((k) => (
               <option key={k.value} value={k.value}>
-                {k.label}
+                {t(k.labelKey)}
               </option>
             ))}
           </select>
@@ -116,12 +127,14 @@ export default function TimelinePage() {
 
       <div className="card">
         {error && <div className="empty">{error}</div>}
-        {!error && entries === null && <div className="empty">Loading…</div>}
+        {!error && entries === null && (
+          <div className="empty">{t("shared.common.loading")}</div>
+        )}
         {!error && entries !== null && entries.length === 0 && (
           <EmptyState icon={<History />}>
             {loaded && people.length === 0
-              ? "Nothing here yet — add people and log some interactions."
-              : "Nothing matches these filters."}
+              ? t("rolodex.timeline.emptyNoPeople")
+              : t("rolodex.timeline.emptyFiltered")}
           </EmptyState>
         )}
         {entries && entries.length > 0 && (
@@ -148,9 +161,10 @@ export default function TimelinePage() {
                       >
                         {e.person_name}
                       </Link>
-                      <span className="feed-type">{entryLabel(e)}</span>
+                      <span className="feed-type">{entryLabel(e, t)}</span>
                       <span className="feed-date">
-                        {fmtDate(e.date)} · {relativeDays(e.date)}
+                        {fmtDate(e.date, undefined, t)} ·{" "}
+                        {relativeDays(e.date, undefined, t)}
                       </span>
                     </div>
                     {e.text && <div className="feed-text">{e.text}</div>}

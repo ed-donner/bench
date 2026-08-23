@@ -12,6 +12,7 @@ import {
   SquareCheck,
   Type,
 } from "lucide-react";
+import type { MessageKey, TranslateFn } from "../../shared/i18n";
 
 export interface BlockTypeDef {
   type: string;
@@ -20,79 +21,97 @@ export interface BlockTypeDef {
   icon: ReactNode;
 }
 
-const BLOCK_TYPE_DEFS: BlockTypeDef[] = [
+const BLOCK_TYPE_META: {
+  type: string;
+  labelKey: MessageKey;
+  keywords: string[];
+  icon: ReactNode;
+}[] = [
   {
     type: "paragraph",
-    label: "Text",
+    labelKey: "space.block.paragraph",
     keywords: ["text", "paragraph", "plain"],
     icon: <Type size={16} />,
   },
   {
     type: "heading1",
-    label: "Heading 1",
+    labelKey: "space.block.heading1",
     keywords: ["h1", "heading", "title"],
     icon: <Heading1 size={16} />,
   },
   {
     type: "heading2",
-    label: "Heading 2",
+    labelKey: "space.block.heading2",
     keywords: ["h2", "heading", "subtitle"],
     icon: <Heading2 size={16} />,
   },
   {
     type: "heading3",
-    label: "Heading 3",
+    labelKey: "space.block.heading3",
     keywords: ["h3", "heading"],
     icon: <Heading3 size={16} />,
   },
   {
     type: "bulleted",
-    label: "Bulleted list",
+    labelKey: "space.block.bulleted",
     keywords: ["bullet", "list", "ul"],
     icon: <List size={16} />,
   },
   {
     type: "numbered",
-    label: "Numbered list",
+    labelKey: "space.block.numbered",
     keywords: ["number", "list", "ol"],
     icon: <ListOrdered size={16} />,
   },
   {
     type: "todo",
-    label: "To-do",
+    labelKey: "space.block.todo",
     keywords: ["todo", "task", "checkbox"],
     icon: <SquareCheck size={16} />,
   },
   {
     type: "quote",
-    label: "Quote",
+    labelKey: "space.block.quote",
     keywords: ["quote", "blockquote"],
     icon: <Quote size={16} />,
   },
   {
     type: "divider",
-    label: "Divider",
+    labelKey: "space.block.divider",
     keywords: ["divider", "hr", "rule", "separator"],
     icon: <Minus size={16} />,
   },
   {
     type: "code",
-    label: "Code",
+    labelKey: "space.block.code",
     keywords: ["code", "snippet", "monospace"],
     icon: <Code size={16} />,
   },
   {
     type: "callout",
-    label: "Callout",
+    labelKey: "space.block.callout",
     keywords: ["callout", "info", "note"],
     icon: <Lightbulb size={16} />,
   },
 ];
 
-export function filterBlockTypes(query: string): BlockTypeDef[] {
+function blockTypeDefs(t: TranslateFn): BlockTypeDef[] {
+  return BLOCK_TYPE_META.map(({ type, labelKey, keywords, icon }) => ({
+    type,
+    label: t(labelKey),
+    keywords,
+    icon,
+  }));
+}
+
+export function filterBlockTypes(
+  query: string,
+  t: TranslateFn,
+): BlockTypeDef[] {
+  const defs = blockTypeDefs(t);
   const q = query.trim().toLowerCase();
-  if (!q) return BLOCK_TYPE_DEFS;
-  return BLOCK_TYPE_DEFS.filter(
+  if (!q) return defs;
+  return defs.filter(
     (d) =>
       d.label.toLowerCase().includes(q) ||
       d.keywords.some((k) => k.startsWith(q)),

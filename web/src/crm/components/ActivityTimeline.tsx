@@ -1,3 +1,5 @@
+import { useT } from "../../shared/useLocale";
+import { activityTypeLabel } from "../labels";
 import { api } from "../api";
 import { Activity } from "../types";
 import { formatDate, formatDateTime } from "../format";
@@ -14,6 +16,8 @@ function isOverdue(activity: Activity): boolean {
 }
 
 export default function ActivityTimeline({ activities, onChanged }: Props) {
+  const t = useT();
+
   async function toggleDone(activity: Activity) {
     await api.patch(`/api/crm/activities/${activity.id}`, {
       done: !activity.done,
@@ -21,7 +25,8 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
     onChanged();
   }
 
-  if (!activities.length) return <p className="muted">No activity yet.</p>;
+  if (!activities.length)
+    return <p className="muted">{t("crm.activity.empty")}</p>;
 
   return (
     <div className="timeline">
@@ -31,12 +36,16 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
           <div className="timeline-body">
             <div>{a.description}</div>
             <div className="timeline-meta">
-              <span style={{ textTransform: "capitalize" }}>{a.type}</span>
+              <span style={{ textTransform: "capitalize" }}>
+                {activityTypeLabel(t, a.type)}
+              </span>
               <span>·</span>
               <span>{formatDateTime(a.occurred_at)}</span>
               {a.due_date && (
                 <span className={`due-chip${isOverdue(a) ? " overdue" : ""}`}>
-                  {isOverdue(a) ? "Overdue: " : "Due "}
+                  {isOverdue(a)
+                    ? t("crm.activity.overdue")
+                    : t("crm.activity.due")}
                   {formatDate(a.due_date)}
                 </span>
               )}
@@ -56,7 +65,7 @@ export default function ActivityTimeline({ activities, onChanged }: Props) {
                 checked={!!a.done}
                 onChange={() => void toggleDone(a)}
               />
-              Done
+              {t("shared.common.done")}
             </label>
           )}
         </div>

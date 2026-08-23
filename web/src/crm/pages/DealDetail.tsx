@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useT } from "../../shared/useLocale";
 import { api } from "../api";
 import { useFetch } from "../hooks";
 import { Activity, Contact, Deal, Organization } from "../types";
@@ -13,6 +14,7 @@ import PageHeader from "../components/PageHeader";
 import { IconDeals } from "../components/Icons";
 
 export default function DealDetail() {
+  const t = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -26,7 +28,7 @@ export default function DealDetail() {
   const { data: contacts } = useFetch<Contact[]>("/api/crm/contacts");
   const org = orgs?.find((o) => o.id === deal?.organization_id);
   const contact = contacts?.find((c) => c.id === deal?.contact_id);
-  const withOrg = org ? ` · ${org.name}` : "";
+  const withOrg = org ? t("crm.deals.withOrg", { orgName: org.name }) : "";
 
   if (!deal) return null;
 
@@ -38,7 +40,7 @@ export default function DealDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/deals">Deals</Link> / {deal.name}
+        <Link to="/deals">{t("crm.nav.deals")}</Link> / {deal.name}
       </div>
       <PageHeader
         icon={<IconDeals size={20} />}
@@ -47,52 +49,52 @@ export default function DealDetail() {
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("crm.form.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("shared.common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("shared.common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("shared.common.details")}</h2>
           <dl className="props">
-            <dt>Stage</dt>
+            <dt>{t("crm.deals.facts.stage")}</dt>
             <dd>
               <StageChip stage={deal.stage} />
             </dd>
-            <dt>Value</dt>
+            <dt>{t("crm.deals.facts.value")}</dt>
             <dd>{formatMoney(deal.value)}</dd>
-            <dt>Close date</dt>
+            <dt>{t("crm.deals.facts.closeDate")}</dt>
             <dd>{formatDate(deal.close_date)}</dd>
-            <dt>Organization</dt>
+            <dt>{t("crm.deals.facts.organization")}</dt>
             <dd>
               {org ? (
                 <Link className="entity-link" to={`/organizations/${org.id}`}>
                   {org.name}
                 </Link>
               ) : (
-                "—"
+                t("shared.common.emDash")
               )}
             </dd>
-            <dt>Primary contact</dt>
+            <dt>{t("crm.deals.facts.primaryContact")}</dt>
             <dd>
               {contact ? (
                 <Link className="entity-link" to={`/contacts/${contact.id}`}>
                   {contact.name}
                 </Link>
               ) : (
-                "—"
+                t("shared.common.emDash")
               )}
             </dd>
           </dl>
         </div>
         <div className="card">
-          <h2>Activity</h2>
+          <h2>{t("crm.deals.activitySection")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -117,8 +119,8 @@ export default function DealDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete deal"
-          message={`Delete "${deal.name}"? This cannot be undone.`}
+          title={t("crm.deals.deleteTitle")}
+          message={t("crm.deals.deleteMessageQuoted", { name: deal.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

@@ -1,6 +1,8 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { useT } from "../../shared/useLocale";
+import type { MessageKey } from "../../shared/i18n";
 import type { Block } from "../api";
 import ContentEditable from "./ContentEditable";
 
@@ -30,17 +32,17 @@ const CLASSES: Record<string, string> = {
   callout: "b-callout-text",
 };
 
-const PLACEHOLDERS: Record<string, string> = {
-  paragraph: "Type “/” for commands",
-  heading1: "Heading 1",
-  heading2: "Heading 2",
-  heading3: "Heading 3",
-  bulleted: "List item",
-  numbered: "List item",
-  todo: "To-do",
-  quote: "Quote",
-  code: "Code",
-  callout: "Callout",
+const PLACEHOLDER_KEYS: Record<string, MessageKey> = {
+  paragraph: "space.block.placeholder.paragraph",
+  heading1: "space.block.placeholder.heading1",
+  heading2: "space.block.placeholder.heading2",
+  heading3: "space.block.placeholder.heading3",
+  bulleted: "space.block.placeholder.listItem",
+  numbered: "space.block.placeholder.listItem",
+  todo: "space.block.placeholder.todo",
+  quote: "space.block.placeholder.quote",
+  code: "space.block.placeholder.code",
+  callout: "space.block.placeholder.callout",
 };
 
 export default function BlockRow({
@@ -49,6 +51,7 @@ export default function BlockRow({
   version,
   ...handlers
 }: Props) {
+  const t = useT();
   const {
     attributes,
     listeners,
@@ -59,6 +62,9 @@ export default function BlockRow({
   } = useSortable({ id: block.id });
   const text = (block.content.text as string | undefined) ?? "";
   const checked = Boolean(block.content.checked);
+  const placeholderKey =
+    PLACEHOLDER_KEYS[block.type] ?? "space.block.placeholder.paragraph";
+  const placeholder = t(placeholderKey);
 
   const editable = (extraClass = "") => (
     <ContentEditable
@@ -66,7 +72,7 @@ export default function BlockRow({
       version={version}
       initialText={text}
       className={`block-text ${CLASSES[block.type] ?? "b-paragraph"}${extraClass}`}
-      placeholder={PLACEHOLDERS[block.type]}
+      placeholder={placeholder}
       onTextInput={handlers.onTextInput}
       onKeyDown={handlers.onKeyDown}
       onBlur={handlers.onBlur}
@@ -105,7 +111,11 @@ export default function BlockRow({
               type="checkbox"
               className="b-checkbox"
               checked={checked}
-              aria-label={text || "To-do"}
+              aria-label={
+                text
+                  ? t("space.block.todoAria", { text })
+                  : t("space.block.placeholder.todo")
+              }
               onChange={(e) =>
                 handlers.onToggleTodo(block.id, e.target.checked)
               }
@@ -142,7 +152,7 @@ export default function BlockRow({
     >
       <button
         className="drag-handle"
-        aria-label="Drag block"
+        aria-label={t("space.block.dragAria")}
         {...attributes}
         {...listeners}
       >

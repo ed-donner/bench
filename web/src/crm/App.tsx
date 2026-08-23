@@ -1,6 +1,8 @@
 import { NavLink, Route, Routes } from "react-router";
 import BenchNav from "../shared/BenchNav";
 import { IconCrm } from "../shared/AppIcons";
+import type { MessageKey } from "../shared/i18n";
+import { useT } from "../shared/useLocale";
 import {
   IconContacts,
   IconDashboard,
@@ -17,15 +19,26 @@ import Deals from "./pages/Deals";
 import DealDetail from "./pages/DealDetail";
 import Pipeline from "./pages/Pipeline";
 
-const NAV = [
-  { to: "/", label: "Dashboard", end: true, Icon: IconDashboard },
-  { to: "/organizations", label: "Organizations", Icon: IconOrganizations },
-  { to: "/contacts", label: "Contacts", Icon: IconContacts },
-  { to: "/deals", label: "Deals", Icon: IconDeals },
-  { to: "/pipeline", label: "Pipeline", Icon: IconPipeline },
+const NAV: {
+  to: string;
+  labelKey: MessageKey;
+  end?: boolean;
+  Icon: typeof IconDashboard;
+}[] = [
+  { to: "/", labelKey: "crm.nav.dashboard", end: true, Icon: IconDashboard },
+  {
+    to: "/organizations",
+    labelKey: "crm.nav.organizations",
+    Icon: IconOrganizations,
+  },
+  { to: "/contacts", labelKey: "crm.nav.contacts", Icon: IconContacts },
+  { to: "/deals", labelKey: "crm.nav.deals", Icon: IconDeals },
+  { to: "/pipeline", labelKey: "crm.nav.pipeline", Icon: IconPipeline },
 ];
 
 export default function App() {
+  const t = useT();
+
   return (
     <>
       <BenchNav active="crm" />
@@ -33,13 +46,13 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <IconCrm size={19} />
-            Personal CRM
+            {t("crm.brand")}
           </div>
           <nav>
-            {NAV.map(({ to, label, end, Icon }) => (
+            {NAV.map(({ to, labelKey, end, Icon }) => (
               <NavLink key={to} to={to} end={end} className="nav-link">
                 <Icon size={17} />
-                <span>{label}</span>
+                <span>{t(labelKey)}</span>
               </NavLink>
             ))}
           </nav>

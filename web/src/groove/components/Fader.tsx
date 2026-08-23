@@ -1,4 +1,6 @@
 import { useCallback, useRef } from "react";
+import { useT } from "../../shared/useLocale";
+import { paramLabel, type LabelContext } from "../i18n";
 import type { ParamSpec } from "../types";
 
 interface Props {
@@ -6,9 +8,12 @@ interface Props {
   value: number;
   onChange: (v: number) => void;
   onTouch?: () => void;
+  labelContext?: LabelContext;
 }
 
-export function Fader({ spec, value, onChange, onTouch }: Props) {
+export function Fader({ spec, value, onChange, onTouch, labelContext }: Props) {
+  const t = useT();
+  const label = paramLabel(t, spec.key, labelContext);
   const drag = useRef<{ y: number; start: number } | null>(null);
   const range = spec.max - spec.min;
   const norm = (value - spec.min) / range;
@@ -41,7 +46,7 @@ export function Fader({ spec, value, onChange, onTouch }: Props) {
   return (
     <div
       className="fader"
-      title={`${spec.label} — drag up/down`}
+      title={t("groove.fader.title", { label })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -54,7 +59,7 @@ export function Fader({ spec, value, onChange, onTouch }: Props) {
           style={{ bottom: `calc(${norm * 100}% - 4px)` }}
         />
       </div>
-      <span className="fader-label">{spec.label}</span>
+      <span className="fader-label">{label}</span>
     </div>
   );
 }

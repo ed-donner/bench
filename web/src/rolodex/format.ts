@@ -5,69 +5,102 @@ import type {
   ImportantDateType,
 } from "./types";
 import { format, parseISO, isValid, differenceInCalendarDays } from "date-fns";
+import { enUS, es } from "date-fns/locale";
+import { translate, type MessageKey, type TranslateFn } from "../shared/i18n";
+import { currentLocale } from "../shared/locale";
 
-export const STATUS_LABEL: Record<CheckInStatus, string> = {
-  in_touch: "In touch",
-  due_soon: "Due soon",
-  overdue: "Overdue",
-  snoozed: "Snoozed",
-  off: "Check-ins off",
-};
+export function dateFnsLocale() {
+  return document.documentElement.lang === "es" ? es : enUS;
+}
 
-export const CIRCLE_LABEL: Record<Circle, string> = {
-  inner: "Inner",
-  close: "Close",
-  wider: "Wider",
-  distant: "Distant",
-};
+function tr(key: MessageKey, params?: Record<string, string | number>): string {
+  return translate(currentLocale(), key, params);
+}
 
-export const INTERACTION_META: Record<
-  InteractionType,
-  { label: string; verb: string }
+const CIRCLE_CADENCE_KEY: Record<
+  Circle,
+  "monthly" | "quarterly" | "sixMonths" | "yearly"
 > = {
-  call: { label: "Call", verb: "Called" },
-  message: { label: "Message", verb: "Messaged" },
-  email: { label: "Email", verb: "Emailed" },
-  met: { label: "Met up", verb: "Met up" },
-  other: { label: "Other", verb: "Other contact" },
+  inner: "monthly",
+  close: "quarterly",
+  wider: "sixMonths",
+  distant: "yearly",
 };
 
-export const DATE_TYPE_LABEL: Record<ImportantDateType, string> = {
-  birthday: "Birthday",
-  anniversary: "Anniversary",
-  work_anniversary: "Work anniversary",
-  child_birthday: "Child's birthday",
-  other: "Important date",
-};
+export function statusLabel(
+  status: CheckInStatus,
+  t: TranslateFn = tr,
+): string {
+  return t(`rolodex.status.${status}`);
+}
+
+export function circleLabel(circle: Circle, t: TranslateFn = tr): string {
+  return t(`rolodex.circle.${circle}`);
+}
+
+export function circleCadence(circle: Circle, t: TranslateFn = tr): string {
+  return t(`rolodex.circle.cadence.${CIRCLE_CADENCE_KEY[circle]}`);
+}
+
+export function circleBlurb(circle: Circle, t: TranslateFn = tr): string {
+  return t(`rolodex.circle.${circle}.blurb`);
+}
+
+export function interactionLabel(
+  type: InteractionType,
+  t: TranslateFn = tr,
+): string {
+  return t(`rolodex.interaction.${type}`);
+}
+
+export function interactionVerb(
+  type: InteractionType,
+  t: TranslateFn = tr,
+): string {
+  return t(`rolodex.interaction.${type}.verb`);
+}
+
+export function dateTypeLabelKey(type: ImportantDateType): MessageKey {
+  return `rolodex.dateType.${type}`;
+}
 
 export function fmtDate(
   iso: string | null | undefined,
-  fallback = "—",
+  fallback?: string,
+  t: TranslateFn = tr,
 ): string {
-  if (!iso) return fallback;
+  const dash = fallback ?? t("shared.common.emDash");
+  if (!iso) return dash;
   const d = parseISO(iso);
-  return isValid(d) ? format(d, "d MMM yyyy") : fallback;
+  return isValid(d)
+    ? format(d, "d MMM yyyy", { locale: dateFnsLocale() })
+    : dash;
 }
 
-export function fmtDateShort(iso: string | null | undefined): string {
-  if (!iso) return "—";
+export function fmtDateShort(
+  iso: string | null | undefined,
+  t: TranslateFn = tr,
+): string {
+  if (!iso) return t("shared.common.emDash");
   const d = parseISO(iso);
-  return isValid(d) ? format(d, "d MMM") : "—";
+  return isValid(d)
+    ? format(d, "d MMM", { locale: dateFnsLocale() })
+    : t("shared.common.emDash");
 }
 
 export function relativeDays(
   iso: string | null | undefined,
   fromToday?: string,
+  t: TranslateFn = tr,
 ): string {
-  if (!iso) return "never contacted";
+  if (!iso) return t("rolodex.time.neverContacted");
   const ref = fromToday ? parseISO(fromToday) : new Date();
-  // Positive is the future: the date is that many days after the day we are counting from.
   const diff = differenceInCalendarDays(parseISO(iso), ref);
-  if (diff === 0) return "today";
-  if (diff === 1) return "tomorrow";
-  if (diff === -1) return "yesterday";
-  if (diff < 0) return `${-diff} days ago`;
-  return `in ${diff} days`;
+  if (diff === 0) return t("rolodex.time.today");
+  if (diff === 1) return t("rolodex.time.tomorrow");
+  if (diff === -1) return t("rolodex.time.yesterday");
+  if (diff < 0) return t("rolodex.time.daysAgo", { count: -diff });
+  return t("rolodex.time.inDays", { count: diff });
 }
 
 const AVATAR_COLORS = [
@@ -103,7 +136,9 @@ export function localTimeIn(
 ): string | null {
   if (!timezone) return null;
   try {
-    return new Intl.DateTimeFormat("en-GB", {
+    const intlLocale =
+      document.documentElement.lang === "es" ? "es-ES" : "en-GB";
+    return new Intl.DateTimeFormat(intlLocale, {
       timeZone: timezone,
       hour: "2-digit",
       minute: "2-digit",
@@ -114,7 +149,9 @@ export function localTimeIn(
 }
 
 export function monthShort(month: number): string {
-  return format(new Date(2001, month - 1, 1), "MMM");
+  return format(new Date(2001, month - 1, 1), "MMM", {
+    locale: dateFnsLocale(),
+  });
 }
 
 export function todayISO(): string {

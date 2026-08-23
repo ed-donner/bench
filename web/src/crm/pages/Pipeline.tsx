@@ -6,6 +6,8 @@ import {
 } from "@hello-pangea/dnd";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { useT } from "../../shared/useLocale";
+import { stageLabel } from "../labels";
 import { api } from "../api";
 import { useFetch } from "../hooks";
 import {
@@ -36,9 +38,11 @@ function DealCard({
   index: number;
   orgName: string;
 }) {
+  const t = useT();
   const navigate = useNavigate();
   const open = () => void navigate(`/deals/${deal.id}`);
   const late = isOpen(deal) && (deal.close_date ?? "") < today();
+
   return (
     <Draggable draggableId={String(deal.id)} index={index}>
       {(dragProvided, dragSnapshot) => (
@@ -61,17 +65,23 @@ function DealCard({
           }}
         >
           <div className="deal-name">{deal.name}</div>
-          <div className="deal-org">{orgName || "No organization"}</div>
+          <div className="deal-org">
+            {orgName || t("crm.pipeline.noOrganization")}
+          </div>
           <div className="deal-figures">
             <span className="deal-value">{formatMoney(deal.value)}</span>
             <span className="deal-prob">{deal.probability}%</span>
           </div>
           <div className="deal-meta">
             <span className={`deal-date${late ? " late" : ""}`}>
-              {formatDateShort(deal.close_date)}
+              {deal.close_date
+                ? formatDateShort(deal.close_date)
+                : t("crm.format.noCloseDate")}
             </span>
             <span className="deal-expected">
-              {formatMoneyCompact(expectedValue(deal))} expected
+              {t("crm.pipeline.expectedSuffix", {
+                amount: formatMoneyCompact(expectedValue(deal)),
+              })}
             </span>
           </div>
         </div>
@@ -81,6 +91,7 @@ function DealCard({
 }
 
 export default function Pipeline() {
+  const t = useT();
   const { data: fetched } = useFetch<Deal[]>("/api/crm/deals");
   // Once a card has been dropped the local order wins; until then the fetched list is what shows.
   // Derived rather than copied into state by an effect, which would render twice on every load.
@@ -115,18 +126,22 @@ export default function Pipeline() {
     <>
       <PageHeader
         icon={<IconPipeline size={20} />}
-        title="Pipeline"
-        sub="Drag a card to another column to change its stage, or up and down to order a column your way"
+        title={t("crm.pipeline.title")}
+        sub={t("crm.pipeline.sub")}
       >
         <div className="pipeline-totals">
           <div className="total-block">
-            <span className="total-label">Total pipeline</span>
+            <span className="total-label">
+              {t("crm.pipeline.totalPipeline")}
+            </span>
             <span className="total-value" data-testid="pipeline-total">
               {formatMoney(sumValue(open))}
             </span>
           </div>
           <div className="total-block">
-            <span className="total-label">Expected revenue</span>
+            <span className="total-label">
+              {t("crm.pipeline.expectedRevenue")}
+            </span>
             <span
               className="total-value accent"
               data-testid="pipeline-expected"
@@ -155,7 +170,7 @@ export default function Pipeline() {
                     <div className="board-column-header">
                       <span className="col-title">
                         <span className="col-dot" />
-                        {stage}
+                        {stageLabel(t, stage)}
                       </span>
                       <span className="col-count">{inStage.length}</span>
                     </div>
@@ -189,7 +204,9 @@ export default function Pipeline() {
                       ))}
                       {provided.placeholder}
                       {inStage.length === 0 && !snapshot.isDraggingOver && (
-                        <p className="board-empty">Drop a deal here</p>
+                        <p className="board-empty">
+                          {t("crm.pipeline.dropDeal")}
+                        </p>
                       )}
                     </div>
                   </div>

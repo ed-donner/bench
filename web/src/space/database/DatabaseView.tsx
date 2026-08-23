@@ -8,6 +8,7 @@ import {
   type ViewConfig,
   type ViewKind,
 } from "../api";
+import { useT } from "../../shared/useLocale";
 import { nextColor } from "./optionColors";
 import TableView from "./TableView";
 import BoardView from "./BoardView";
@@ -40,6 +41,7 @@ function reordered(property: Property, optionIds: string[]): Property {
 }
 
 export default function DatabaseView({ databaseId }: Props) {
+  const t = useT();
   // The loaded id travels with the data, so "still loading the next database" is derived during
   // render rather than reset by an effect, which would render twice on every navigation.
   const [loaded, setLoaded] = useState<{
@@ -259,7 +261,7 @@ export default function DatabaseView({ databaseId }: Props) {
           />
         ) : (
           <div className="board-empty">
-            Add a select property to group this board.
+            {t("space.property.boardNeedSelect")}
           </div>
         ))}
       {kind === "list" && <ListView rows={rows} properties={data.properties} />}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { useT } from "../../shared/useLocale";
 import { api } from "../api";
 import { useFetch } from "../hooks";
 import { Activity, Contact, Deal, Organization } from "../types";
@@ -19,26 +20,28 @@ function ContactFacts({
   contact: Contact;
   org?: Organization;
 }) {
+  const t = useT();
+
   return (
     <dl className="props">
-      <dt>Status</dt>
+      <dt>{t("crm.contacts.facts.status")}</dt>
       <dd>
         <StatusChip status={contact.status} />
       </dd>
-      <dt>Email</dt>
-      <dd>{contact.email || "—"}</dd>
-      <dt>Phone</dt>
-      <dd>{contact.phone || "—"}</dd>
-      <dt>Job title</dt>
-      <dd>{contact.job_title || "—"}</dd>
-      <dt>Organization</dt>
+      <dt>{t("crm.contacts.facts.email")}</dt>
+      <dd>{contact.email || t("shared.common.emDash")}</dd>
+      <dt>{t("crm.contacts.facts.phone")}</dt>
+      <dd>{contact.phone || t("shared.common.emDash")}</dd>
+      <dt>{t("crm.contacts.facts.jobTitle")}</dt>
+      <dd>{contact.job_title || t("shared.common.emDash")}</dd>
+      <dt>{t("crm.contacts.facts.organization")}</dt>
       <dd>
         {org ? (
           <Link className="entity-link" to={`/organizations/${org.id}`}>
             {org.name}
           </Link>
         ) : (
-          "—"
+          t("shared.common.emDash")
         )}
       </dd>
     </dl>
@@ -46,6 +49,7 @@ function ContactFacts({
 }
 
 export default function ContactDetail() {
+  const t = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -60,7 +64,7 @@ export default function ContactDetail() {
     `/api/crm/activities?contact_id=${id}`,
   );
   const org = orgs?.find((o) => o.id === contact?.organization_id);
-  const atOrg = org ? ` at ${org.name}` : "";
+  const atOrg = org ? t("crm.contacts.atOrg", { orgName: org.name }) : "";
 
   if (!contact) return null;
 
@@ -72,36 +76,40 @@ export default function ContactDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/contacts">Contacts</Link> / {contact.name}
+        <Link to="/contacts">{t("crm.nav.contacts")}</Link> / {contact.name}
       </div>
       <PageHeader
         icon={<IconContacts size={20} />}
         title={contact.name}
-        sub={(contact.job_title || "Contact") + atOrg}
+        sub={(contact.job_title || t("crm.contacts.fallbackSub")) + atOrg}
       >
         <div className="header-actions">
           <button className="btn btn-primary" onClick={() => setLogging(true)}>
-            Log activity
+            {t("crm.contacts.logActivity")}
           </button>
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("shared.common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("shared.common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card">
-          <h2>Details</h2>
+          <h2>{t("shared.common.details")}</h2>
           <ContactFacts contact={contact} org={org} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>
+            {t("crm.organizations.dealsSection", {
+              count: deals?.length ?? 0,
+            })}
+          </h2>
           <DealList deals={deals ?? []} />
         </div>
         <div className="card full">
-          <h2>Activity</h2>
+          <h2>{t("crm.contacts.activitySection")}</h2>
           <ActivityTimeline
             activities={activities ?? []}
             onChanged={reloadActivities}
@@ -125,8 +133,10 @@ export default function ContactDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete contact"
-          message={`Delete "${contact.name}"? This cannot be undone.`}
+          title={t("crm.contacts.deleteTitle")}
+          message={t("crm.contacts.deleteMessageQuoted", {
+            name: contact.name,
+          })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

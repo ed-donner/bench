@@ -1,4 +1,6 @@
 import { SubmitEvent, useState } from "react";
+import { useT } from "../../shared/useLocale";
+import { statusLabel } from "../labels";
 import Modal from "./Modal";
 import { api } from "../api";
 import {
@@ -23,6 +25,7 @@ export default function ContactForm({
   onSaved,
   onClose,
 }: Props) {
+  const t = useT();
   const [form, setForm] = useState({
     name: existing?.name ?? "",
     email: existing?.email ?? "",
@@ -46,10 +49,13 @@ export default function ContactForm({
   }
 
   return (
-    <Modal title={existing ? "Edit contact" : "Add contact"} onClose={onClose}>
+    <Modal
+      title={existing ? t("crm.form.editContact") : t("crm.form.addContact")}
+      onClose={onClose}
+    >
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="field">
-          <label htmlFor="ct-name">Name</label>
+          <label htmlFor="ct-name">{t("shared.common.name")}</label>
           <input
             id="ct-name"
             required
@@ -59,7 +65,7 @@ export default function ContactForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="ct-email">Email</label>
+            <label htmlFor="ct-email">{t("crm.form.email")}</label>
             <input
               id="ct-email"
               type="email"
@@ -68,7 +74,7 @@ export default function ContactForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="ct-phone">Phone</label>
+            <label htmlFor="ct-phone">{t("crm.form.phone")}</label>
             <input
               id="ct-phone"
               value={form.phone}
@@ -77,7 +83,7 @@ export default function ContactForm({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="ct-title">Job title</label>
+          <label htmlFor="ct-title">{t("crm.form.jobTitle")}</label>
           <input
             id="ct-title"
             value={form.job_title}
@@ -86,7 +92,7 @@ export default function ContactForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="ct-org">Organization</label>
+            <label htmlFor="ct-org">{t("crm.form.organization")}</label>
             <select
               id="ct-org"
               value={form.organization_id}
@@ -98,7 +104,7 @@ export default function ContactForm({
                 })
               }
             >
-              <option value="">— None —</option>
+              <option value="">{t("shared.common.none")}</option>
               {organizations.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
@@ -107,7 +113,7 @@ export default function ContactForm({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="ct-status">Status</label>
+            <label htmlFor="ct-status">{t("crm.form.status")}</label>
             <select
               id="ct-status"
               value={form.status}
@@ -117,7 +123,7 @@ export default function ContactForm({
             >
               {CONTACT_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {statusLabel(t, s)}
                 </option>
               ))}
             </select>
@@ -125,10 +131,10 @@ export default function ContactForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t("shared.common.cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {t("shared.common.save")}
           </button>
         </div>
       </form>

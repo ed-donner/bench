@@ -1,4 +1,6 @@
 import { useCallback, useRef } from "react";
+import { useT } from "../../shared/useLocale";
+import { paramLabel, type LabelContext } from "../i18n";
 import type { ParamSpec } from "../types";
 
 const START = -135;
@@ -21,9 +23,12 @@ interface Props {
   value: number;
   onChange: (v: number) => void;
   onTouch?: () => void;
+  labelContext?: LabelContext;
 }
 
-export function Knob({ spec, value, onChange, onTouch }: Props) {
+export function Knob({ spec, value, onChange, onTouch, labelContext }: Props) {
+  const t = useT();
+  const label = paramLabel(t, spec.key, labelContext);
   const drag = useRef<{ y: number; start: number } | null>(null);
   const range = spec.max - spec.min;
   const norm = (value - spec.min) / range;
@@ -58,7 +63,7 @@ export function Knob({ spec, value, onChange, onTouch }: Props) {
   return (
     <div
       className="knob"
-      title={`${spec.label} — drag up/down, hold shift for fine`}
+      title={t("groove.knob.title", { label })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -79,7 +84,7 @@ export function Knob({ spec, value, onChange, onTouch }: Props) {
           className="knob-pointer"
         />
       </svg>
-      <span className="knob-label">{spec.label}</span>
+      <span className="knob-label">{label}</span>
     </div>
   );
 }

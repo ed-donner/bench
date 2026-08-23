@@ -5,21 +5,23 @@ import type { ImportantDateType } from "../../types";
 import { DATE_TYPES } from "../../types";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
-import { DATE_TYPE_LABEL } from "../../format";
+import { dateTypeLabelKey } from "../../format";
+import { useT } from "../../../shared/useLocale";
+import type { MessageKey } from "../../../shared/i18n";
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+const MONTH_KEYS: MessageKey[] = [
+  "rolodex.month.january",
+  "rolodex.month.february",
+  "rolodex.month.march",
+  "rolodex.month.april",
+  "rolodex.month.may",
+  "rolodex.month.june",
+  "rolodex.month.july",
+  "rolodex.month.august",
+  "rolodex.month.september",
+  "rolodex.month.october",
+  "rolodex.month.november",
+  "rolodex.month.december",
 ];
 
 /** Why a year is optional: plenty of birthdays are known as a day and month and nothing more. */
@@ -32,6 +34,7 @@ export default function AddDateModal({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const t = useT();
   const [type, setType] = useState<ImportantDateType>("birthday");
   const [label, setLabel] = useState("");
   const [day, setDay] = useState("");
@@ -45,12 +48,12 @@ export default function AddDateModal({
     const m = Number(month);
     const d = Number(day);
     if (!m || !d || d < 1 || d > 31) {
-      setError("Please give a valid day and month");
+      setError(t("rolodex.addDate.errorDayMonth"));
       return;
     }
     const y = year ? Number(year) : null;
     if (y != null && (y < 1850 || y > 2100)) {
-      setError("Year looks off — between 1850 and 2100 please");
+      setError(t("rolodex.addDate.errorYear"));
       return;
     }
     setBusy(true);
@@ -71,52 +74,52 @@ export default function AddDateModal({
   };
 
   const labelHint =
-    type === "child_birthday" || type === "other"
-      ? "(e.g. child’s name)"
-      : "(optional)";
+    type === "child_birthday"
+      ? t("rolodex.addDate.labelChildHint")
+      : t("rolodex.addDate.labelOptional");
 
   return (
     <Modal
-      title="Add an important date"
+      title={t("rolodex.addDate.title")}
       icon={<Cake size={17} className="modal-icon amber" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("shared.common.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={busy}
           >
-            Save date
+            {t("rolodex.addDate.save")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <Field label="Type">
+        <Field label={t("rolodex.addDate.type")}>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as ImportantDateType)}
           >
-            {DATE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {DATE_TYPE_LABEL[t]}
+            {DATE_TYPES.map((dateType) => (
+              <option key={dateType} value={dateType}>
+                {t(dateTypeLabelKey(dateType))}
               </option>
             ))}
           </select>
         </Field>
-        <Field label={`Label ${labelHint}`}>
+        <Field label={t("rolodex.addDate.label", { hint: labelHint })}>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder={type === "child_birthday" ? "Louise" : ""}
           />
         </Field>
-        <Field label="Day *">
+        <Field label={t("rolodex.addDate.day")}>
           <input
             type="number"
             min={1}
@@ -126,19 +129,19 @@ export default function AddDateModal({
             placeholder="14"
           />
         </Field>
-        <Field label="Month *">
+        <Field label={t("rolodex.addDate.month")}>
           <select value={month} onChange={(e) => setMonth(e.target.value)}>
-            <option value="">—</option>
-            {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
+            <option value="">{t("shared.common.emDash")}</option>
+            {MONTH_KEYS.map((key, i) => (
+              <option key={key} value={i + 1}>
+                {t(key)}
               </option>
             ))}
           </select>
         </Field>
         <Field
-          label="Year (optional)"
-          hint="With a year we can show their age and flag milestone birthdays."
+          label={t("rolodex.addDate.year")}
+          hint={t("rolodex.addDate.yearHint")}
         >
           <input
             type="number"
