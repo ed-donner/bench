@@ -47,6 +47,9 @@ export default defineConfig({
   preview: { port: 8102, strictPort: true },
   test: {
     environment: "jsdom",
+    // Newer Node releases expose experimental Web Storage on globalThis. It shadows jsdom's
+    // working implementation unless the worker starts with the Node version disabled.
+    execArgv: ["--no-experimental-webstorage"],
     setupFiles: ["src/space/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     // The default 5s is wall-clock, and the parallel coverage run can starve a forked worker on

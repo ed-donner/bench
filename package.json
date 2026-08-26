@@ -21,6 +21,7 @@
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
     "test": "npm run test -w server && npm run test -w web",
     "coverage": "npm run coverage -w server && npm run coverage -w web",
+    "pree2e": "playwright install chromium",
     "e2e": "playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

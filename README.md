@@ -138,10 +138,12 @@ quietly passes without its tool is worse than no control.
 Both platforms, from the repository root:
 
 ```bash
-npx playwright install chromium
+npm run e2e
 ```
 
-This downloads a private copy of Chromium (a few hundred MB). It is only needed for `npm run e2e`.
+The first run downloads Playwright's private copy of Chromium (a few hundred MB); later runs reuse
+it. The `e2e` script checks the browser installation before starting the suite, so it also fetches
+the matching browser after Playwright is upgraded.
 
 ## 2.2 `npm run check` - the fast gate
 
