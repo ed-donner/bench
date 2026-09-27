@@ -3,6 +3,7 @@ import { useParams } from "react-router";
 import { api, type PersonDetail } from "../api";
 import { errorMessage } from "../format";
 import { useStore } from "../store";
+import { useT } from "../strings";
 import { PersonForm } from "../components/PersonForm";
 import { LogInteractionModal } from "../components/LogInteractionModal";
 import PersonHeader from "../components/person/PersonHeader";
@@ -29,6 +30,7 @@ type QuickModal =
   | null;
 
 export default function PersonDetailPage() {
+  const t = useT();
   const { id } = useParams();
   const personId = Number(id);
   const { people, refresh } = useStore();
@@ -68,8 +70,8 @@ export default function PersonDetailPage() {
   }, [load, refresh]);
 
   if (error)
-    return <div className="page">Couldn’t load this person: {error}</div>;
-  if (!detail) return <div className="page muted">Loading…</div>;
+    return <div className="page">{t("person.loadFailed", { error })}</div>;
+  if (!detail) return <div className="page muted">{t("common.loading")}</div>;
 
   const { person } = detail;
   return (

@@ -16,6 +16,7 @@ import type {
   TimelineEntry,
 } from "./types";
 import type { UpcomingDate } from "./types";
+import { RequestError } from "./requestError";
 
 /** Paths are relative to the app's own namespace on the one Bench server. */
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -24,11 +25,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
-    // The API answers a bad request with { error }, and that message is what the toast shows.
-    // Anything else - an empty body, HTML from a proxy - has to still name the status, or the
-    // parse failure is all anyone sees.
+    // The API answers a bad request with { error }. Anything else - an empty body, HTML from a
+    // proxy - has to still name the status, or the parse failure is all anyone sees.
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? `${res.status} ${res.statusText}`);
+    throw new RequestError(
+      res.status,
+      body.error ?? `${res.status} ${res.statusText}`,
+    );
   }
   return res.json() as Promise<T>;
 }
@@ -105,7 +108,7 @@ export interface ImportRow {
     isDuplicate: boolean;
     duplicateOfId: number | null;
     duplicateOfName: string | null;
-    reason: string | null;
+    reason: "email" | "name" | null;
   };
 }
 

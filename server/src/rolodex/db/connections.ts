@@ -1,6 +1,11 @@
 /** How two people are connected, and how that reads from either end. */
 import { nowISO } from "../dates.js";
-import type { Connection, ConnectionKind, ConnectionView } from "../types.js";
+import type {
+  Connection,
+  ConnectionKind,
+  ConnectionRole,
+  ConnectionView,
+} from "../types.js";
 import {
   connectionFromRow,
   deleteRow,
@@ -21,6 +26,12 @@ export interface ConnectionsRepo {
   listConnections(personId: number): ConnectionView[];
   createConnection(a: number, b: number, input: ConnectionInput): Connection;
   deleteConnection(id: number): boolean;
+}
+
+/** Which side of a parent/child link this person is on; any other kind reads the same both ways. */
+function connectionRole(personId: number, c: Connection): ConnectionRole {
+  if (c.kind !== "parent_child") return c.kind;
+  return c.a_is_parent === (personId === c.person_a) ? "parent" : "child";
 }
 
 /** The same row reads differently from each end: A is B's parent, so B is A's child. */
@@ -71,6 +82,8 @@ export function connectionsRepo(db: DB): ConnectionsRepo {
           other_name: otherName,
           kind: c.kind,
           description: describeConnection(personId, c, otherName),
+          role: connectionRole(personId, c),
+          label: isA ? c.label : c.inverse_label,
           note: c.note,
         };
       }),

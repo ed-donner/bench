@@ -5,22 +5,15 @@ import type { ImportantDateType } from "../../types";
 import { DATE_TYPES } from "../../types";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
-import { DATE_TYPE_LABEL } from "../../format";
+import { format } from "date-fns";
+import { errorMessage } from "../../format";
+import { dateLocale, useT } from "../../strings";
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+/** January to December, in the language of the page. */
+const monthNames = () =>
+  Array.from({ length: 12 }, (_, i) =>
+    format(new Date(2001, i, 1), "LLLL", { locale: dateLocale() }),
+  );
 
 /** Why a year is optional: plenty of birthdays are known as a day and month and nothing more. */
 export default function AddDateModal({
@@ -32,6 +25,7 @@ export default function AddDateModal({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const t = useT();
   const [type, setType] = useState<ImportantDateType>("birthday");
   const [label, setLabel] = useState("");
   const [day, setDay] = useState("");
@@ -45,12 +39,17 @@ export default function AddDateModal({
     const m = Number(month);
     const d = Number(day);
     if (!m || !d || d < 1 || d > 31) {
-      setError("Please give a valid day and month");
+      setError(t("dateForm.invalidDay"));
       return;
     }
     const y = year ? Number(year) : null;
     if (y != null && (y < 1850 || y > 2100)) {
-      setError("Year looks off — between 1850 and 2100 please");
+      setError(t("dateForm.invalidYear"));
+      return;
+    }
+    // 29 February is a real date, celebrated on the 28th in common years, so check a leap year.
+    if (d > new Date(2000, m, 0).getDate()) {
+      setError(t("dateForm.notADate", { day: d, month: monthNames()[m - 1] }));
       return;
     }
     setBusy(true);
@@ -65,58 +64,58 @@ export default function AddDateModal({
       await onSaved();
       onClose();
     } catch (e) {
-      setError((e as Error).message);
+      setError(errorMessage(e));
       setBusy(false);
     }
   };
 
   const labelHint =
     type === "child_birthday" || type === "other"
-      ? "(e.g. child’s name)"
-      : "(optional)";
+      ? t("dateForm.labelChild")
+      : t("dateForm.labelOptional");
 
   return (
     <Modal
-      title="Add an important date"
+      title={t("dateForm.title")}
       icon={<Cake size={17} className="modal-icon amber" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={busy}
           >
-            Save date
+            {t("dateForm.save")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <Field label="Type">
+        <Field label={t("log.type")}>
           <select
             value={type}
             onChange={(e) => setType(e.target.value as ImportantDateType)}
           >
-            {DATE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {DATE_TYPE_LABEL[t]}
+            {DATE_TYPES.map((d) => (
+              <option key={d} value={d}>
+                {t(`dateType.${d}`)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label={`Label ${labelHint}`}>
+        <Field label={`${t("dateForm.label")} ${labelHint}`}>
           <input
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder={type === "child_birthday" ? "Louise" : ""}
           />
         </Field>
-        <Field label="Day *">
+        <Field label={t("dateForm.day")}>
           <input
             type="number"
             min={1}
@@ -126,20 +125,17 @@ export default function AddDateModal({
             placeholder="14"
           />
         </Field>
-        <Field label="Month *">
+        <Field label={t("dateForm.month")}>
           <select value={month} onChange={(e) => setMonth(e.target.value)}>
             <option value="">—</option>
-            {MONTHS.map((m, i) => (
+            {monthNames().map((m, i) => (
               <option key={m} value={i + 1}>
                 {m}
               </option>
             ))}
           </select>
         </Field>
-        <Field
-          label="Year (optional)"
-          hint="With a year we can show their age and flag milestone birthdays."
-        >
+        <Field label={t("dateForm.year")} hint={t("dateForm.yearHint")}>
           <input
             type="number"
             value={year}

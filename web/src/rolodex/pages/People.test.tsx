@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { format, subDays } from "date-fns";
@@ -7,6 +7,7 @@ import People from "./People";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
 import { person } from "../test/helpers";
+import { setLang } from "../../shared/i18n";
 
 vi.mock("../api");
 
@@ -56,6 +57,25 @@ const rowNames = () =>
     .map((row) => within(row).getAllByRole("cell")[0].textContent);
 
 describe("People", () => {
+  it("re-labels the table in place when the language switches, and back", () => {
+    renderPeople();
+    act(() => setLang("es"));
+    expect(
+      screen.getByRole("columnheader", { name: /Último contacto/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("12 d tarde")).toBeInTheDocument();
+    expect(screen.getByText("Atrasado")).toBeInTheDocument();
+    // The seeded names are data, not interface, and stay as they are.
+    expect(screen.getByText("Maya Chen")).toBeInTheDocument();
+
+    act(() => setLang("en"));
+    expect(
+      screen.getByRole("columnheader", { name: /Last contacted/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("12d overdue")).toBeInTheDocument();
+    expect(screen.queryByText("Atrasado")).not.toBeInTheDocument();
+  });
+
   it("lists everyone with their company and check-in state", () => {
     renderPeople();
     expect(

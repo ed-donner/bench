@@ -62,7 +62,7 @@ per workspace: type-aware linting reaches both tsconfigs through typescript-esli
 | `eslint-plugin-playwright`    | No conditional expects, no `waitForTimeout`                                              |
 | `eslint-config-prettier`      | Last in the config, switching off the rules that would fight Prettier                    |
 
-Two things need no package, only configuration:
+Three things need no package, only configuration:
 
 - The built-in size rules, which enforce "short functions, short modules": `max-lines` 500,
   `max-lines-per-function` 200, `complexity` 15, `max-depth` 4, `max-params` 5. Seed and patch
@@ -76,6 +76,14 @@ Two things need no package, only configuration:
   allowed by default. Note what it does **not** cover: the collision
   [PROJECT.md](./PROJECT.md) warns about is the three global stylesheets, and a lint rule cannot see
   CSS. Separate HTML entry points are what keeps those apart. This rule guards the module graph only.
+- **`no-restricted-syntax`, rejecting literal UI text** across every `.tsx` in `web/src` outside the
+  tests: `JSXText` containing a letter, and a string literal or template text in `aria-label`,
+  `title`, `placeholder` or `alt`. It is what keeps the English and Spanish catalogs complete as
+  the code changes, since anything new has to go through `t()`. It cannot see a string built in a
+  helper and passed in as a variable - a toast, a chart label - which the leak scan below covers
+  instead. Groove's panel legends, which stay English by design, are not exempted file by file:
+  they live in `web/src/groove/legends.ts`, one place with the reason beside them, and the rule
+  stays on for every component.
 
 ### Rules deliberately off
 
@@ -188,6 +196,41 @@ Formatting is applied in four places, and the split between which ones **write**
   Without it, `format:check` inside `check` fails on every unformatted agent edit.
 - **Never `prettier --write` in `prebuild` or CI.** A build that rewrites its own source is not
   reproducible, and in CI it would pass while leaving the repository unformatted.
+
+## Translations
+
+Three checks keep the two languages honest, one per layer, and none of them needs a package:
+
+| Check                  | Where                                                  | Catches                                                                            |
+| ---------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Literal-text lint rule | `eslint.config.js`                                     | A word typed into JSX instead of a catalog                                         |
+| Catalog parity         | `web/src/shared/catalogs.test.ts`                      | A key in one language and not the other, a dropped `{placeholder}`, an empty value |
+| Leak scan              | `e2e/i18n/leaks.ts`, used by every spec in `e2e/i18n/` | English showing on a Spanish page, or Spanish left on an English one               |
+
+The parity test globs every `locales/` directory, so a new app is covered without touching it. A
+key missing from Spanish is already a type error, because `makeT` types both catalogs by the
+English one; the test catches the rest.
+
+**The leak scan is what makes "fully translated" measurable.** It collects every visible text node,
+option label and `aria-label`/`title`/`placeholder`/`alt` on the page, and fails on any string in
+the unwanted language: one of that app's catalog strings exactly (plus the strip's), or one of
+three words or more inside a longer string. Three rules keep it honest rather than noisy:
+
+- **Per app.** One app's vocabulary is another's data - CRM's "Status" is a property name in
+  Space's seed - so each screen is scanned against its own app's catalog only.
+- **Seed data is named, not ignored.** People, pages and deals are the user's and stay in whatever
+  language they were written in, so a spec passes the few seed strings on its screen that collide
+  with a catalog value (Space's "Home" page, a Rolodex gift containing a placeholder's text).
+- **`aria-hidden` text is skipped.** recharts keeps an off-screen measuring span holding the last
+  label it sized, which lags a language switch by one render and is neither seen nor spoken.
+
+It only knows strings that are in a catalog. A literal that never made it into one is invisible to
+it, which is the lint rule's job.
+
+`e2e/i18n/switching.spec.ts` runs the scan both ways: switching once, and switching back, on every
+app. The second is the one that matters - a memoised label shows up as Spanish left on an
+English page. Removing `t` from the dependencies of Rolodex's People columns fails both that spec
+and the People unit test, which was checked by doing it.
 
 ## Coverage
 

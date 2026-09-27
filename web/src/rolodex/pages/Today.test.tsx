@@ -189,8 +189,11 @@ describe("Today", () => {
 
   it("shows the failure rather than an empty page when the API is down", async () => {
     vi.mocked(api.today).mockRejectedValue(new Error("no server"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     renderToday();
-    expect(await screen.findByText(/no server/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Couldn’t load Today. The request failed/),
+    ).toBeInTheDocument();
   });
 
   it("charts what has been logged", async () => {

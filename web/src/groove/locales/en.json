@@ -1,0 +1,18 @@
+{
+  "tempo.drag": "Drag up/down to change tempo",
+  "play.key": "Spacebar",
+  "play.play": "PLAY",
+  "play.stop": "STOP",
+  "patch.title": "{name} — {subtitle} (key {key})",
+  "patch.revertTitle": "Restore this patch to its factory settings",
+  "patch.revert": "REVERT",
+  "patch.saved": "SAVED",
+  "pad.step": "{unit} step {step}",
+  "pad.drumTip": "Click to cycle rest / hit / accent · drag across to paint",
+  "pad.noteTip": "Click to toggle · drag up/down or scroll to change pitch",
+  "pad.chordTip": "Click to toggle · drag up/down or scroll to change pitch · shift-click to change chord",
+  "fader.tip": "{label} — drag up/down",
+  "knob.tip": "{label} — drag up/down, hold shift for fine",
+  "unit.mute": "MUTE",
+  "velocity.tip": "Drag across to draw per-step dynamics"
+}

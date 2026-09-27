@@ -8,21 +8,24 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { ContactList, DealList } from "../components/RelatedLists";
 import PageHeader from "../components/PageHeader";
 import { IconOrganizations } from "../components/Icons";
+import { useT } from "../strings";
 
 function OrganizationFacts({ org }: { org: Organization }) {
+  const t = useT();
   return (
     <dl className="props">
-      <dt>Website</dt>
+      <dt>{t("orgs.col.website")}</dt>
       <dd>{org.website || "—"}</dd>
-      <dt>Industry</dt>
+      <dt>{t("orgs.col.industry")}</dt>
       <dd>{org.industry || "—"}</dd>
-      <dt>Notes</dt>
+      <dt>{t("detail.notes")}</dt>
       <dd>{org.notes || "—"}</dd>
     </dl>
   );
 }
 
 export default function OrganizationDetail() {
+  const t = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
@@ -47,33 +50,33 @@ export default function OrganizationDetail() {
   return (
     <>
       <div className="breadcrumb">
-        <Link to="/organizations">Organizations</Link> / {org.name}
+        <Link to="/organizations">{t("nav.organizations")}</Link> / {org.name}
       </div>
       <PageHeader
         icon={<IconOrganizations size={20} />}
         title={org.name}
-        sub={org.industry || "Organization"}
+        sub={org.industry || t("deals.col.organization")}
       >
         <div className="header-actions">
           <button className="btn btn-ghost" onClick={() => setEditing(true)}>
-            Edit
+            {t("common.edit")}
           </button>
           <button className="btn btn-danger" onClick={() => setDeleting(true)}>
-            Delete
+            {t("common.delete")}
           </button>
         </div>
       </PageHeader>
       <div className="detail-grid">
         <div className="card full">
-          <h2>Details</h2>
+          <h2>{t("detail.details")}</h2>
           <OrganizationFacts org={org} />
         </div>
         <div className="card">
-          <h2>Contacts ({contacts?.length ?? 0})</h2>
+          <h2>{t("detail.contactsCount", { count: contacts?.length ?? 0 })}</h2>
           <ContactList contacts={contacts ?? []} />
         </div>
         <div className="card">
-          <h2>Deals ({deals?.length ?? 0})</h2>
+          <h2>{t("detail.dealsCount", { count: deals?.length ?? 0 })}</h2>
           <DealList deals={deals ?? []} />
         </div>
       </div>
@@ -86,8 +89,8 @@ export default function OrganizationDetail() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete "${org.name}"? Its contacts and deals will be kept but unlinked.`}
+          title={t("orgs.deleteTitle")}
+          message={t("orgs.deleteMessage", { name: org.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(false)}
         />

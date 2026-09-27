@@ -1,0 +1,18 @@
+{
+  "tempo.drag": "Arrastra arriba o abajo para cambiar el tempo",
+  "play.key": "Barra espaciadora",
+  "play.play": "TOCAR",
+  "play.stop": "PARAR",
+  "patch.title": "{name} — {subtitle} (tecla {key})",
+  "patch.revertTitle": "Devuelve este patch a sus ajustes de fábrica",
+  "patch.revert": "RESTAURAR",
+  "patch.saved": "GUARDADO",
+  "pad.step": "{unit} paso {step}",
+  "pad.drumTip": "Haz clic para alternar silencio / golpe / acento · arrastra para pintar",
+  "pad.noteTip": "Haz clic para activar · arrastra arriba o abajo, o usa la rueda, para cambiar la nota",
+  "pad.chordTip": "Haz clic para activar · arrastra arriba o abajo, o usa la rueda, para cambiar la nota · Mayús+clic para cambiar el acorde",
+  "fader.tip": "{label}: arrastra arriba o abajo",
+  "knob.tip": "{label}: arrastra arriba o abajo; mantén Mayús para afinar",
+  "unit.mute": "SILENCIO",
+  "velocity.tip": "Arrastra para dibujar la dinámica de cada paso"
+}

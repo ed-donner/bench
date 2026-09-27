@@ -1,5 +1,6 @@
 import { ActivityType } from "../types";
 import { IconCall, IconEmail, IconNote } from "./Icons";
+import { activityLabel } from "../strings";
 
 const GLYPH = {
   note: IconNote,
@@ -11,7 +12,7 @@ const GLYPH = {
 export default function ActivityIcon({ type }: { type: ActivityType }) {
   const Glyph = GLYPH[type];
   return (
-    <div className={`activity-icon ${type}`} title={type}>
+    <div className={`activity-icon ${type}`} title={activityLabel(type)}>
       <Glyph size={15} />
     </div>
   );

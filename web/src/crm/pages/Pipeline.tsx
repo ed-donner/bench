@@ -2,7 +2,10 @@ import {
   DragDropContext,
   Draggable,
   Droppable,
+  DragStart,
+  DragUpdate,
   DropResult,
+  ResponderProvided,
 } from "@hello-pangea/dnd";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -24,6 +27,7 @@ import {
 import { formatDateShort, formatMoney, formatMoneyCompact } from "../format";
 import PageHeader from "../components/PageHeader";
 import { IconPipeline } from "../components/Icons";
+import { stageLabel, useT } from "../strings";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -36,6 +40,7 @@ function DealCard({
   index: number;
   orgName: string;
 }) {
+  const t = useT();
   const navigate = useNavigate();
   const open = () => void navigate(`/deals/${deal.id}`);
   const late = isOpen(deal) && (deal.close_date ?? "") < today();
@@ -61,7 +66,7 @@ function DealCard({
           }}
         >
           <div className="deal-name">{deal.name}</div>
-          <div className="deal-org">{orgName || "No organization"}</div>
+          <div className="deal-org">{orgName || t("pipeline.noOrg")}</div>
           <div className="deal-figures">
             <span className="deal-value">{formatMoney(deal.value)}</span>
             <span className="deal-prob">{deal.probability}%</span>
@@ -71,7 +76,9 @@ function DealCard({
               {formatDateShort(deal.close_date)}
             </span>
             <span className="deal-expected">
-              {formatMoneyCompact(expectedValue(deal))} expected
+              {t("pipeline.expectedShort", {
+                value: formatMoneyCompact(expectedValue(deal)),
+              })}
             </span>
           </div>
         </div>
@@ -81,6 +88,7 @@ function DealCard({
 }
 
 export default function Pipeline() {
+  const t = useT();
   const { data: fetched } = useFetch<Deal[]>("/api/crm/deals");
   // Once a card has been dropped the local order wins; until then the fetched list is what shows.
   // Derived rather than copied into state by an effect, which would render twice on every load.
@@ -93,7 +101,48 @@ export default function Pipeline() {
     [orgs],
   );
 
-  function onDragEnd({ draggableId, destination, source }: DropResult) {
+  // The library's own screen-reader announcements are English, so the board says its own.
+  const dealName = (id: string) =>
+    deals.find((d) => d.id === Number(id))?.name ?? "";
+  const where = ({
+    droppableId,
+    index,
+  }: {
+    droppableId: string;
+    index: number;
+  }) =>
+    t("pipeline.sr.where", {
+      stage: stageLabel(droppableId as DealStage),
+      position: index + 1,
+    });
+
+  function onDragStart(start: DragStart, provided: ResponderProvided) {
+    provided.announce(
+      t("pipeline.sr.lifted", {
+        name: dealName(start.draggableId),
+        where: where(start.source),
+      }),
+    );
+  }
+
+  function onDragUpdate(update: DragUpdate, provided: ResponderProvided) {
+    provided.announce(
+      update.destination
+        ? t("pipeline.sr.moved", { where: where(update.destination) })
+        : t("pipeline.sr.outside"),
+    );
+  }
+
+  function onDragEnd(result: DropResult, provided: ResponderProvided) {
+    const { draggableId, destination, source } = result;
+    provided.announce(
+      destination
+        ? t("pipeline.sr.dropped", {
+            name: dealName(draggableId),
+            where: where(destination),
+          })
+        : t("pipeline.sr.cancelled", { where: where(source) }),
+    );
     if (!destination) return;
     const samePlace =
       destination.droppableId === source.droppableId &&
@@ -115,18 +164,18 @@ export default function Pipeline() {
     <>
       <PageHeader
         icon={<IconPipeline size={20} />}
-        title="Pipeline"
-        sub="Drag a card to another column to change its stage, or up and down to order a column your way"
+        title={t("nav.pipeline")}
+        sub={t("pipeline.sub")}
       >
         <div className="pipeline-totals">
           <div className="total-block">
-            <span className="total-label">Total pipeline</span>
+            <span className="total-label">{t("pipeline.total")}</span>
             <span className="total-value" data-testid="pipeline-total">
               {formatMoney(sumValue(open))}
             </span>
           </div>
           <div className="total-block">
-            <span className="total-label">Expected revenue</span>
+            <span className="total-label">{t("dash.expected")}</span>
             <span
               className="total-value accent"
               data-testid="pipeline-expected"
@@ -136,7 +185,12 @@ export default function Pipeline() {
           </div>
         </div>
       </PageHeader>
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DragDropContext
+        onDragStart={onDragStart}
+        onDragUpdate={onDragUpdate}
+        onDragEnd={onDragEnd}
+        dragHandleUsageInstructions={t("pipeline.sr.instructions")}
+      >
         <div className="board">
           {DEAL_STAGES.map((stage) => {
             const inStage = deals.filter((d) => d.stage === stage);
@@ -155,7 +209,7 @@ export default function Pipeline() {
                     <div className="board-column-header">
                       <span className="col-title">
                         <span className="col-dot" />
-                        {stage}
+                        {stageLabel(stage)}
                       </span>
                       <span className="col-count">{inStage.length}</span>
                     </div>
@@ -189,7 +243,7 @@ export default function Pipeline() {
                       ))}
                       {provided.placeholder}
                       {inStage.length === 0 && !snapshot.isDraggingOver && (
-                        <p className="board-empty">Drop a deal here</p>
+                        <p className="board-empty">{t("pipeline.drop")}</p>
                       )}
                     </div>
                   </div>

@@ -38,3 +38,6 @@ npm-debug.log*
 !.vscode/settings.json
 !.vscode/extensions.json
 *.swp
+
+# Screenshot walkthroughs (e2e/tools/screenshots.mjs)
+screenshots/i18n/

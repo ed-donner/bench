@@ -7,6 +7,7 @@ import {
   ContactStatus,
   Organization,
 } from "../types";
+import { statusLabel, useT } from "../strings";
 
 interface Props {
   existing?: Contact;
@@ -23,6 +24,7 @@ export default function ContactForm({
   onSaved,
   onClose,
 }: Props) {
+  const t = useT();
   const [form, setForm] = useState({
     name: existing?.name ?? "",
     email: existing?.email ?? "",
@@ -46,10 +48,13 @@ export default function ContactForm({
   }
 
   return (
-    <Modal title={existing ? "Edit contact" : "Add contact"} onClose={onClose}>
+    <Modal
+      title={existing ? t("contacts.editTitle") : t("contacts.add")}
+      onClose={onClose}
+    >
       <form className="form-grid" onSubmit={(e) => void submit(e)}>
         <div className="field">
-          <label htmlFor="ct-name">Name</label>
+          <label htmlFor="ct-name">{t("col.name")}</label>
           <input
             id="ct-name"
             required
@@ -59,7 +64,7 @@ export default function ContactForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="ct-email">Email</label>
+            <label htmlFor="ct-email">{t("col.email")}</label>
             <input
               id="ct-email"
               type="email"
@@ -68,7 +73,7 @@ export default function ContactForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="ct-phone">Phone</label>
+            <label htmlFor="ct-phone">{t("col.phone")}</label>
             <input
               id="ct-phone"
               value={form.phone}
@@ -77,7 +82,7 @@ export default function ContactForm({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="ct-title">Job title</label>
+          <label htmlFor="ct-title">{t("col.jobTitle")}</label>
           <input
             id="ct-title"
             value={form.job_title}
@@ -86,7 +91,7 @@ export default function ContactForm({
         </div>
         <div className="form-row">
           <div className="field">
-            <label htmlFor="ct-org">Organization</label>
+            <label htmlFor="ct-org">{t("deals.col.organization")}</label>
             <select
               id="ct-org"
               value={form.organization_id}
@@ -98,7 +103,7 @@ export default function ContactForm({
                 })
               }
             >
-              <option value="">— None —</option>
+              <option value="">{t("form.none")}</option>
               {organizations.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
@@ -107,7 +112,7 @@ export default function ContactForm({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="ct-status">Status</label>
+            <label htmlFor="ct-status">{t("col.status")}</label>
             <select
               id="ct-status"
               value={form.status}
@@ -117,7 +122,7 @@ export default function ContactForm({
             >
               {CONTACT_STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {statusLabel(s)}
                 </option>
               ))}
             </select>
@@ -125,10 +130,10 @@ export default function ContactForm({
         </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button type="submit" className="btn btn-primary">
-            Save
+            {t("common.save")}
           </button>
         </div>
       </form>

@@ -174,8 +174,8 @@ describe("adding an important date", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows what the server refused", async () => {
-    vi.mocked(api.addDate).mockRejectedValue(new Error("31/2 is not a date"));
+  it("refuses a day the month does not have, before asking the server", async () => {
+    vi.mocked(api.addDate).mockClear();
     render(<AddDateModal personId={1} onClose={onClose} onSaved={onSaved} />);
     await userEvent.type(
       screen.getByRole("spinbutton", { name: "Day *" }),
@@ -186,7 +186,10 @@ describe("adding an important date", () => {
       "2",
     );
     await userEvent.click(screen.getByRole("button", { name: "Save date" }));
-    expect(await screen.findByText("31/2 is not a date")).toBeInTheDocument();
+    expect(
+      await screen.findByText("31 February is not a date"),
+    ).toBeInTheDocument();
+    expect(api.addDate).not.toHaveBeenCalled();
   });
 });
 
@@ -283,7 +286,7 @@ describe("connecting two people", () => {
       1,
       expect.objectContaining({
         label: "Introduced me to Ben Foster",
-        inverse_label: "Connected to Maya Chen",
+        inverse_label: null,
       }),
     );
     await waitFor(() => {

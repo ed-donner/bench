@@ -41,12 +41,49 @@ describe("BenchNav", () => {
 
   it("toggles the theme for every app and remembers the choice", async () => {
     render(<BenchNav active="rolodex" />);
-    await userEvent.click(screen.getByRole("button", { name: /Switch to/ }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /Switch to (light|dark)/ }),
+    );
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(localStorage.getItem("bench.theme")).toBe("dark");
 
-    await userEvent.click(screen.getByRole("button", { name: /Switch to/ }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /Switch to (light|dark)/ }),
+    );
     expect(document.documentElement.dataset.theme).toBe("light");
     expect(localStorage.getItem("bench.theme")).toBe("light");
+  });
+
+  it("switches the language both ways, in place, and remembers it", async () => {
+    render(<BenchNav active="crm" />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Switch to Spanish" }),
+    );
+    expect(localStorage.getItem("bench.lang")).toBe("es");
+    expect(document.documentElement.lang).toBe("es");
+    expect(
+      screen.getByRole("navigation", { name: "Principal" }),
+    ).toHaveTextContent("Inicio");
+    expect(
+      screen.getByRole("button", { name: /Cambiar a modo (claro|oscuro)/ }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Cambiar a inglés" }),
+    );
+    expect(localStorage.getItem("bench.lang")).toBe("en");
+    expect(nav().getAllByRole("link")[0]).toHaveTextContent("Home");
+  });
+
+  it("keeps the app names as they are in both languages", async () => {
+    render(<BenchNav active="crm" />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Switch to Spanish" }),
+    );
+    expect(
+      within(screen.getByRole("navigation", { name: "Principal" }))
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Inicio", "CRM", "Space", "Rolodex", "Groove"]);
   });
 });

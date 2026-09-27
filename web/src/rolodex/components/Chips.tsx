@@ -1,6 +1,6 @@
 import type { CheckInStatus, Circle } from "../types";
-import { CIRCLE_META } from "../types";
-import { STATUS_LABEL } from "../format";
+import { circleLabel, statusLabel } from "../format";
+import { useT } from "../strings";
 
 export function StatusBadge({
   status,
@@ -12,7 +12,7 @@ export function StatusBadge({
   return (
     <span className={`badge status-${status}`} title={title}>
       <span className="dot" />
-      {STATUS_LABEL[status]}
+      {statusLabel(status)}
     </span>
   );
 }
@@ -24,14 +24,15 @@ export function CircleChip({
   circle: Circle;
   onClick?: () => void;
 }) {
-  const label = CIRCLE_META[circle].label;
+  const t = useT();
+  const label = circleLabel(circle);
   if (!onClick) return <span className={`chip circle-${circle}`}>{label}</span>;
   return (
     <button
       type="button"
       className={`chip circle-${circle} chip-clickable`}
       onClick={onClick}
-      title={`Filter by ${label} circle`}
+      title={t("circle.filterBy", { circle: label })}
     >
       {label}
     </button>

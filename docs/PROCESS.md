@@ -71,13 +71,21 @@ about them - read it before concluding that a component is untestable.
 ### End-to-end tests - `npm run e2e`
 
 Playwright, in `e2e/`. Layout: `smoke.spec.ts` (the seams between the apps), then `crm/`, `space/`,
-`groove/`. `e2e/tools/screenshots.mjs` is not part of the suite - it drives a running app and
-captures every screen in both themes, for reviewing a visual change in one pass.
+`rolodex/`, `groove/`, and `i18n/` - every app walked in Spanish through the leak scan, and the
+language switched once and twice across the platform. `e2e/tools/screenshots.mjs` is not part of
+the suite - it drives a running app and captures every screen of all five documents in English and
+Spanish, light, plus Spanish dark, into `screenshots/i18n/`, and prints any text Spanish clips that
+English does not. It clicks and types, so run it against a server with a throwaway `DATA_DIR`
+(`cd server && DATA_DIR=/tmp/bench-shots npx tsx src/index.ts`), not the one holding your data.
 
 Rules that keep this suite reliable:
 
 - **Import `test` and `expect` from `../fixtures`**, never from `@playwright/test` directly, or the
   spec gets no server and no `baseURL`.
+- **The suite runs in English** - `playwright.config.ts` pins `locale: "en-US"`, because a first
+  visit follows the browser's language. A Spanish spec opts in with `inSpanish(page)` from
+  `e2e/i18n/leaks.ts`, and ends each screen with `expectNoEnglish(page, "<app>")`. Groove's
+  instrument spec is the exception that runs in both, from one table of the words it presses.
 - **Each worker runs its own server and database.** `e2e/fixtures.ts` spawns the API on
   `8150 + workerIndex` with its own `DATA_DIR` under `e2e/.tmp/w<n>`; `e2e/global-setup.ts` builds
   `web/dist` once. There is no `webServer` block in `playwright.config.ts` - do not add one back.
@@ -194,6 +202,19 @@ just the root one, or a stale nested copy shadows the hoisted package inside tha
 See [CONTROLS.md](./CONTROLS.md) for what the checks are and how each layer is enforced.
 
 ## 7. Self-improvement
+
+Lessons so far:
+
+- **Ad-hoc browser scripts write data.** A Space view remembers a filter you added, a title
+  autosaves, a debug script racing a navigation renames whatever page was still loaded. The e2e
+  fixture isolates every worker; a one-off script does not. Start its server with a throwaway
+  `DATA_DIR`, every time.
+- **Wait for the new page before typing into it.** After "New page", the title input on screen is
+  still the previous page's until the new one loads - `expect(input).toHaveValue("")` first, as
+  `e2e/space/editor.spec.ts` does. Skipping it renames the wrong page and looks like a bug in
+  whatever you were testing.
+- **Prove a guard test by breaking the code it guards.** A test for a failure mode that has never
+  happened may be asserting nothing. Introduce the bug, watch it fail, put the code back.
 
 Based on feedback and experiences on the build, update this PROCESS.md to incorporate lessons learned,
 to ensure that you continuously improve. When you update PROCESS.md, also consider updating this very section on self-improvement

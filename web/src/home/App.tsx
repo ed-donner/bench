@@ -6,67 +6,28 @@ import {
   IconRolodex,
   IconSpace,
 } from "../shared/AppIcons";
+import { useT } from "../shared/strings";
 
-interface AppCard {
-  href: string;
-  name: string;
-  tagline: string;
-  detail: string;
-  facts: string[];
-  Icon: (p: { size?: number }) => React.ReactElement;
-}
+/** The name is the app's own and stays English; everything said about it is in the catalogs. */
+const APPS = [
+  { key: "crm", href: "/crm/", name: "CRM", Icon: IconCrm },
+  { key: "space", href: "/space/", name: "Space", Icon: IconSpace },
+  { key: "rolodex", href: "/rolodex/", name: "Rolodex", Icon: IconRolodex },
+  { key: "groove", href: "/groove/", name: "Groove", Icon: IconGroove },
+] as const;
 
-const APPS: AppCard[] = [
-  {
-    href: "/crm/",
-    name: "CRM",
-    tagline: "Deals, and the people behind them",
-    detail:
-      "Organizations, contacts and a drag-and-drop pipeline, with a dashboard that adds up what is actually in play.",
-    facts: ["Pipeline", "Dashboard", "Activities"],
-    Icon: IconCrm,
-  },
-  {
-    href: "/space/",
-    name: "Space",
-    tagline: "Everything you know, in one place",
-    detail:
-      "Pages and blocks that nest as deep as you like, databases with table, board and list views, and search across the lot.",
-    facts: ["Pages", "Databases", "Search"],
-    Icon: IconSpace,
-  },
-  {
-    href: "/rolodex/",
-    name: "Rolodex",
-    tagline: "The people in your life, kept close",
-    detail:
-      "Who you are due to contact, what is going on with them, birthdays coming up, and a timeline of every conversation.",
-    facts: ["Check-ins", "Circles", "Calendar"],
-    Icon: IconRolodex,
-  },
-  {
-    href: "/groove/",
-    name: "Groove",
-    tagline: "A groovebox in the browser",
-    detail:
-      "Four synth units, one transport and a master DJ filter. Pure Web Audio — no samples, no plugins, no latency budget.",
-    facts: ["4 units", "16 steps", "Web Audio"],
-    Icon: IconGroove,
-  },
-];
+const FACTS = ["fact1", "fact2", "fact3"] as const;
 
 export default function App() {
+  const t = useT();
   return (
     <>
       <BenchNav active="home" />
       <div className="home">
         <header className="home-header">
-          <p className="home-eyebrow">Local-first · no login · no cloud</p>
-          <h1>Bench</h1>
-          <p className="home-lede">
-            Four apps, one server, one machine. Your data lives in SQLite files
-            on this disk and goes nowhere else.
-          </p>
+          <p className="home-eyebrow">{t("home.eyebrow")}</p>
+          <h1>{t("home.title")}</h1>
+          <p className="home-lede">{t("home.lede")}</p>
         </header>
 
         <div className="home-grid">
@@ -75,16 +36,16 @@ export default function App() {
               <app.Icon size={104} />
               <div className="home-card-body">
                 <h2>{app.name}</h2>
-                <p className="home-tagline">{app.tagline}</p>
-                <p className="home-detail">{app.detail}</p>
+                <p className="home-tagline">{t(`home.${app.key}.tagline`)}</p>
+                <p className="home-detail">{t(`home.${app.key}.detail`)}</p>
                 <ul className="home-facts">
-                  {app.facts.map((f) => (
-                    <li key={f}>{f}</li>
+                  {FACTS.map((f) => (
+                    <li key={f}>{t(`home.${app.key}.${f}`)}</li>
                   ))}
                 </ul>
               </div>
               <span className="home-open">
-                Open
+                {t("home.open")}
                 <svg
                   width="15"
                   height="15"
@@ -105,9 +66,9 @@ export default function App() {
 
         <footer className="home-footer">
           <span>
-            <strong>npm run dev</strong> · API on 8100, Vite on 8101
+            <strong>{"npm run dev"}</strong> · {t("home.footerRun")}
           </span>
-          <span>SQLite in ./data</span>
+          <span>{t("home.footerData")}</span>
         </footer>
       </div>
     </>

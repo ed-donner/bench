@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { initLang } from "../../shared/i18n";
 
 // jsdom implements no pointer capture, so Groove's knobs and faders throw on pointerdown without
 // this. Capture only decides which element receives the rest of a drag, and these tests dispatch
@@ -42,4 +43,6 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   delete document.documentElement.dataset.theme;
+  // The language is module state, so a test that switched to Spanish would leak into the next.
+  initLang();
 });

@@ -4,20 +4,21 @@ import { api } from "../../api";
 import type { ConnectionKind, PersonComputed } from "../../types";
 import { Modal } from "../Modal";
 import { Field, FieldGroup } from "../Field";
+import { errorMessage } from "../../format";
+import { useT } from "../../strings";
 
-const KIND_OPTIONS: { value: ConnectionKind; label: string }[] = [
-  { value: "partner", label: "Partner of" },
-  { value: "parent_child", label: "Parent / child of" },
-  { value: "sibling", label: "Sibling of" },
-  { value: "colleague", label: "Colleague of" },
-  { value: "other", label: "Other" },
+const KINDS: ConnectionKind[] = [
+  "partner",
+  "parent_child",
+  "sibling",
+  "colleague",
+  "other",
 ];
 
-/** A free-text connection reads from one side only, so each side gets its own wording. */
-function sideLabel(text: string, otherName: string): string {
-  return text.trim()
-    ? `${text.trim()} ${otherName}`
-    : `Connected to ${otherName}`;
+/** A free-text connection reads from one side only, so each side gets its own wording. Left
+    blank, nothing is stored and the page says "Connected to" in whichever language it is in. */
+function sideLabel(text: string, otherName: string): string | null {
+  return text.trim() ? `${text.trim()} ${otherName}` : null;
 }
 
 export default function AddConnectionModal({
@@ -31,6 +32,7 @@ export default function AddConnectionModal({
   onClose: () => void;
   onSaved: () => Promise<void>;
 }) {
+  const t = useT();
   const others = people.filter((p) => p.id !== person.id);
   const [otherId, setOtherId] = useState<number | "">("");
   const [kind, setKind] = useState<ConnectionKind>("partner");
@@ -45,7 +47,7 @@ export default function AddConnectionModal({
 
   const save = async () => {
     if (!otherId) {
-      setError("Pick a person to connect");
+      setError(t("connForm.pick"));
       return;
     }
     setBusy(true);
@@ -63,7 +65,7 @@ export default function AddConnectionModal({
       await onSaved();
       onClose();
     } catch (e) {
-      setError((e as Error).message);
+      setError(errorMessage(e));
       setBusy(false);
     }
   };
@@ -71,32 +73,32 @@ export default function AddConnectionModal({
   const firstName = person.name.split(" ")[0];
   return (
     <Modal
-      title={`Connect ${firstName} to someone`}
+      title={t("connForm.title", { name: firstName })}
       icon={<Link2 size={17} className="modal-icon blue" />}
       onClose={onClose}
       footer={
         <>
           {error && <span className="form-error">{error}</span>}
           <button className="btn" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="btn btn-primary"
             onClick={() => void save()}
             disabled={busy}
           >
-            Save connection
+            {t("connForm.save")}
           </button>
         </>
       }
     >
       <div className="form-grid">
-        <Field label="Person" wide>
+        <Field label={t("people.col.person")} wide>
           <select
             value={otherId}
             onChange={(e) => setOtherId(Number(e.target.value) || "")}
           >
-            <option value="">— choose —</option>
+            <option value="">{t("connForm.choose")}</option>
             {others.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -104,20 +106,20 @@ export default function AddConnectionModal({
             ))}
           </select>
         </Field>
-        <Field label="Relationship" wide>
+        <Field label={t("connForm.relationship")} wide>
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as ConnectionKind)}
           >
-            {KIND_OPTIONS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
+            {KINDS.map((k) => (
+              <option key={k} value={k}>
+                {t(`connForm.kind.${k}`)}
               </option>
             ))}
           </select>
         </Field>
         {kind === "parent_child" && otherId !== "" && (
-          <FieldGroup label="Who is the parent?" wide>
+          <FieldGroup label={t("connForm.whoParent")} wide>
             <div className="row" style={{ gap: 14 }}>
               <label className="row radio-option">
                 <input
@@ -126,7 +128,7 @@ export default function AddConnectionModal({
                   checked={aIsParent}
                   onChange={() => setAIsParent(true)}
                 />
-                {person.name} is the parent
+                {t("connForm.isParent", { name: person.name })}
               </label>
               <label className="row radio-option">
                 <input
@@ -135,45 +137,46 @@ export default function AddConnectionModal({
                   checked={!aIsParent}
                   onChange={() => setAIsParent(false)}
                 />
-                {otherName} is the parent
+                {t("connForm.isParent", { name: otherName })}
               </label>
             </div>
           </FieldGroup>
         )}
         {kind === "colleague" && (
-          <Field label="Where? (optional)" wide>
+          <Field label={t("connForm.where")} wide>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="at Fabrikam, years ago"
+              placeholder={t("connForm.wherePlaceholder")}
             />
           </Field>
         )}
         {kind === "other" && (
           <>
-            <Field label={`On ${firstName}’s page`}>
+            <Field label={t("connForm.onPage", { name: firstName })}>
               <input
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
-                placeholder={`e.g. “Introduced me to” ${otherName || "…"}`}
+                placeholder={t("connForm.example", { name: otherName || "…" })}
               />
             </Field>
             <Field
-              label={`On ${otherName ? otherName.split(" ")[0] : "their"}’s page`}
+              label={
+                otherName
+                  ? t("connForm.onPage", { name: otherName.split(" ")[0] })
+                  : t("connForm.onTheirPage")
+              }
             >
               <input
                 value={inverseLabel}
                 onChange={(e) => setInverseLabel(e.target.value)}
-                placeholder={`e.g. “Introduced me to” ${firstName}`}
+                placeholder={t("connForm.example", { name: firstName })}
               />
             </Field>
           </>
         )}
       </div>
-      <div className="hint modal-hint">
-        Connections appear on both people’s pages, reading correctly from each
-        side.
-      </div>
+      <div className="hint modal-hint">{t("connForm.hint")}</div>
     </Modal>
   );
 }

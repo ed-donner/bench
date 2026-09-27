@@ -9,7 +9,15 @@ import {
   YAxis,
 } from "recharts";
 import { Sparkles } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import type { StatsPayload } from "../../api";
+import type { Circle } from "../../types";
+import { circleLabel } from "../../format";
+import { dateLocale, useT } from "../../strings";
+
+/** The server labels its axes in English; the keys are what the chart translates from. */
+const monthLabel = (key: string) =>
+  format(parseISO(`${key}-01`), "MMM yy", { locale: dateLocale() });
 
 const AXIS = { fontSize: 11, fill: "var(--muted)" };
 const TOOLTIP = {
@@ -39,14 +47,15 @@ function Frame({
 }
 
 export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
+  const t = useT();
   return (
     <div className="card card-pad span2">
       <h2 className="card-title chart-heading">
-        <Sparkles size={16} /> How you’re doing
+        <Sparkles size={16} /> {t("charts.title")}
       </h2>
       {stats ? (
         <div className="chart-pair">
-          <Frame title="Interactions logged per month">
+          <Frame title={t("charts.perMonth")}>
             <BarChart
               data={stats.months}
               margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
@@ -57,7 +66,8 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
                 vertical={false}
               />
               <XAxis
-                dataKey="label"
+                dataKey="key"
+                tickFormatter={monthLabel}
                 tick={AXIS}
                 tickLine={false}
                 axisLine={{ stroke: "var(--border)" }}
@@ -71,16 +81,17 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
               <Tooltip
                 cursor={{ fill: "var(--surface-2)" }}
                 contentStyle={TOOLTIP}
+                labelFormatter={(key) => monthLabel(key as string)}
               />
               <Bar
                 dataKey="count"
-                name="Interactions"
+                name={t("charts.interactions")}
                 fill="var(--blue)"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </Frame>
-          <Frame title="People per circle, by check-in status">
+          <Frame title={t("charts.perCircle")}>
             <BarChart
               data={stats.circles}
               margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
@@ -91,7 +102,8 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
                 vertical={false}
               />
               <XAxis
-                dataKey="label"
+                dataKey="circle"
+                tickFormatter={(c: Circle) => circleLabel(c)}
                 tick={AXIS}
                 tickLine={false}
                 axisLine={{ stroke: "var(--border)" }}
@@ -105,30 +117,31 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
               <Tooltip
                 cursor={{ fill: "var(--surface-2)" }}
                 contentStyle={TOOLTIP}
+                labelFormatter={(c) => circleLabel(c as Circle)}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Bar
                 dataKey="in_touch"
-                name="In touch"
+                name={t("status.in_touch")}
                 stackId="s"
                 fill="var(--green)"
               />
               <Bar
                 dataKey="due_soon"
-                name="Due soon"
+                name={t("status.due_soon")}
                 stackId="s"
                 fill="var(--amber)"
               />
               <Bar
                 dataKey="overdue"
-                name="Overdue"
+                name={t("status.overdue")}
                 stackId="s"
                 fill="var(--red)"
                 radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="snoozed"
-                name="Snoozed"
+                name={t("status.snoozed")}
                 stackId="s"
                 fill="var(--slate)"
               />
@@ -136,7 +149,7 @@ export default function TodayCharts({ stats }: { stats: StatsPayload | null }) {
           </Frame>
         </div>
       ) : (
-        <div className="muted small">Loading charts…</div>
+        <div className="muted small">{t("charts.loading")}</div>
       )}
     </div>
   );

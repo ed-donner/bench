@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useT } from "../strings";
 
 interface Props {
   title: string;
@@ -17,6 +18,7 @@ export default function ConfirmDialog({
 }: Props) {
   // Focused on mount rather than through autoFocus, which fires before assistive technology has
   // been told the dialog opened.
+  const t = useT();
   const cancelRef = useRef<HTMLButtonElement>(null);
   useEffect(() => cancelRef.current?.focus(), []);
 
@@ -33,7 +35,7 @@ export default function ConfirmDialog({
         <p>{message}</p>
         <div className="dialog-actions">
           <button ref={cancelRef} className="btn" onClick={onCancel}>
-            Cancel
+            {t("common.cancel")}
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
             {confirmLabel}

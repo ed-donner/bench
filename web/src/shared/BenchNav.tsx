@@ -14,6 +14,8 @@ import {
   IconSun,
 } from "./AppIcons";
 import { currentTheme, toggleTheme, type Theme } from "./theme";
+import { LANGS, setLang, useLang } from "./i18n";
+import { useT } from "./strings";
 import "./nav.css";
 
 type AppKey = "home" | "crm" | "space" | "rolodex" | "groove";
@@ -24,10 +26,11 @@ type AppKey = "home" | "crm" | "space" | "rolodex" | "groove";
 const APPS: {
   key: AppKey;
   href: string;
-  label: string;
+  /** The app's own name, the same in every language - except the launcher, which is "Home". */
+  label: string | null;
   Icon: (p: { size?: number }) => React.ReactElement;
 }[] = [
-  { key: "home", href: "/", label: "Home", Icon: IconHome },
+  { key: "home", href: "/", label: null, Icon: IconHome },
   { key: "crm", href: "/crm/", label: "CRM", Icon: IconCrm },
   { key: "space", href: "/space/", label: "Space", Icon: IconSpace },
   { key: "rolodex", href: "/rolodex/", label: "Rolodex", Icon: IconRolodex },
@@ -36,13 +39,16 @@ const APPS: {
 
 export default function BenchNav({ active }: { active: AppKey }) {
   const [theme, setTheme] = useState<Theme>(currentTheme);
+  const lang = useLang();
+  const t = useT();
+  const themeLabel = theme === "dark" ? t("nav.toLight") : t("nav.toDark");
   return (
     <header className="bench-nav">
       <span className="bench-nav-brand">
         <BenchMark size={21} />
-        Bench
+        {t("nav.brand")}
       </span>
-      <nav className="bench-nav-links" aria-label="Primary">
+      <nav className="bench-nav-links" aria-label={t("nav.primary")}>
         {APPS.map(({ key, href, label, Icon }) => (
           <a
             key={key}
@@ -51,16 +57,29 @@ export default function BenchNav({ active }: { active: AppKey }) {
             aria-current={key === active ? "page" : undefined}
           >
             <Icon size={16} />
-            {label}
+            {label ?? t("nav.home")}
           </a>
         ))}
       </nav>
       <button
         type="button"
+        className="bench-nav-lang"
+        onClick={() => setLang(lang === "en" ? "es" : "en")}
+        aria-label={t("nav.toOtherLang")}
+        title={t("nav.toOtherLang")}
+      >
+        {LANGS.map((l) => (
+          <span key={l} aria-current={l === lang ? "true" : undefined}>
+            {l.toUpperCase()}
+          </span>
+        ))}
+      </button>
+      <button
+        type="button"
         className="bench-nav-theme"
         onClick={() => setTheme(toggleTheme())}
-        aria-label={theme === "dark" ? "Switch to light" : "Switch to dark"}
-        title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+        aria-label={themeLabel}
+        title={themeLabel}
       >
         {theme === "dark" ? <IconSun size={16} /> : <IconMoon size={16} />}
       </button>

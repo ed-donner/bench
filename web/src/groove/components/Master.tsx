@@ -6,6 +6,7 @@ import { Knob } from "./Knob";
 import { Fader } from "./Fader";
 import { Scope } from "./Scope";
 import { useReadout } from "./useReadout";
+import { LEGEND } from "../legends";
 
 interface Props {
   params: Params;
@@ -24,7 +25,7 @@ function SweepMeter({ bars, phase }: { bars: number; phase: number }) {
   if (bars === 0) {
     return (
       <div className="sweep-meter off">
-        <span className="sweep-off">SWEEP OFF</span>
+        <span className="sweep-off">{LEGEND.sweepOff}</span>
       </div>
     );
   }
@@ -63,7 +64,7 @@ export function Master(p: Props) {
           />
         </div>
         <div className="hero-side">
-          <span className="bank-label">MASTER FILTER</span>
+          <span className="bank-label">{LEGEND.masterFilter}</span>
           <div className="hero-display">
             <span className="disp-label">
               {readout.value ? readout.value.label : "CUTOFF"}
@@ -98,7 +99,7 @@ export function Master(p: Props) {
       <Scope analyser={p.analyser} getFilter={p.getFilter} />
 
       <div className="master-out">
-        <span className="bank-label">OUT</span>
+        <span className="bank-label">{LEGEND.out}</span>
         <Fader
           spec={{ key: "volume", label: "VOL", kind: "slider", min: 0, max: 1 }}
           value={p.volume}

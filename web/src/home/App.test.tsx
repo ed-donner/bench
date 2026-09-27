@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import App from "./App";
+import { setLang } from "../shared/i18n";
 
 const APPS = [
   ["CRM", "/crm/", "Deals, and the people behind them"],
@@ -35,5 +36,17 @@ describe("launcher", () => {
       expect(screen.getByRole("heading", { name })).toBeInTheDocument();
       expect(screen.getByText(tagline)).toBeInTheDocument();
     }
+  });
+
+  it("describes every app in Spanish, keeping their names", () => {
+    render(<App />);
+    act(() => setLang("es"));
+    expect(
+      screen.getByRole("heading", { name: "Rolodex" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Las personas de tu vida, siempre cerca"),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Abrir")).toHaveLength(4);
   });
 });

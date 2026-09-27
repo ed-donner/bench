@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { ReactNode, useState } from "react";
 import { IconEdit, IconTrash } from "./Icons";
+import { useT } from "../strings";
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
 
@@ -22,7 +23,8 @@ interface Props<T> {
   emptyMessage?: string;
   /** Shown on the right of the footer, e.g. a total. */
   summary?: ReactNode;
-  noun?: string;
+  /** What a row is, for the footer's count: "3 deals". */
+  noun?: "deal" | "contact" | "organization" | "record";
 }
 
 export default function DataTable<T>({
@@ -32,10 +34,11 @@ export default function DataTable<T>({
   onEdit,
   onDelete,
   rowLabel,
-  emptyMessage = "Nothing here yet.",
+  emptyMessage,
   summary,
   noun = "record",
 }: Props<T>) {
+  const t = useT();
   const [sorting, setSorting] = useState<SortingState>([]);
   // React Compiler cannot memoize what useReactTable() returns, so the rule flags every call site.
   // There is nothing to change here - it is the library's only API, and Bench does not run the
@@ -114,8 +117,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn"
-                          aria-label={`Edit ${label(row.original)}`}
-                          title="Edit"
+                          aria-label={t("table.editRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("common.edit")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onEdit(row.original);
@@ -128,8 +133,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn icon-btn-danger"
-                          aria-label={`Delete ${label(row.original)}`}
-                          title="Delete"
+                          aria-label={t("table.deleteRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("common.delete")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDelete(row.original);
@@ -146,13 +153,12 @@ export default function DataTable<T>({
           </tbody>
         </table>
       </div>
-      {data.length === 0 && <div className="empty-state">{emptyMessage}</div>}
+      {data.length === 0 && (
+        <div className="empty-state">{emptyMessage ?? t("table.empty")}</div>
+      )}
       {data.length > 0 && (
         <div className="table-foot">
-          <span>
-            {data.length} {noun}
-            {data.length === 1 ? "" : "s"}
-          </span>
+          <span>{t(`table.count.${noun}`, { count: data.length })}</span>
           {summary && <span className="table-summary">{summary}</span>}
         </div>
       )}

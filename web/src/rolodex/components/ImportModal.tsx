@@ -6,21 +6,22 @@ import { Modal } from "./Modal";
 import { Field } from "./Field";
 import { errorMessage } from "../format";
 import { useStore } from "../store";
+import { useT } from "../strings";
 
-const people = (n: number) => `${n} ${n === 1 ? "person" : "people"}`;
-
+/** The fields a CSV column can map to; the API reads the keys, each labelled from import.field. */
 const FIELDS = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "job_title", label: "Job title" },
-  { key: "company", label: "Company" },
-  { key: "city", label: "City" },
-  { key: "birthday", label: "Birthday" },
-  { key: "notes", label: "Notes" },
-];
+  "name",
+  "email",
+  "phone",
+  "job_title",
+  "company",
+  "city",
+  "birthday",
+  "notes",
+] as const;
 
 export function ImportModal({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const { refresh } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [parse, setParse] = useState<ImportParsePayload | null>(null);
@@ -128,7 +129,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal
       large
-      title="Import people"
+      title={t("import.title")}
       icon={
         <Upload size={17} className="lucide" style={{ color: "var(--blue)" }} />
       }
@@ -149,9 +150,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
       {!parse && !result && (
         <>
           <p className="muted" style={{ marginTop: 0 }}>
-            Bring in contacts from a CSV file or a vCard (.vcf) file. We’ll read
-            the file, let you check exactly what will be added, and flag anyone
-            who already seems to be in your Rolodex.
+            {t("import.intro")}
           </p>
           <button
             type="button"
@@ -161,18 +160,16 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
           >
             <FileUp size={26} />
             <div className="strong">
-              {busy ? "Reading file…" : "Choose a .csv or .vcf file"}
+              {busy ? t("import.reading") : t("import.choose")}
             </div>
-            <div className="small">
-              Everything stays on this machine — nothing is uploaded anywhere.
-            </div>
+            <div className="small">{t("import.local")}</div>
           </button>
           <input
             ref={fileRef}
             type="file"
             accept=".csv,.vcf,text/csv,text/vcard"
             className="visually-hidden"
-            aria-label="File to import"
+            aria-label={t("import.file")}
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) void readAndParse(f);
@@ -189,14 +186,14 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
               <span className="step-dot on">1</span>
               <span style={{ fontWeight: 600 }}>{filename}</span>
               <span className="muted small">
-                {parse.format === "vcf" ? "vCard file" : "CSV file"} ·{" "}
-                {rows.length} contacts found
+                {parse.format === "vcf" ? t("import.vcf") : t("import.csv")} ·{" "}
+                {t("import.found", { count: rows.length })}
               </span>
             </div>
             {dupCount > 0 && (
               <span className="dup-flag">
-                <AlertTriangle size={12} /> {dupCount} likely duplicate
-                {dupCount === 1 ? "" : "s"} — skipped
+                <AlertTriangle size={12} />{" "}
+                {t("import.dupSkipped", { count: dupCount })}
               </span>
             )}
           </div>
@@ -211,16 +208,16 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
               }}
             >
               <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                Map the columns
+                {t("import.map")}
               </div>
               <div className="form-grid">
                 {FIELDS.map((f) => (
-                  <Field label={f.label} key={f.key}>
+                  <Field label={t(`import.field.${f}`)} key={f}>
                     <select
-                      value={mapping[f.key] ?? ""}
-                      onChange={(e) => void remap(f.key, e.target.value)}
+                      value={mapping[f] ?? ""}
+                      onChange={(e) => void remap(f, e.target.value)}
                     >
-                      <option value="">— not imported —</option>
+                      <option value="">{t("import.notImported")}</option>
                       {parse.headers!.map((h) => (
                         <option key={h} value={h}>
                           {h}
@@ -233,17 +230,19 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>Preview</div>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>
+            {t("import.preview")}
+          </div>
           <div className="import-review">
             <table className="data">
               <thead>
                 <tr>
                   <th style={{ width: 30 }}></th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Company</th>
-                  <th>City</th>
-                  <th>Notes</th>
+                  <th>{t("import.field.name")}</th>
+                  <th>{t("import.field.email")}</th>
+                  <th>{t("import.field.company")}</th>
+                  <th>{t("import.field.city")}</th>
+                  <th>{t("import.field.notes")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,7 +258,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
                     <td>
                       <input
                         type="checkbox"
-                        aria-label={`Import ${r.person.name}`}
+                        aria-label={t("import.row", { name: r.person.name })}
                         disabled={r.duplicate.isDuplicate}
                         checked={selected.has(r.index)}
                         onChange={(e) => {
@@ -274,14 +273,15 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
                       <div style={{ fontWeight: 600 }}>{r.person.name}</div>
                       {r.duplicate.isDuplicate && (
                         <span className="dup-flag">
-                          <AlertTriangle size={11} /> Already in your Rolodex:{" "}
+                          <AlertTriangle size={11} /> {t("import.already")}{" "}
                           <Link
                             to={`/people/${r.duplicate.duplicateOfId}`}
                             onClick={onClose}
                           >
                             {r.duplicate.duplicateOfName}
                           </Link>{" "}
-                          (matched by {r.duplicate.reason})
+                          {r.duplicate.reason &&
+                            t(`import.matchedBy.${r.duplicate.reason}`)}
                         </span>
                       )}
                     </td>
@@ -295,8 +295,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
             </table>
           </div>
           <p className="muted small" style={{ marginBottom: 0 }}>
-            People already in your Rolodex are matched by email or exact name
-            and skipped by default — untick anyone you don’t want to add.
+            {t("import.footnote")}
           </p>
         </>
       )}
@@ -324,23 +323,24 @@ function ImportFooter({
   onClose: () => void;
   onImport: () => void;
 }) {
+  const t = useT();
   if (result)
     return (
       <>
         <span className="import-done">
-          <CheckCircle2 size={15} /> Imported {people(result.added)}
+          <CheckCircle2 size={15} />{" "}
+          {t("import.imported", { count: result.added })}
           {result.skipped > 0 && (
             <span className="muted">
-              · {result.skipped} duplicate{result.skipped === 1 ? "" : "s"}{" "}
-              skipped
+              · {t("import.skipped", { count: result.skipped })}
             </span>
           )}
         </span>
         <button className="btn" onClick={onReset}>
-          Import another file
+          {t("import.another")}
         </button>
         <button className="btn btn-primary" onClick={onClose}>
-          Done
+          {t("import.done")}
         </button>
       </>
     );
@@ -348,7 +348,7 @@ function ImportFooter({
   if (!started)
     return (
       <button className="btn" onClick={onClose}>
-        Cancel
+        {t("common.cancel")}
       </button>
     );
 
@@ -356,14 +356,16 @@ function ImportFooter({
     <>
       {error && <span className="form-error">{error}</span>}
       <button className="btn" onClick={onReset} disabled={busy}>
-        Start over
+        {t("import.startOver")}
       </button>
       <button
         className="btn btn-primary"
         onClick={onImport}
         disabled={busy || importCount === 0}
       >
-        {busy ? "Importing…" : `Import ${people(importCount)}`}
+        {busy
+          ? t("import.importing")
+          : t("import.apply", { count: importCount })}
       </button>
     </>
   );

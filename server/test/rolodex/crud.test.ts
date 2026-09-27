@@ -188,10 +188,12 @@ describe("connections CRUD", () => {
     const fromKate = repo.listConnections(kate.id);
     expect(fromKate[0].other_name).toBe("Sam Fielding");
     expect(fromKate[0].description).toBe("Parent of Sam Fielding");
+    expect(fromKate[0].role).toBe("parent");
 
     const fromSam = repo.listConnections(sam.id);
     expect(fromSam[0].other_name).toBe("Kate Marsh");
     expect(fromSam[0].description).toBe("Child of Kate Marsh");
+    expect(fromSam[0].role).toBe("child");
   });
 
   it("deletes a connection from either side", () => {
@@ -222,6 +224,10 @@ describe("connections CRUD", () => {
     expect(repo.listConnections(elena.id)[0].description).toBe(
       "Introduced me to Peter",
     );
+    expect(repo.listConnections(elena.id)[0]).toMatchObject({
+      role: "other",
+      label: "Introduced me to Peter",
+    });
   });
 });
 

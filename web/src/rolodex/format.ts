@@ -1,44 +1,18 @@
-import type {
-  CheckInStatus,
-  Circle,
-  InteractionType,
-  ImportantDateType,
-} from "./types";
+import type { CheckInStatus, Circle, InteractionType } from "./types";
 import { format, parseISO, isValid, differenceInCalendarDays } from "date-fns";
+import { dateLocale, t } from "./strings";
+import { RequestError } from "./requestError";
 
-export const STATUS_LABEL: Record<CheckInStatus, string> = {
-  in_touch: "In touch",
-  due_soon: "Due soon",
-  overdue: "Overdue",
-  snoozed: "Snoozed",
-  off: "Check-ins off",
-};
+export const statusLabel = (status: CheckInStatus) => t(`status.${status}`);
 
-export const CIRCLE_LABEL: Record<Circle, string> = {
-  inner: "Inner",
-  close: "Close",
-  wider: "Wider",
-  distant: "Distant",
-};
+export const circleLabel = (circle: Circle) => t(`circle.${circle}`);
 
-export const INTERACTION_META: Record<
-  InteractionType,
-  { label: string; verb: string }
-> = {
-  call: { label: "Call", verb: "Called" },
-  message: { label: "Message", verb: "Messaged" },
-  email: { label: "Email", verb: "Emailed" },
-  met: { label: "Met up", verb: "Met up" },
-  other: { label: "Other", verb: "Other contact" },
-};
+export const interactionLabel = (type: InteractionType) =>
+  t(`interaction.${type}`);
 
-export const DATE_TYPE_LABEL: Record<ImportantDateType, string> = {
-  birthday: "Birthday",
-  anniversary: "Anniversary",
-  work_anniversary: "Work anniversary",
-  child_birthday: "Child's birthday",
-  other: "Important date",
-};
+/** What a logged interaction did, as the feeds say it: "Called", "Met up". */
+export const interactionVerb = (type: InteractionType) =>
+  t(`interaction.${type}.verb`);
 
 export function fmtDate(
   iso: string | null | undefined,
@@ -46,28 +20,30 @@ export function fmtDate(
 ): string {
   if (!iso) return fallback;
   const d = parseISO(iso);
-  return isValid(d) ? format(d, "d MMM yyyy") : fallback;
+  return isValid(d)
+    ? format(d, "d MMM yyyy", { locale: dateLocale() })
+    : fallback;
 }
 
 export function fmtDateShort(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = parseISO(iso);
-  return isValid(d) ? format(d, "d MMM") : "—";
+  return isValid(d) ? format(d, "d MMM", { locale: dateLocale() }) : "—";
 }
 
 export function relativeDays(
   iso: string | null | undefined,
   fromToday?: string,
 ): string {
-  if (!iso) return "never contacted";
+  if (!iso) return t("relative.never");
   const ref = fromToday ? parseISO(fromToday) : new Date();
   // Positive is the future: the date is that many days after the day we are counting from.
   const diff = differenceInCalendarDays(parseISO(iso), ref);
-  if (diff === 0) return "today";
-  if (diff === 1) return "tomorrow";
-  if (diff === -1) return "yesterday";
-  if (diff < 0) return `${-diff} days ago`;
-  return `in ${diff} days`;
+  if (diff === 0) return t("relative.today");
+  if (diff === 1) return t("relative.tomorrow");
+  if (diff === -1) return t("relative.yesterday");
+  if (diff < 0) return t("relative.ago", { count: -diff });
+  return t("relative.in", { count: diff });
 }
 
 const AVATAR_COLORS = [
@@ -114,14 +90,22 @@ export function localTimeIn(
 }
 
 export function monthShort(month: number): string {
-  return format(new Date(2001, month - 1, 1), "MMM");
+  return format(new Date(2001, month - 1, 1), "MMM", { locale: dateLocale() });
 }
 
 export function todayISO(): string {
   return format(new Date(), "yyyy-MM-dd");
 }
 
-/** The message from a failed request, for showing in place of the thing that failed to load. */
+/**
+ * A failed request, in words, for showing in place of the thing that failed to load. The server
+ * answers in English, so its own message goes to the console for debugging and the page says
+ * what kind of failure it was.
+ */
 export function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+  console.error(e);
+  if (e instanceof RequestError && e.status === 404) return t("error.notFound");
+  if (e instanceof RequestError && e.status === 400)
+    return t("error.badRequest");
+  return t("error.failed");
 }

@@ -111,12 +111,19 @@ export interface Connection {
   created_at: string;
 }
 
+/** A connection's kind as seen from one end: a parent_child link is "parent" from one side. */
+export type ConnectionRole =
+  Exclude<ConnectionKind, "parent_child"> | "parent" | "child";
+
+/** `description` is the English sentence; `role` and `label` are what a client words it from. */
 export interface ConnectionView {
   id: number;
   other_id: number;
   other_name: string;
   kind: ConnectionKind;
   description: string;
+  role: ConnectionRole;
+  label: string | null;
   note: string | null;
 }
 

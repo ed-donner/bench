@@ -8,6 +8,7 @@ import { DrumGrid } from "./DrumGrid";
 import { NoteGrid } from "./NoteGrid";
 import { VelocityLane } from "./VelocityLane";
 import { useReadout } from "./useReadout";
+import { useT } from "../strings";
 
 interface Props {
   id: UnitId;
@@ -48,6 +49,7 @@ export function Unit(props: Props) {
   const meta = UNIT_META[id];
   const specs = UNIT_PARAMS[id];
   const params = patch[id].params;
+  const t = useT();
   const readout = useReadout();
 
   const knobs = specs.filter((s) => s.kind === "knob");
@@ -81,7 +83,7 @@ export function Unit(props: Props) {
           className={`mute-btn${muted ? " active" : ""}`}
           onClick={onMute}
         >
-          MUTE
+          {t("unit.mute")}
         </button>
       </header>
 

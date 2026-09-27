@@ -5,8 +5,16 @@ import { api, type TreeNode } from "./api";
 import Sidebar from "./components/Sidebar";
 import PageView from "./components/PageView";
 import SearchModal from "./components/SearchModal";
+import { useLang } from "../shared/i18n";
+import { useT } from "./strings";
 
 export default function App() {
+  // Re-render the whole page on a language switch, including helpers that read the plain t().
+  useLang();
+  const t = useT();
+  useEffect(() => {
+    document.title = t("app.name");
+  }, [t]);
   const [tree, setTree] = useState<TreeNode[] | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const reloadTree = useCallback(() => api.tree().then(setTree), []);

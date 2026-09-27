@@ -87,6 +87,23 @@ These read as machine-written and are unwelcome here.
 
 The exception, kept deliberately: the small conic-gradient brand mark.
 
+## Text in two languages
+
+- **No literal UI text.** Every word a person reads or a screen reader speaks comes from the app's
+  `locales/en.json` and `locales/es.json` through `t()`, and goes into **both** catalogs in the same
+  change. Lint rejects text between JSX tags and in `aria-label`, `title`, `placeholder` and `alt`;
+  a string built in a helper - a toast, a chart label - is the case it cannot see, so treat those
+  the same way.
+- **Translate labels, never values.** A stored value (`"Qualified"`, `"inner"`) is a key; the label
+  comes from ``t(`stage.${stage}`)``. Nothing the user typed, and nothing the seed wrote, goes
+  through a catalog.
+- **Keys are flat and dotted** (`"deals.col.stage"`), grouped by screen. Plurals are
+  `"key.one"`/`"key.other"` and chosen by a numeric `count`.
+- **Anything memoised that holds a label depends on the language**, or it keeps the old one after
+  a switch - `t` from `useT()` changes identity when the language does, so put it in the deps.
+- Format numbers, money and dates with `intlLocale()` or the app's date-fns locale, never a
+  hard-coded `"en-US"`.
+
 ## TypeScript and React
 
 - `strict` is on, with `noUnusedLocals` and `noUnusedParameters`. Do not loosen the config to make

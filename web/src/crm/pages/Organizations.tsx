@@ -10,6 +10,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import { formatMoney } from "../format";
 import { IconOrganizations, IconPlus, IconSearch } from "../components/Icons";
 import PageHeader from "../components/PageHeader";
+import { useT } from "../strings";
 
 interface OrgRow extends Organization {
   contact_count: number;
@@ -18,6 +19,7 @@ interface OrgRow extends Organization {
 }
 
 export default function Organizations() {
+  const t = useT();
   const [q, setQ] = useState("");
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Organization | null>(null);
@@ -77,12 +79,12 @@ export default function Organizations() {
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: t("col.name"),
         cell: (c) => <strong>{c.getValue<string>()}</strong>,
       },
       {
         accessorKey: "website",
-        header: "Website",
+        header: t("orgs.col.website"),
         cell: (c) => {
           const site = c.getValue<string>();
           return site ? (
@@ -94,23 +96,23 @@ export default function Organizations() {
       },
       {
         accessorKey: "industry",
-        header: "Industry",
+        header: t("orgs.col.industry"),
         cell: (c) =>
           c.getValue<string>() || <span className="cell-empty">—</span>,
       },
       {
         accessorKey: "contact_count",
-        header: "Contacts",
+        header: t("nav.contacts"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_count",
-        header: "Open deals",
+        header: t("dash.openDeals"),
         cell: (c) => <span className="cell-num">{c.getValue<number>()}</span>,
       },
       {
         accessorKey: "open_value",
-        header: "Pipeline",
+        header: t("nav.pipeline"),
         cell: (c) => (
           <span className="cell-money">
             {formatMoney(c.getValue<number>())}
@@ -118,7 +120,7 @@ export default function Organizations() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   const remove = async () => {
@@ -135,12 +137,12 @@ export default function Organizations() {
     <>
       <PageHeader
         icon={<IconOrganizations size={20} />}
-        title="Organizations"
-        sub="The companies you do business with"
+        title={t("nav.organizations")}
+        sub={t("orgs.sub")}
       >
         <button className="btn btn-primary" onClick={() => setAdding(true)}>
           <IconPlus size={16} />
-          Add organization
+          {t("orgs.add")}
         </button>
       </PageHeader>
       <div className="toolbar">
@@ -149,7 +151,7 @@ export default function Organizations() {
           <input
             className="search-input"
             type="search"
-            placeholder="Search organizations…"
+            placeholder={t("orgs.search")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -163,10 +165,8 @@ export default function Organizations() {
         onRowClick={(o) => void navigate(`/organizations/${o.id}`)}
         onEdit={(o) => setEditing(o)}
         onDelete={(o) => setDeleting(o)}
-        emptyMessage={
-          q ? `No organizations match “${q}”.` : "No organizations yet."
-        }
-        summary={<>Open pipeline {formatMoney(openPipeline)}</>}
+        emptyMessage={q ? t("orgs.noMatch", { q }) : t("orgs.none")}
+        summary={t("orgs.summary", { value: formatMoney(openPipeline) })}
       />
       {adding && (
         <OrganizationForm onSaved={reload} onClose={() => setAdding(false)} />
@@ -180,8 +180,8 @@ export default function Organizations() {
       )}
       {deleting && (
         <ConfirmDialog
-          title="Delete organization"
-          message={`Delete ${deleting.name}? Its contacts and deals stay, but lose their link to it.`}
+          title={t("orgs.deleteTitle")}
+          message={t("orgs.deleteMessage", { name: deleting.name })}
           onConfirm={() => void remove()}
           onCancel={() => setDeleting(null)}
         />

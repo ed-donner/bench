@@ -1,7 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { setLang } from "../shared/i18n";
+import { RequestError } from "./requestError";
 import {
   avatarColor,
+  circleLabel,
   errorMessage,
+  interactionLabel,
+  statusLabel,
   fmtDate,
   fmtDateShort,
   initials,
@@ -58,8 +63,47 @@ describe("avatars", () => {
 });
 
 describe("errorMessage", () => {
-  it("prefers the message of a real error", () => {
-    expect(errorMessage(new Error("nope"))).toBe("nope");
-    expect(errorMessage("plain")).toBe("plain");
+  it("words a failure by its status, in the page's language", () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    expect(errorMessage(new RequestError(404, "Not found"))).toBe(
+      "It no longer exists.",
+    );
+    expect(errorMessage(new RequestError(400, "Invalid year"))).toBe(
+      "The server did not accept that.",
+    );
+    expect(errorMessage(new Error("offline"))).toBe(
+      "The request failed — is the server running?",
+    );
+    setLang("es");
+    expect(errorMessage(new RequestError(404, "Not found"))).toBe(
+      "Ya no existe.",
+    );
+  });
+
+  it("keeps the server's own text in the console", () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const error = new RequestError(400, "Invalid year");
+    errorMessage(error);
+    expect(log).toHaveBeenCalledWith(error);
+  });
+});
+
+describe("in Spanish", () => {
+  it("formats dates and relative days", () => {
+    setLang("es");
+    expect(fmtDate("2026-03-15")).toBe("15 mar 2026");
+    expect(monthShort(9)).toBe("sep");
+    expect(relativeDays("2026-08-14", "2026-08-15")).toBe("ayer");
+    expect(relativeDays("2026-08-05", "2026-08-15")).toBe("hace 10 días");
+    expect(relativeDays("2026-08-25", "2026-08-15")).toBe("en 10 días");
+    expect(relativeDays("2026-08-16", "2026-08-15")).toBe("mañana");
+    expect(relativeDays(null)).toBe("nunca contactado");
+  });
+
+  it("names statuses, circles and interactions", () => {
+    setLang("es");
+    expect(statusLabel("overdue")).toBe("Atrasado");
+    expect(circleLabel("inner")).toBe("Íntimo");
+    expect(interactionLabel("call")).toBe("Llamada");
   });
 });

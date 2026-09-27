@@ -1,12 +1,15 @@
 import type { PropertyType } from "../api";
+import { t } from "../strings";
+
+export const PROPERTY_TYPES: PropertyType[] = [
+  "text",
+  "number",
+  "select",
+  "multi_select",
+  "date",
+  "checkbox",
+  "url",
+];
 
 /** How each property type is named in the UI. */
-export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
-  text: "Text",
-  number: "Number",
-  select: "Select",
-  multi_select: "Multi-select",
-  date: "Date",
-  checkbox: "Checkbox",
-  url: "URL",
-};
+export const propertyTypeLabel = (type: PropertyType) => t(`propType.${type}`);

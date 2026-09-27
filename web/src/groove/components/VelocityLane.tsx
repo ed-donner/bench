@@ -1,6 +1,8 @@
 import { useCallback, useRef } from "react";
 import type { MelodicStep } from "../types";
 import { STEPS } from "../types";
+import { LEGEND } from "../legends";
+import { useT } from "../strings";
 
 interface Props {
   steps: MelodicStep[];
@@ -10,6 +12,7 @@ interface Props {
 
 /** Draw per-step dynamics by dragging across the lane. Rests are left alone. */
 export function VelocityLane({ steps, current, onChange }: Props) {
+  const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const painting = useRef(false);
 
@@ -29,11 +32,11 @@ export function VelocityLane({ steps, current, onChange }: Props) {
 
   return (
     <div className="vel-lane">
-      <span className="vel-caption">VELOCITY</span>
+      <span className="vel-caption">{LEGEND.velocity}</span>
       <div
         ref={ref}
         className="vel-track"
-        title="Drag across to draw per-step dynamics"
+        title={t("velocity.tip")}
         onPointerDown={(e) => {
           e.preventDefault();
           (e.currentTarget as Element).setPointerCapture(e.pointerId);

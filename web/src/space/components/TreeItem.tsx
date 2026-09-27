@@ -3,6 +3,7 @@ import { ChevronRight, MoreHorizontal, Plus } from "lucide-react";
 import { api, type TreeNode } from "../api";
 import ConfirmDialog from "./ConfirmDialog";
 import Menu from "./Menu";
+import { useT } from "../strings";
 
 interface Props {
   node: TreeNode;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function TreeItem(props: Props) {
+  const t = useT();
   const {
     node,
     depth,
@@ -47,7 +49,7 @@ export default function TreeItem(props: Props) {
     }
   };
 
-  const label = node.title || "Untitled";
+  const label = node.title || t("common.untitled");
   return (
     <div role="none">
       <div
@@ -67,7 +69,11 @@ export default function TreeItem(props: Props) {
       >
         <button
           className={`chevron${isOpen ? " open" : ""}${node.children.length === 0 ? " hidden" : ""}`}
-          aria-label={isOpen ? `Collapse ${label}` : `Expand ${label}`}
+          aria-label={
+            isOpen
+              ? t("tree.collapse", { name: label })
+              : t("tree.expand", { name: label })
+          }
           onClick={(e) => {
             e.stopPropagation();
             onToggle(node.id);
@@ -83,7 +89,7 @@ export default function TreeItem(props: Props) {
             ref={inputRef}
             className="tree-rename"
             value={draft}
-            aria-label="Rename page"
+            aria-label={t("tree.rename")}
             onChange={(e) => setDraft(e.target.value)}
             onClick={(e) => e.stopPropagation()}
             onBlur={() => void commitRename()}
@@ -101,7 +107,7 @@ export default function TreeItem(props: Props) {
         <span className="tree-actions">
           <button
             className="icon-btn"
-            aria-label={`Page options for ${label}`}
+            aria-label={t("tree.options", { name: label })}
             onClick={(e) => {
               e.stopPropagation();
               setMenuAt({ x: e.clientX, y: e.clientY });
@@ -111,7 +117,7 @@ export default function TreeItem(props: Props) {
           </button>
           <button
             className="icon-btn"
-            aria-label={`Add page inside ${label}`}
+            aria-label={t("tree.addInside", { name: label })}
             onClick={(e) => {
               e.stopPropagation();
               onCreateChild(node.id);
@@ -127,14 +133,14 @@ export default function TreeItem(props: Props) {
           onClose={() => setMenuAt(null)}
           items={[
             {
-              label: "Rename",
+              label: t("tree.renameItem"),
               onSelect: () => {
                 setDraft(node.title);
                 setRenaming(true);
               },
             },
             {
-              label: "Delete",
+              label: t("common.delete"),
               danger: true,
               onSelect: () => setConfirming(true),
             },
@@ -143,13 +149,13 @@ export default function TreeItem(props: Props) {
       )}
       {confirming && (
         <ConfirmDialog
-          title={`Delete “${label}”?`}
+          title={t("tree.deleteTitle", { name: label })}
           message={
             node.children.length > 0
-              ? `“${label}” and everything nested inside it will be deleted permanently.`
-              : `“${label}” will be deleted permanently.`
+              ? t("tree.deleteNested", { name: label })
+              : t("tree.deleteOne", { name: label })
           }
-          confirmLabel="Delete"
+          confirmLabel={t("common.delete")}
           onCancel={() => setConfirming(false)}
           onConfirm={() => {
             setConfirming(false);

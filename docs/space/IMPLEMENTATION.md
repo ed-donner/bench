@@ -97,6 +97,21 @@ count, and cards that lift as you pick them up.
   viewport and the drag never activates. A drag must also move in several steps, or dnd-kit never
   sees it pass its 6px activation distance.
 
+## Two languages
+
+Text lives in `web/src/space/locales/`. **Nothing the user owns is translated**: page titles and
+bodies, database names, property names and select options stay as written, so the seeded
+workspace reads as English content inside Spanish chrome. The title column's header ("Name") is
+chrome and is translated; a property someone called "Status" is not.
+
+- **Display-only vocabulary**: block types, property types, filter operators, view names.
+  `operatorsFor` and `propertyTypeLabel` read the language when called, and `App` subscribes to it
+  (`useLang()`) so the whole page re-renders on a switch.
+- **The slash menu matches the name in the page's language**, and keeps English keywords, so
+  `/enca` finds Encabezado 1 and `/h1` works in both.
+- **Drag announcements** come from `web/src/shared/dragText.ts`: dnd-kit's defaults are English and
+  name items by id, a uuid here. The board and the editor pass it as `accessibility`.
+
 ## Themes
 
 The theme is Bench-wide: `web/src/shared/theme.ts` owns it, the toggle lives in the nav strip, and

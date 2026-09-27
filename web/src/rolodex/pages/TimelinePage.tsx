@@ -9,21 +9,23 @@ import InteractionIcon from "../components/InteractionIcon";
 import {
   errorMessage,
   fmtDate,
+  interactionVerb,
   relativeDays,
-  INTERACTION_META,
 } from "../format";
 import { useStore } from "../store";
+import { t, useT } from "../strings";
 
+/** The filter's values, which the API reads; each is labelled from timeline.kind.<value>. */
 const KIND_OPTIONS = [
-  { value: "all", label: "All activity" },
-  { value: "interaction_call", label: "Calls" },
-  { value: "interaction_message", label: "Messages" },
-  { value: "interaction_email", label: "Emails" },
-  { value: "interaction_met", label: "Meet-ups" },
-  { value: "interaction_other", label: "Other contact" },
-  { value: "news", label: "News" },
-  { value: "reminder_done", label: "Completed reminders" },
-];
+  "all",
+  "interaction_call",
+  "interaction_message",
+  "interaction_email",
+  "interaction_met",
+  "interaction_other",
+  "news",
+  "reminder_done",
+] as const;
 
 function entryIcon(e: TimelineEntry): React.ReactNode {
   if (e.kind === "interaction")
@@ -32,17 +34,15 @@ function entryIcon(e: TimelineEntry): React.ReactNode {
   return <History size={15} />;
 }
 
-const entryCount = (n: number) =>
-  `${n} ${n === 1 ? "entry" : "entries"} across everyone`;
-
 function entryLabel(e: TimelineEntry): string {
   if (e.kind === "interaction" && e.interaction_type)
-    return INTERACTION_META[e.interaction_type].verb;
-  if (e.kind === "news") return "News recorded";
-  return "Reminder completed";
+    return interactionVerb(e.interaction_type);
+  if (e.kind === "news") return t("timeline.news");
+  return t("timeline.reminder");
 }
 
 export default function TimelinePage() {
+  const t = useT();
   const { people, loaded } = useStore();
   const [personId, setPersonId] = useState<number | "">("");
   const [kind, setKind] = useState("all");
@@ -75,24 +75,24 @@ export default function TimelinePage() {
             >
               <History size={19} />
             </span>
-            Timeline
+            {t("nav.timeline")}
           </h1>
           <p className="page-desc">
             {entries
-              ? `${entryCount(entries.length)}, newest first`
-              : "Loading…"}
+              ? t("timeline.count", { count: entries.length })
+              : t("common.loading")}
           </p>
         </div>
         <div className="page-actions">
           <select
             className="filter-select"
-            aria-label="Person"
+            aria-label={t("people.col.person")}
             value={personId}
             onChange={(e) =>
               setPersonId(e.target.value === "" ? "" : Number(e.target.value))
             }
           >
-            <option value="">Everyone</option>
+            <option value="">{t("timeline.everyone")}</option>
             {people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -101,13 +101,13 @@ export default function TimelinePage() {
           </select>
           <select
             className="filter-select"
-            aria-label="Activity"
+            aria-label={t("timeline.activity")}
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
             {KIND_OPTIONS.map((k) => (
-              <option key={k.value} value={k.value}>
-                {k.label}
+              <option key={k} value={k}>
+                {t(`timeline.kind.${k}`)}
               </option>
             ))}
           </select>
@@ -116,12 +116,14 @@ export default function TimelinePage() {
 
       <div className="card">
         {error && <div className="empty">{error}</div>}
-        {!error && entries === null && <div className="empty">Loading…</div>}
+        {!error && entries === null && (
+          <div className="empty">{t("common.loading")}</div>
+        )}
         {!error && entries !== null && entries.length === 0 && (
           <EmptyState icon={<History />}>
             {loaded && people.length === 0
-              ? "Nothing here yet — add people and log some interactions."
-              : "Nothing matches these filters."}
+              ? t("timeline.emptyAll")
+              : t("timeline.emptyFiltered")}
           </EmptyState>
         )}
         {entries && entries.length > 0 && (

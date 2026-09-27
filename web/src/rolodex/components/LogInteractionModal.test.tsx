@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LogInteractionModal } from "./LogInteractionModal";
+import { RequestError } from "../requestError";
 import { api } from "../api";
 import { ToastContext } from "../store";
 import { interaction, person } from "../test/helpers";
@@ -63,14 +64,15 @@ describe("logging an interaction", () => {
 
   it("keeps the form open and shows why when the server refuses", async () => {
     vi.mocked(api.addInteraction).mockRejectedValue(
-      new Error("A valid date (yyyy-mm-dd) is required"),
+      new RequestError(400, "A valid date (yyyy-mm-dd) is required"),
     );
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { onClose } = renderLog();
     await userEvent.click(
       screen.getByRole("button", { name: "Save interaction" }),
     );
     expect(
-      await screen.findByText("A valid date (yyyy-mm-dd) is required"),
+      await screen.findByText("The server did not accept that."),
     ).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
   });

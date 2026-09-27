@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setLang } from "../shared/i18n";
 import {
   formatDate,
   formatDateShort,
@@ -72,5 +73,16 @@ describe("formatDateTime", () => {
     expect(formatDateTime("2026-03-04 18:30:00")).toMatch(
       /^\w{3} \d{1,2}, 2026, \d{1,2}:\d{2} [AP]M$/,
     );
+  });
+});
+
+describe("in Spanish", () => {
+  it("formats money, compact money and dates for the es locale", () => {
+    setLang("es");
+    expect(formatMoney(12345)).toBe("12.345\u00a0US$");
+    expect(formatMoneyCompact(22500)).toBe("22,5 k US$");
+    expect(formatDate("2026-03-04")).toBe("4 mar 2026");
+    expect(formatDateShort("2026-03-04")).toBe("4 mar");
+    expect(formatDateShort(null)).toBe("Sin fecha de cierre");
   });
 });

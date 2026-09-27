@@ -7,10 +7,14 @@ import type {
   DraggableStateSnapshot,
   DroppableProvided,
   DroppableStateSnapshot,
+  DragStart,
+  DragUpdate,
   DropResult,
+  ResponderProvided,
 } from "@hello-pangea/dnd";
 import Pipeline from "./Pipeline";
 import { api } from "../api";
+import { setLang } from "../../shared/i18n";
 import { deal, org, routes } from "../test/helpers";
 
 /**
@@ -18,19 +22,47 @@ import { deal, org, routes } from "../test/helpers";
  * here - the keyboard drag is an e2e test. Stubbing it renders the board and hands back the
  * onDragEnd the page passes in, which is where the optimistic update lives.
  */
-const { dropped } = vi.hoisted(() => ({
-  dropped: {} as { end: (result: DropResult) => void },
-}));
+interface Dropped {
+  start: (start: DragStart) => void;
+  update: (update: DragUpdate) => void;
+  end: (result: DropResult) => void;
+  announced: string[];
+}
+
+const { dropped } = vi.hoisted(() => {
+  const dropped: Dropped = {
+    start: () => undefined,
+    update: () => undefined,
+    end: () => undefined,
+    announced: [],
+  };
+  return { dropped };
+});
 
 vi.mock("@hello-pangea/dnd", () => ({
   DragDropContext: ({
     children,
+    onDragStart,
+    onDragUpdate,
     onDragEnd,
   }: {
     children: React.ReactNode;
-    onDragEnd: (result: DropResult) => void;
+    onDragStart: (start: DragStart, provided: ResponderProvided) => void;
+    onDragUpdate: (update: DragUpdate, provided: ResponderProvided) => void;
+    onDragEnd: (result: DropResult, provided: ResponderProvided) => void;
   }) => {
-    dropped.end = onDragEnd;
+    const provided = {
+      announce: (message: string) => dropped.announced.push(message),
+    };
+    dropped.start = (start) => {
+      onDragStart(start, provided);
+    };
+    dropped.update = (update) => {
+      onDragUpdate(update, provided);
+    };
+    dropped.end = (result) => {
+      onDragEnd(result, provided);
+    };
     return <div>{children}</div>;
   },
   Droppable: ({
@@ -210,6 +242,49 @@ describe("Pipeline", () => {
       stage: "Negotiation",
       index: 0,
     });
+    expect(dropped.announced.at(-1)).toBe(
+      "Dropped Platform rollout in Negotiation, position 1",
+    );
+  });
+
+  it("names the stages and announces a drop in Spanish", async () => {
+    setLang("es");
+    show();
+    await screen.findByText("Platform rollout");
+    expect(screen.getByText("Negociación")).toBeInTheDocument();
+
+    dropped.end(drag(1, "Negotiation") as DropResult);
+
+    expect(dropped.announced.at(-1)).toBe(
+      "Platform rollout soltado en Negociación, posición 1",
+    );
+  });
+
+  it("tells a screen reader where a lifted card is, and when it leaves the board", async () => {
+    show();
+    await screen.findByText("Platform rollout");
+    const source = { droppableId: "Proposal", index: 0 };
+
+    dropped.start({ draggableId: "1", source } as DragStart);
+    expect(dropped.announced.at(-1)).toMatch(
+      /^Picked up Platform rollout from Proposal, position 1\./,
+    );
+    dropped.update({
+      draggableId: "1",
+      source,
+      destination: { droppableId: "Won", index: 2 },
+    } as DragUpdate);
+    expect(dropped.announced.at(-1)).toBe("Moving to Won, position 3");
+    dropped.update({
+      draggableId: "1",
+      source,
+      destination: null,
+    } as DragUpdate);
+    expect(dropped.announced.at(-1)).toBe("Not over a column");
+    dropped.end({ draggableId: "1", source, destination: null } as DropResult);
+    expect(dropped.announced.at(-1)).toBe(
+      "Move cancelled. Back in Proposal, position 1",
+    );
   });
 
   it("keeps a card where it is dropped within its own column", async () => {

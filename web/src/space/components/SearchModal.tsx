@@ -8,20 +8,23 @@ import {
   Search,
 } from "lucide-react";
 import { api, type SearchResult } from "../api";
+import { useT } from "../strings";
 
 interface Props {
   onClose: () => void;
 }
 
 function TypeBadge({ result }: { result: SearchResult }) {
+  const t = useT();
   if (result.type === "database")
-    return <DatabaseIcon size={14} aria-label="Database" />;
+    return <DatabaseIcon size={14} aria-label={t("search.database")} />;
   if (result.type === "row")
-    return <Rows3 size={14} aria-label="Database row" />;
-  return <FileText size={14} aria-label="Page" />;
+    return <Rows3 size={14} aria-label={t("search.row")} />;
+  return <FileText size={14} aria-label={t("search.page")} />;
 }
 
 export default function SearchModal({ onClose }: Props) {
+  const t = useT();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<SearchResult[]>([]);
@@ -73,25 +76,29 @@ export default function SearchModal({ onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="search-modal" role="dialog" aria-label="Quick find">
+      <div
+        className="search-modal"
+        role="dialog"
+        aria-label={t("search.title")}
+      >
         <div className="search-input-row">
           <Search size={17} className="search-glyph" />
           <input
             ref={inputRef}
             className="search-input"
-            placeholder="Search pages, databases, rows…"
-            aria-label="Search"
+            placeholder={t("search.placeholder")}
+            aria-label={t("sidebar.search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
           />
-          <kbd className="search-kbd">esc</kbd>
+          <kbd className="search-kbd">{t("search.esc")}</kbd>
         </div>
         {query.trim() && (
           <div
             className="search-results"
             role="listbox"
-            aria-label="Search results"
+            aria-label={t("search.results")}
           >
             {results.map((r, i) => (
               <button
@@ -105,7 +112,9 @@ export default function SearchModal({ onClose }: Props) {
                 <span className="search-icon">
                   {r.icon ?? <TypeBadge result={r} />}
                 </span>
-                <span className="search-title">{r.title || "Untitled"}</span>
+                <span className="search-title">
+                  {r.title || t("common.untitled")}
+                </span>
                 {r.parent_title && (
                   <span className="search-crumb">{r.parent_title}</span>
                 )}
@@ -116,7 +125,7 @@ export default function SearchModal({ onClose }: Props) {
             ))}
             {results.length === 0 && (
               <div className="search-empty">
-                No matches for “{query.trim()}”
+                {t("search.none", { query: query.trim() })}
               </div>
             )}
           </div>

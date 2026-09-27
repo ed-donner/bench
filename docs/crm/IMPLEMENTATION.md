@@ -135,6 +135,22 @@ rendering `0` while the footer total was correct. Build an enriched row type ins
 - Sidebar: brand, then nav, sharing one icon column - check alignment against the brand when
   touching it. Getting home is the Bench nav's job, above the app.
 
+## Two languages
+
+Text lives in `web/src/crm/locales/`; `strings.ts` holds `t`/`useT` and `stageLabel`,
+`statusLabel` and `activityLabel`. Stages, contact statuses and activity types are **display-only**:
+`"Qualified"` is still what the database, the API, the CSS class (`stage-Qualified`) and the pipeline's
+droppable ids carry. Money and dates go through `intlLocale()` in `format.ts` - `12.345 US$`,
+`4 mar 2026` in Spanish - and the compact figures on the cards read `22,5 k US$`.
+
+- **The dashboard's month and funnel rows are memoised with the language as a dependency**, because
+  their labels are baked into the rows. Without it a switch leaves the axis in the old language.
+- **The pipeline speaks for itself to a screen reader.** `@hello-pangea/dnd`'s announcements are
+  English only, so `Pipeline.tsx` passes `onDragStart`/`onDragUpdate`/`onDragEnd` announcements and
+  `dragHandleUsageInstructions` from the catalog. The unit stub drives all three responders;
+  `e2e/i18n/crm.spec.ts` drags in Spanish and reads the live region.
+- `DataTable`'s `noun` is a catalog key (`deal`, `contact`, `organization`), counted with plurals.
+
 ## Related
 
 - [REQUIREMENTS.md](./REQUIREMENTS.md) - the original product brief

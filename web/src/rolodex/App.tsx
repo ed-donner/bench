@@ -9,6 +9,7 @@ import {
 import BenchNav from "../shared/BenchNav";
 import { IconRolodex } from "../shared/AppIcons";
 import StoreProvider from "./StoreProvider";
+import { useT } from "./strings";
 import Today from "./pages/Today";
 import People from "./pages/People";
 import PersonDetail from "./pages/PersonDetail";
@@ -17,33 +18,34 @@ import CalendarPage from "./pages/CalendarPage";
 import TimelinePage from "./pages/TimelinePage";
 
 const NAV = [
-  { to: "/", label: "Today", end: true, Icon: LayoutDashboard },
-  { to: "/people", label: "People", Icon: Users },
-  { to: "/circles", label: "Circles", Icon: UsersRound },
-  { to: "/calendar", label: "Calendar", Icon: CalendarDays },
-  { to: "/timeline", label: "Timeline", Icon: History },
-];
+  { to: "/", label: "today", end: true, Icon: LayoutDashboard },
+  { to: "/people", label: "people", end: false, Icon: Users },
+  { to: "/circles", label: "circles", end: false, Icon: UsersRound },
+  { to: "/calendar", label: "calendar", end: false, Icon: CalendarDays },
+  { to: "/timeline", label: "timeline", end: false, Icon: History },
+] as const;
 
 function Shell() {
+  const t = useT();
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
           <IconRolodex size={19} />
-          Rolodex
+          {t("app.name")}
         </div>
         <nav>
           {NAV.map(({ to, label, end, Icon }) => (
             <NavLink key={to} to={to} end={end} className="nav-item">
               <Icon size={17} />
-              <span>{label}</span>
+              <span>{t(`nav.${label}`)}</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-footer">
-          Runs on your machine.
+          {t("app.footer1")}
           <br />
-          No accounts, no cloud.
+          {t("app.footer2")}
         </div>
       </aside>
       <main className="main">

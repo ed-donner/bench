@@ -122,3 +122,44 @@
   color: #ffffff;
   background: #272d36;
 }
+
+/* The language button sits beside the theme toggle and reads "EN ES", the current one in ink
+   and the other one faint - the click goes to the faint one. */
+.bench-nav-lang {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  height: 30px;
+  margin-right: -20px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #98a1ad;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .bench-nav-lang {
+  color: #5b636e;
+}
+
+.bench-nav-lang [aria-current] {
+  color: #1c2128;
+}
+
+[data-theme="dark"] .bench-nav-lang [aria-current] {
+  color: #ffffff;
+}
+
+.bench-nav-lang:hover {
+  background: #f0f2f5;
+}
+
+[data-theme="dark"] .bench-nav-lang:hover {
+  background: #272d36;
+}

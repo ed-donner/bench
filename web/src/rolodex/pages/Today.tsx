@@ -21,22 +21,25 @@ import { dateTypeLabel } from "../dates";
 import {
   errorMessage,
   fmtDate,
+  interactionVerb,
   monthShort,
   relativeDays,
-  INTERACTION_META,
 } from "../format";
 import { useStore, useToast } from "../store";
+import { dateLocale, t as translate, useT } from "../strings";
 
 /** What a timeline entry did, in words. */
 function entryVerb(entry: TimelineEntry): string {
-  if (entry.kind === "news") return "news recorded";
-  if (entry.kind === "reminder_done") return "reminder completed";
+  if (entry.kind === "news") return translate("today.newsRecorded");
+  if (entry.kind === "reminder_done")
+    return translate("today.reminderCompleted");
   return entry.interaction_type
-    ? INTERACTION_META[entry.interaction_type].verb
-    : "contact logged";
+    ? interactionVerb(entry.interaction_type)
+    : translate("today.contactLogged");
 }
 
 export default function Today() {
+  const t = useT();
   const { people, refresh } = useStore();
   const toast = useToast();
   const [payload, setPayload] = useState<TodayPayload | null>(null);
@@ -77,8 +80,9 @@ export default function Today() {
     await Promise.all([load(), refresh()]);
   };
 
-  if (error) return <div className="page">Couldn’t load Today: {error}</div>;
-  if (!payload) return <div className="page muted">Loading…</div>;
+  if (error)
+    return <div className="page">{t("today.loadFailed", { error })}</div>;
+  if (!payload) return <div className="page muted">{t("common.loading")}</div>;
 
   const overdue = payload.to_contact.filter((p) => p.status === "overdue");
   const peopleById = new Map(people.map((p) => [p.id, p]));
@@ -91,11 +95,14 @@ export default function Today() {
             <span className="icon-sq amber">
               <LayoutDashboard size={19} />
             </span>
-            Today
+            {t("nav.today")}
           </h1>
           <p className="page-desc">
-            {format(new Date(), "EEEE d MMMM yyyy")} — what needs your
-            attention.
+            {t("today.desc", {
+              date: format(new Date(), "EEEE d MMMM yyyy", {
+                locale: dateLocale(),
+              }),
+            })}
           </p>
         </div>
       </div>
@@ -104,7 +111,7 @@ export default function Today() {
         <div className="stat-card">
           <div className="stat-num red">{overdue.length}</div>
           <div className="stat-label">
-            <Phone size={13} /> overdue to contact
+            <Phone size={13} /> {t("today.stat.overdue")}
           </div>
         </div>
         <div className="stat-card">
@@ -112,19 +119,19 @@ export default function Today() {
             {payload.to_contact.length - overdue.length}
           </div>
           <div className="stat-label">
-            <History size={13} /> due within a week
+            <History size={13} /> {t("today.stat.dueWeek")}
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-num purple">{payload.upcoming_dates.length}</div>
           <div className="stat-label">
-            <Cake size={13} /> dates in 30 days
+            <Cake size={13} /> {t("today.stat.dates")}
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-num blue">{payload.reminders.length}</div>
           <div className="stat-label">
-            <Bell size={13} /> reminders due
+            <Bell size={13} /> {t("today.stat.reminders")}
           </div>
         </div>
       </div>
@@ -139,16 +146,14 @@ export default function Today() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">
-              <Cake size={16} /> Dates coming up
+              <Cake size={16} /> {t("today.dates")}
             </h2>
             <Link to="/calendar" className="small card-link">
-              Calendar →
+              {t("today.calendarLink")}
             </Link>
           </div>
           {payload.upcoming_dates.length === 0 ? (
-            <EmptyState icon={<Cake />}>
-              No birthdays or important dates in the next 30 days.
-            </EmptyState>
+            <EmptyState icon={<Cake />}>{t("today.noDates")}</EmptyState>
           ) : (
             payload.upcoming_dates.slice(0, 7).map((e) => (
               <Link
@@ -172,14 +177,14 @@ export default function Today() {
                     {e.person_name}
                     {e.milestone && (
                       <span className="badge status-due_soon milestone">
-                        turns {e.age_turning}
+                        {t("today.turns", { age: e.age_turning ?? "" })}
                       </span>
                     )}
                   </div>
                   <div className="small muted">
                     {dateTypeLabel(e.type, e.label)}
                     {e.age_turning != null && !e.milestone
-                      ? ` · turns ${e.age_turning}`
+                      ? ` · ${t("today.turns", { age: e.age_turning })}`
                       : ""}
                   </div>
                 </div>
@@ -194,37 +199,35 @@ export default function Today() {
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">
-              <Bell size={16} /> Reminders
+              <Bell size={16} /> {t("today.reminders")}
             </h2>
           </div>
           {payload.reminders.length === 0 ? (
-            <EmptyState icon={<Bell />}>
-              No reminders due — nothing on your list.
-            </EmptyState>
+            <EmptyState icon={<Bell />}>{t("today.noReminders")}</EmptyState>
           ) : (
             payload.reminders.slice(0, 7).map((r) => (
               <div key={r.id} className="list-row">
                 <button
                   className="reminder-check"
-                  title="Mark done"
-                  aria-label={`Mark done: ${r.text}`}
+                  title={t("today.markDone")}
+                  aria-label={t("today.markDoneNamed", { text: r.text })}
                   onClick={() => {
                     void api
                       .setReminderDone(r.id, true)
                       .then(after)
-                      .then(() => toast("Reminder done — nice"));
+                      .then(() => toast(t("today.reminderToast")));
                   }}
                 />
                 <div className="body">
                   <div className="strong">{r.text}</div>
                   <div className="small muted">
-                    <Link to={`/people/${r.person_id}`}>{r.person_name}</Link> ·
-                    due {fmtDate(r.due_date)} ·{" "}
+                    <Link to={`/people/${r.person_id}`}>{r.person_name}</Link> ·{" "}
+                    {t("today.due", { date: fmtDate(r.due_date) })} ·{" "}
                     <span
                       className={r.overdue ? "reminder-overdue" : undefined}
                     >
                       {r.due_today
-                        ? "today"
+                        ? t("relative.today")
                         : relativeDays(r.due_date, payload.today)}
                     </span>
                   </div>
@@ -239,16 +242,14 @@ export default function Today() {
         <div className="card span2">
           <div className="card-header">
             <h2 className="card-title">
-              <History size={16} /> Recent activity
+              <History size={16} /> {t("today.recent")}
             </h2>
             <Link to="/timeline" className="small card-link">
-              Full timeline →
+              {t("today.timelineLink")}
             </Link>
           </div>
           {payload.recent.length === 0 ? (
-            <EmptyState icon={<Sparkles />}>
-              Nothing logged yet — record an interaction and it’ll show up here.
-            </EmptyState>
+            <EmptyState icon={<Sparkles />}>{t("today.noRecent")}</EmptyState>
           ) : (
             <div className="feed">
               {payload.recent.slice(0, 8).map((e) => (

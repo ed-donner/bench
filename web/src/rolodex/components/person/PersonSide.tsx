@@ -16,7 +16,7 @@ import {
   Users2,
 } from "lucide-react";
 import { api, type PersonDetail } from "../../api";
-import { CIRCLE_META } from "../../types";
+import type { ConnectionView } from "../../types";
 import {
   currentAge,
   dateTypeLabel,
@@ -25,9 +25,24 @@ import {
 } from "../../dates";
 import { Avatar } from "../Avatar";
 import { EmptyState } from "../Modal";
-import { fmtDate, monthShort, relativeDays, todayISO } from "../../format";
+import {
+  circleLabel,
+  fmtDate,
+  monthShort,
+  relativeDays,
+  todayISO,
+} from "../../format";
+import { t, useT } from "../../strings";
 
 type AddWhat = "date" | "reminder" | "gift" | "connection";
+
+/** "Parent of Sam", or the words given when the link was made, which are the user's own. */
+function describeConnection(c: ConnectionView): string {
+  if (c.role === "other")
+    return c.label || t("side.conn.other", { name: c.other_name });
+  const base = t(`side.conn.${c.role}`, { name: c.other_name });
+  return c.role === "colleague" && c.note ? `${base} — ${c.note}` : base;
+}
 
 function DetailRow({
   icon,
@@ -59,6 +74,7 @@ export default function PersonSide({
   after: () => Promise<void>;
   onAdd: (what: AddWhat) => void;
 }) {
+  const tr = useT();
   const { person } = detail;
   const today = todayISO();
   const openReminders = detail.reminders.filter((r) => !r.done);
@@ -75,37 +91,37 @@ export default function PersonSide({
     <div className="person-col">
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Details</h2>
+          <h2 className="card-title">{tr("side.details")}</h2>
         </div>
         <div className="card-body">
           <DetailRow
             icon={<Mail size={14} />}
-            label="Email"
+            label={tr("side.email")}
             value={person.email}
           />
           <DetailRow
             icon={<Phone size={14} />}
-            label="Phone"
+            label={tr("side.phone")}
             value={person.phone}
           />
           <DetailRow
             icon={<MapPin size={14} />}
-            label="City"
+            label={tr("side.city")}
             value={person.city}
           />
           <DetailRow
             icon={<Clock3 size={14} />}
-            label="Time zone"
+            label={tr("side.timezone")}
             value={person.timezone}
           />
           <DetailRow
             icon={<Users2 size={14} />}
-            label="Circle"
-            value={CIRCLE_META[person.circle].label}
+            label={tr("people.col.circle")}
+            value={circleLabel(person.circle)}
           />
           <DetailRow
             icon={<ArrowRight size={14} />}
-            label="How we met"
+            label={tr("side.howMet")}
             value={[
               person.how_met,
               person.met_where,
@@ -120,16 +136,14 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Cake size={16} /> Important dates
+            <Cake size={16} /> {tr("side.dates")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("date")}>
-            <Plus size={13} /> Add date
+            <Plus size={13} /> {tr("side.addDate")}
           </button>
         </div>
         {detail.dates.length === 0 ? (
-          <EmptyState icon={<Cake />}>
-            No dates yet — birthdays, anniversaries, the works.
-          </EmptyState>
+          <EmptyState icon={<Cake />}>{tr("side.datesEmpty")}</EmptyState>
         ) : (
           <div>
             {detail.dates.map((d) => {
@@ -146,20 +160,24 @@ export default function PersonSide({
                       {dateTypeLabel(d.type, d.label)}
                       {occurrence.milestone && (
                         <span className="badge status-due_soon milestone">
-                          turns {occurrence.ageTurning} — milestone
+                          {tr("side.milestone", {
+                            age: occurrence.ageTurning ?? "",
+                          })}
                         </span>
                       )}
                     </div>
                     <div className="small muted">
-                      {d.year ? `Born/started ${d.year} · ` : ""}
-                      {age != null ? `${age} now, ` : ""}
-                      next: {fmtDate(occurrence.date)} (
-                      {relativeDays(occurrence.date)})
+                      {d.year ? `${tr("side.since", { year: d.year })} · ` : ""}
+                      {age != null ? `${tr("side.ageNow", { age })}, ` : ""}
+                      {tr("side.next", {
+                        date: fmtDate(occurrence.date),
+                        when: relativeDays(occurrence.date),
+                      })}
                     </div>
                   </div>
                   <button
                     className="icon-btn danger actions"
-                    aria-label="Delete date"
+                    aria-label={tr("side.deleteDate")}
                     onClick={() => {
                       void api.deleteDate(d.id).then(after);
                     }}
@@ -176,24 +194,22 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Bell size={16} /> Reminders
+            <Bell size={16} /> {tr("today.reminders")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("reminder")}>
-            <Plus size={13} /> Add reminder
+            <Plus size={13} /> {tr("side.addReminder")}
           </button>
         </div>
         {openReminders.length === 0 ? (
-          <EmptyState icon={<Bell />}>
-            Nothing to do — set a reminder and it’ll appear on Today too.
-          </EmptyState>
+          <EmptyState icon={<Bell />}>{tr("side.remindersEmpty")}</EmptyState>
         ) : (
           <div>
             {openReminders.map((r) => (
               <div key={r.id} className="list-row">
                 <button
                   className="reminder-check"
-                  title="Mark done"
-                  aria-label={`Mark done: ${r.text}`}
+                  title={tr("today.markDone")}
+                  aria-label={tr("today.markDoneNamed", { text: r.text })}
                   onClick={() => {
                     void api.setReminderDone(r.id, true).then(after);
                   }}
@@ -203,12 +219,13 @@ export default function PersonSide({
                   <div
                     className={`small ${r.due_date < today ? "reminder-overdue" : "muted"}`}
                   >
-                    due {fmtDate(r.due_date)} · {relativeDays(r.due_date)}
+                    {tr("today.due", { date: fmtDate(r.due_date) })} ·{" "}
+                    {relativeDays(r.due_date)}
                   </div>
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={tr("side.deleteReminder", { text: r.text })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -221,14 +238,14 @@ export default function PersonSide({
         )}
         {doneReminders.length > 0 && (
           <div className="card-body">
-            <div className="small muted section-label">Done</div>
+            <div className="small muted section-label">{tr("side.done")}</div>
             {doneReminders.map((r) => (
               <div key={r.id} className="fact-row">
                 <BadgeCheck size={13} className="done-tick" />
                 <span className="reminder-done-text grow">{r.text}</span>
                 <button
                   className="icon-btn danger"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={tr("side.deleteReminder", { text: r.text })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -244,10 +261,10 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Gift size={16} /> Gifts
+            <Gift size={16} /> {tr("side.gifts")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("gift")}>
-            <Plus size={13} /> Add gift
+            <Plus size={13} /> {tr("side.addGift")}
           </button>
         </div>
         {soonest && giftIdeas.length > 0 && (
@@ -258,14 +275,14 @@ export default function PersonSide({
               {relativeDays(soonest.occurrence.date)}
             </div>
             <div className="small gift-ideas">
-              Gift ideas: {giftIdeas.map((g) => g.name).join(" · ")}
+              {tr("side.giftIdeas", {
+                ideas: giftIdeas.map((g) => g.name).join(" · "),
+              })}
             </div>
           </div>
         )}
         {detail.gifts.length === 0 ? (
-          <EmptyState icon={<Gift />}>
-            No gifts recorded — ideas, things given, things received.
-          </EmptyState>
+          <EmptyState icon={<Gift />}>{tr("side.giftsEmpty")}</EmptyState>
         ) : (
           <div>
             {[...detail.gifts]
@@ -275,7 +292,7 @@ export default function PersonSide({
                   <div className="body">
                     <div className="row" style={{ gap: 8 }}>
                       <span className={`gift-kind gift-${g.kind}`}>
-                        {g.kind}
+                        {tr(`gift.${g.kind}`)}
                       </span>
                       <span className="strong">{g.name}</span>
                     </div>
@@ -287,19 +304,19 @@ export default function PersonSide({
                   {g.kind === "idea" && (
                     <button
                       className="btn btn-sm actions"
-                      title="Mark as given"
+                      title={tr("side.markGivenTitle")}
                       onClick={() => {
                         void api
                           .updateGift(g.id, { kind: "given", date: todayISO() })
                           .then(after);
                       }}
                     >
-                      Mark given
+                      {tr("side.markGiven")}
                     </button>
                   )}
                   <button
                     className="icon-btn danger actions"
-                    aria-label={`Delete gift: ${g.name}`}
+                    aria-label={tr("side.deleteGift", { name: g.name })}
                     onClick={() => {
                       void api.deleteGift(g.id).then(after);
                     }}
@@ -315,15 +332,15 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Link2 size={16} /> Connections
+            <Link2 size={16} /> {tr("side.connections")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("connection")}>
-            <Plus size={13} /> Add connection
+            <Plus size={13} /> {tr("side.addConnection")}
           </button>
         </div>
         {detail.connections.length === 0 ? (
           <EmptyState icon={<Link2 />}>
-            No connections — link partners, family, colleagues.
+            {tr("side.connectionsEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -337,11 +354,13 @@ export default function PersonSide({
                   >
                     {c.other_name}
                   </Link>
-                  <div className="small muted">{c.description}</div>
+                  <div className="small muted">{describeConnection(c)}</div>
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete connection to ${c.other_name}`}
+                  aria-label={tr("side.deleteConnection", {
+                    name: c.other_name,
+                  })}
                   onClick={() => {
                     void api.deleteConnection(c.id).then(after);
                   }}
@@ -357,7 +376,7 @@ export default function PersonSide({
       {person.notes && (
         <div className="card card-pad">
           <h2 className="card-title notes-title">
-            <StickyNote size={16} /> Notes
+            <StickyNote size={16} /> {tr("side.notes")}
           </h2>
           <p className="muted person-notes">{person.notes}</p>
         </div>

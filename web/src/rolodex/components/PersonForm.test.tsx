@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PersonForm } from "./PersonForm";
+import { RequestError } from "../requestError";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
 import { person } from "../test/helpers";
@@ -107,15 +108,18 @@ describe("PersonForm", () => {
 
   it("shows what the server refused, rather than closing", async () => {
     vi.mocked(api.createPerson).mockRejectedValue(
-      new Error("Name is required"),
+      new RequestError(400, "Name is required"),
     );
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { onClose } = renderForm();
     await userEvent.type(
       screen.getByRole("textbox", { name: "Name *" }),
       "Ada",
     );
     await userEvent.click(screen.getByRole("button", { name: "Add person" }));
-    expect(await screen.findByText("Name is required")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The server did not accept that."),
+    ).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
   });
 });

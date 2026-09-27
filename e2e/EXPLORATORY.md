@@ -27,6 +27,25 @@ The specs assert that each app's background actually changes and that the choice
 reload; whether the result is _legible_ - chart axes, chips on tinted backgrounds, Groove's lit
 steps against a pale panel - is a judgement only you can make.
 
+**Check both languages.** The EN/ES button sits left of the theme toggle. The suite proves every
+screen is free of the other language's catalog strings and that the switch holds across apps,
+reloads and a second switch. What it cannot judge:
+
+- **Whether the Spanish is good Spanish.** The translations are the agent's, not a native
+  speaker's, and nobody fluent has reviewed them yet. Neutral wording was the aim, avoiding
+  Spain-only forms such as "vosotros"; vocabulary choices such as "negocio" for deal and "embudo"
+  for pipeline are worth a second opinion.
+- **Native date inputs follow the browser, not the page.** `<input type="date">` shows
+  `mm/dd/yyyy` in an English browser whatever the page's language, and `dd/mm/aaaa` in a Spanish
+  one. Nothing in the page can change that; it is Chromium's own control.
+- **With a modal open, the language button is keyboard-only.** The overlay covers the strip, so
+  the mouse cannot reach it; Tab can. The spec switches with a form open that way and proves the
+  typed values survive - whether that is the right behaviour, rather than lifting the strip above
+  overlays, is a design call.
+- **Layout at other widths.** The screenshot walk measures clipped text at 1440 wide, where Spanish
+  adds none. Narrower windows are unchecked; Spanish runs about a quarter longer, and the CRM stat
+  tiles and pipeline column headers are the first places it would wrap.
+
 ## Groove - the big one
 
 **Nothing about how it sounds is tested.** The suite proves the transport runs, the playhead

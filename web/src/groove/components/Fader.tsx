@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import type { ParamSpec } from "../types";
+import { useT } from "../strings";
 
 interface Props {
   spec: ParamSpec;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function Fader({ spec, value, onChange, onTouch }: Props) {
+  const t = useT();
   const drag = useRef<{ y: number; start: number } | null>(null);
   const range = spec.max - spec.min;
   const norm = (value - spec.min) / range;
@@ -41,7 +43,7 @@ export function Fader({ spec, value, onChange, onTouch }: Props) {
   return (
     <div
       className="fader"
-      title={`${spec.label} — drag up/down`}
+      title={t("fader.tip", { label: spec.label })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}

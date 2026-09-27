@@ -99,12 +99,18 @@ export interface Gift {
   created_at: string;
 }
 
+/** A connection's kind as seen from one end: a parent_child link is "parent" from one side. */
+type ConnectionRole =
+  Exclude<ConnectionKind, "parent_child"> | "parent" | "child";
+
+/** The server's `description` is English; the page words it from `role` and `label`. */
 export interface ConnectionView {
   id: number;
   other_id: number;
   other_name: string;
   kind: ConnectionKind;
-  description: string;
+  role: ConnectionRole;
+  label: string | null;
   note: string | null;
 }
 
@@ -149,44 +155,3 @@ export interface UpcomingDate extends Pick<
   age_turning: number | null;
   milestone: boolean;
 }
-
-export interface CircleMeta {
-  key: Circle;
-  label: string;
-  cadenceDays: number;
-  cadenceDescription: string;
-  blurb: string;
-}
-
-/** The circles and their check-in cadences. Mirrors server/src/rolodex/cadence.ts, which is the
-    authority: the server derives every status, and this copy only labels the UI. */
-export const CIRCLE_META: Record<Circle, CircleMeta> = {
-  inner: {
-    key: "inner",
-    label: "Inner",
-    cadenceDays: 30,
-    cadenceDescription: "Monthly",
-    blurb: "Your closest people — aim to be in touch every month.",
-  },
-  close: {
-    key: "close",
-    label: "Close",
-    cadenceDays: 91,
-    cadenceDescription: "Quarterly",
-    blurb: "Good friends and close family — every three months or so.",
-  },
-  wider: {
-    key: "wider",
-    label: "Wider",
-    cadenceDays: 182,
-    cadenceDescription: "Every six months",
-    blurb: "Friends you want to keep — twice a year.",
-  },
-  distant: {
-    key: "distant",
-    label: "Distant",
-    cadenceDays: 365,
-    cadenceDescription: "Yearly",
-    blurb: "Acquaintances and old friends — once a year is enough.",
-  },
-};

@@ -5,6 +5,9 @@
  *
  * The playhead LED is the honest proxy for "the clock is running": it is driven by the same
  * transport that schedules the audio, without reaching into the audio graph.
+ *
+ * The whole spec runs once per language. The legends and unit names are English in both; what a
+ * player presses and what a screen reader hears are not.
  */
 import { test, expect } from "../fixtures";
 import type { Page } from "@playwright/test";
@@ -17,6 +20,11 @@ declare global {
 }
 
 const UNITS = ["RHYTHM", "BASS", "PADS", "LEAD"];
+
+const WORDS = {
+  en: { play: "PLAY", stop: "STOP", step: "step", mute: "MUTE" },
+  es: { play: "TOCAR", stop: "PARAR", step: "paso", mute: "SILENCIO" },
+};
 
 /**
  * How many of a bar's 16 steps have to light before we accept that the sequencer ran.
@@ -39,7 +47,7 @@ function playhead(page: Page): Promise<number> {
 }
 
 const transport = (page: Page) =>
-  page.getByRole("button", { name: /(PLAY|STOP)/ });
+  page.getByRole("button", { name: /(PLAY|STOP|TOCAR|PARAR)/ });
 
 /**
  * Accumulates every step the LED strip lights, from inside the page.
@@ -75,93 +83,115 @@ async function recordSteps(page: Page) {
 const stepsSeen = (page: Page) =>
   page.evaluate(() => window.stepsSeen?.size ?? 0);
 
-test("the instrument boots with all four units", async ({ page }) => {
-  await page.goto("/groove/");
-  for (const unit of UNITS) {
-    await expect(page.getByRole("region", { name: unit })).toBeVisible();
-  }
-  await expect(transport(page)).toContainText("PLAY");
-});
+for (const lang of ["en", "es"] as const) {
+  const w = WORDS[lang];
 
-test("the transport starts and stops, and the playhead follows it", async ({
-  page,
-}) => {
-  await page.goto("/groove/");
-  expect(await playhead(page)).toBe(-1);
+  test.describe(lang, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((l) => {
+        localStorage.setItem("bench.lang", l);
+      }, lang);
+    });
 
-  await transport(page).click();
-  await expect(transport(page)).toContainText("STOP");
+    test("the instrument boots with all four units", async ({ page }) => {
+      await page.goto("/groove/");
+      for (const unit of UNITS) {
+        await expect(page.getByRole("region", { name: unit })).toBeVisible();
+      }
+      await expect(transport(page)).toContainText(w.play);
+    });
 
-  // The clock is running if a step lights at all, then moves on.
-  await expect
-    .poll(() => playhead(page), { timeout: 5000 })
-    .toBeGreaterThanOrEqual(0);
-  const first = await playhead(page);
-  await expect.poll(() => playhead(page), { timeout: 5000 }).not.toBe(first);
+    test("the transport starts and stops, and the playhead follows it", async ({
+      page,
+    }) => {
+      await page.goto("/groove/");
+      expect(await playhead(page)).toBe(-1);
 
-  await transport(page).click();
-  await expect(transport(page)).toContainText("PLAY");
-  await expect.poll(() => playhead(page), { timeout: 3000 }).toBe(-1);
-});
+      await transport(page).click();
+      await expect(transport(page)).toContainText(w.stop);
 
-test("drum steps are individually addressable and toggle through their states", async ({
-  page,
-}) => {
-  await page.goto("/groove/");
-  const step = page.getByRole("button", { name: "KICK step 3", exact: true });
-  await expect(step).toBeVisible();
+      // The clock is running if a step lights at all, then moves on.
+      await expect
+        .poll(() => playhead(page), { timeout: 5000 })
+        .toBeGreaterThanOrEqual(0);
+      const first = await playhead(page);
+      await expect
+        .poll(() => playhead(page), { timeout: 5000 })
+        .not.toBe(first);
 
-  const before = await step.getAttribute("aria-pressed");
-  await step.click();
-  await expect(step).not.toHaveAttribute("aria-pressed", before!);
-});
+      await transport(page).click();
+      await expect(transport(page)).toContainText(w.play);
+      await expect.poll(() => playhead(page), { timeout: 3000 }).toBe(-1);
+    });
 
-test("melodic steps carry their unit name so the four grids stay distinguishable", async ({
-  page,
-}) => {
-  await page.goto("/groove/");
-  for (const unit of ["BASS", "PADS", "LEAD"]) {
-    await expect(
-      page.getByRole("button", { name: `${unit} step 1`, exact: true }),
-    ).toHaveCount(1);
-  }
-});
+    test("drum steps are individually addressable and toggle through their states", async ({
+      page,
+    }) => {
+      await page.goto("/groove/");
+      const step = page.getByRole("button", {
+        name: `KICK ${w.step} 3`,
+        exact: true,
+      });
+      await expect(step).toBeVisible();
 
-test("switching patches changes the tempo", async ({ page }) => {
-  await page.goto("/groove/");
-  const bpm = () =>
-    // Bounded rather than `\d+`: a tempo is at most four digits, and an unbounded quantifier
-    // scanning the whole document backtracks badly.
-    page.evaluate(() => /(\d{1,4})BPM/.exec(document.body.textContent)?.[1]);
+      const before = await step.getAttribute("aria-pressed");
+      await step.click();
+      await expect(step).not.toHaveAttribute("aria-pressed", before!);
+    });
 
-  const first = await bpm();
-  await page.getByRole("button", { name: /BASALT/ }).click();
-  await expect.poll(bpm, { timeout: 3000 }).not.toBe(first);
-});
+    test("melodic steps carry their unit name so the four grids stay distinguishable", async ({
+      page,
+    }) => {
+      await page.goto("/groove/");
+      for (const unit of ["BASS", "PADS", "LEAD"]) {
+        await expect(
+          page.getByRole("button", {
+            name: `${unit} ${w.step} 1`,
+            exact: true,
+          }),
+        ).toHaveCount(1);
+      }
+    });
 
-test("a unit can be muted and unmuted", async ({ page }) => {
-  await page.goto("/groove/");
-  const rhythm = page.getByRole("region", { name: "RHYTHM" });
-  await rhythm.getByRole("button", { name: "MUTE" }).click();
-  await expect(rhythm).toHaveClass(/muted/);
-  await rhythm.getByRole("button", { name: "MUTE" }).click();
-  await expect(rhythm).not.toHaveClass(/muted/);
-});
+    test("switching patches changes the tempo", async ({ page }) => {
+      await page.goto("/groove/");
+      const bpm = () =>
+        // Bounded rather than `\d+`: a tempo is at most four digits, and an unbounded quantifier
+        // scanning the whole document backtracks badly.
+        page.evaluate(
+          () => /(\d{1,4})BPM/.exec(document.body.textContent)?.[1],
+        );
 
-test("running the sequencer logs no console errors", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-  page.on("pageerror", (e) => errors.push(e.message));
+      const first = await bpm();
+      await page.getByRole("button", { name: /BASALT/ }).click();
+      await expect.poll(bpm, { timeout: 3000 }).not.toBe(first);
+    });
 
-  await page.goto("/groove/");
-  await recordSteps(page);
-  await transport(page).click();
-  // Most of a bar has to light. The playhead is driven by the same transport that schedules the
-  // audio, so a swept bar proves the sequencer really ran.
-  await expect
-    .poll(() => stepsSeen(page), { timeout: 10_000 })
-    .toBeGreaterThanOrEqual(MIN_STEPS_SEEN);
-  await transport(page).click();
+    test("a unit can be muted and unmuted", async ({ page }) => {
+      await page.goto("/groove/");
+      const rhythm = page.getByRole("region", { name: "RHYTHM" });
+      await rhythm.getByRole("button", { name: w.mute }).click();
+      await expect(rhythm).toHaveClass(/muted/);
+      await rhythm.getByRole("button", { name: w.mute }).click();
+      await expect(rhythm).not.toHaveClass(/muted/);
+    });
 
-  expect(errors).toEqual([]);
-});
+    test("running the sequencer logs no console errors", async ({ page }) => {
+      const errors: string[] = [];
+      page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+      page.on("pageerror", (e) => errors.push(e.message));
+
+      await page.goto("/groove/");
+      await recordSteps(page);
+      await transport(page).click();
+      // Most of a bar has to light. The playhead is driven by the same transport that schedules the
+      // audio, so a swept bar proves the sequencer really ran.
+      await expect
+        .poll(() => stepsSeen(page), { timeout: 10_000 })
+        .toBeGreaterThanOrEqual(MIN_STEPS_SEEN);
+      await transport(page).click();
+
+      expect(errors).toEqual([]);
+    });
+  });
+}

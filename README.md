@@ -1,7 +1,8 @@
 # Bench
 
 Four local-first apps behind one server. No login, no cloud - everything runs on your machine and
-your data lives in local SQLite files. Light and dark, one toggle for all four.
+your data lives in local SQLite files. Light and dark, one toggle for all four; English and
+Spanish, one button for all four.
 
 |             |            |                                                                                                                     |
 | ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +102,7 @@ before anything appears**, which is normal, not a hang. Then open:
 **http://localhost:8100**
 
 The first run creates and seeds the three SQLite databases under `data/` with sample data. Click
-through all four apps and the theme toggle to confirm it works.
+through all four apps, the theme toggle and the EN/ES button to confirm it works.
 
 Stop the server with `Ctrl+C`.
 
@@ -176,7 +177,7 @@ npm run e2e
 ```
 
 Playwright drives a real Chromium through all four apps: the launcher, CRM, Space, Rolodex, Groove
-and the shared theme toggle. It takes about a minute.
+the shared theme toggle, and every app again in Spanish. It takes about a minute.
 
 What it does under the hood, which explains the wait and the ports:
 

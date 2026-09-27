@@ -18,6 +18,8 @@ import {
 } from "recharts";
 import { FunnelRow, MonthlyRow, OrgPipeline, WinLoss } from "../types";
 import { formatMoney } from "../format";
+import { currentLang } from "../../shared/i18n";
+import { stageLabel, t, useT } from "../strings";
 
 /**
  * The dashboard's colour language, shared with the tiles above these charts: green is money
@@ -39,14 +41,12 @@ const tooltipStyle = {
 
 const shortMoney = (v: number) => {
   const amount = v >= 1000 ? `${Math.round(v / 1000)}k` : String(v);
-  return `$${amount}`;
+  return currentLang() === "es" ? `${amount} US$` : `$${amount}`;
 };
 
-const REVENUE_LABEL: Record<string, string> = {
-  actual: "Won",
-  expected: "Expected",
-  count: "Deals closing",
-};
+/** The revenue chart's series, named in the page's language. */
+const revenueLabel = (series: unknown) =>
+  t(`chart.series.${series as "actual" | "expected" | "count"}`);
 
 /**
  * Money as stacked bars, deal volume as a line on its own axis. Won and expected stack rather than
@@ -54,6 +54,7 @@ const REVENUE_LABEL: Record<string, string> = {
  * enough to read across a twelve-month span.
  */
 export function RevenueChart({ data }: { data: MonthlyRow[] }) {
+  const tr = useT();
   const firstFuture = data.find((m) => m.future);
   return (
     <ResponsiveContainer width="100%" height={240}>
@@ -75,7 +76,7 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
           axisLine={false}
           tick={AXIS}
           tickFormatter={shortMoney}
-          width={50}
+          width={currentLang() === "es" ? 64 : 50}
         />
         <YAxis
           yAxisId="count"
@@ -91,11 +92,11 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
           contentStyle={tooltipStyle}
           formatter={(value, name) => [
             name === "count" ? value : formatMoney(Number(value)),
-            REVENUE_LABEL[String(name)],
+            revenueLabel(name),
           ]}
         />
         <Legend
-          formatter={(value) => REVENUE_LABEL[String(value)]}
+          formatter={(value) => revenueLabel(value)}
           wrapperStyle={{ fontSize: 12, color: "#6b7280" }}
         />
         {firstFuture && (
@@ -105,7 +106,7 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
             stroke="#b6bcc6"
             strokeDasharray="3 3"
             label={{
-              value: "forecast",
+              value: tr("chart.forecast"),
               position: "insideTopLeft",
               fill: "#8a919c",
               fontSize: 11,
@@ -144,6 +145,7 @@ export function RevenueChart({ data }: { data: MonthlyRow[] }) {
 }
 
 export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
+  const tr = useT();
   return (
     <ResponsiveContainer width="100%" height={240}>
       <FunnelChart margin={{ top: 8, right: 96, left: 96, bottom: 8 }}>
@@ -152,8 +154,12 @@ export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
           formatter={(value, _name, item) => {
             const row = item.payload as FunnelRow;
             return [
-              `${formatMoney(Number(value))} · ${row.count} at or past this stage, ${row.inStage} in it`,
-              row.name,
+              tr("chart.funnelTip", {
+                value: formatMoney(Number(value)),
+                reached: row.count,
+                inStage: row.inStage,
+              }),
+              stageLabel(row.name),
             ];
           }}
         />
@@ -189,9 +195,20 @@ export function RevenueFunnel({ data }: { data: FunnelRow[] }) {
 
 /** Won against lost, with the rate itself in the middle where it is the first thing read. */
 export function WinRateDonut({ data }: { data: WinLoss }) {
+  const tr = useT();
   const slices = [
-    { name: "Won", value: data.won, money: data.wonValue, fill: GREEN },
-    { name: "Lost", value: data.lost, money: data.lostValue, fill: RED },
+    {
+      name: stageLabel("Won"),
+      value: data.won,
+      money: data.wonValue,
+      fill: GREEN,
+    },
+    {
+      name: stageLabel("Lost"),
+      value: data.lost,
+      money: data.lostValue,
+      fill: RED,
+    },
   ];
   return (
     <div className="donut-wrap">
@@ -202,7 +219,10 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
             formatter={(value, name, item) => {
               const slice = item.payload as (typeof slices)[number];
               return [
-                `${Number(value)} deals · ${formatMoney(slice.money)}`,
+                tr("chart.dealsMoney", {
+                  count: Number(value),
+                  money: formatMoney(slice.money),
+                }),
                 name,
               ];
             }}
@@ -222,7 +242,7 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
       <div className="donut-centre">
         <div className="donut-rate">{data.rate}%</div>
         <div className="donut-caption">
-          {data.won} won · {data.lost} lost
+          {tr("chart.wonLost", { won: data.won, lost: data.lost })}
         </div>
       </div>
     </div>
@@ -230,6 +250,7 @@ export function WinRateDonut({ data }: { data: WinLoss }) {
 }
 
 export function TopOrganizations({ data }: { data: OrgPipeline[] }) {
+  const tr = useT();
   return (
     <ResponsiveContainer width="100%" height={240}>
       <BarChart
@@ -259,7 +280,10 @@ export function TopOrganizations({ data }: { data: OrgPipeline[] }) {
           formatter={(value, _name, item) => {
             const org = item.payload as OrgPipeline;
             return [
-              `${formatMoney(Number(value))} · ${org.count} open deals`,
+              tr("chart.openDeals", {
+                value: formatMoney(Number(value)),
+                count: org.count,
+              }),
               org.name,
             ];
           }}

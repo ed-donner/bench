@@ -12,78 +12,84 @@ import {
   SquareCheck,
   Type,
 } from "lucide-react";
+import { t } from "../strings";
 
+/** A block type's name is in the catalogs, under block.<type>; the keywords stay English, so
+    "/h1" finds a heading in either language. */
 export interface BlockTypeDef {
-  type: string;
-  label: string;
+  type: BlockKind;
   keywords: string[];
   icon: ReactNode;
 }
 
+type BlockKind =
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "bulleted"
+  | "numbered"
+  | "todo"
+  | "quote"
+  | "divider"
+  | "code"
+  | "callout";
+
+export const blockLabel = (type: BlockKind) => t(`block.${type}`);
+
 const BLOCK_TYPE_DEFS: BlockTypeDef[] = [
   {
     type: "paragraph",
-    label: "Text",
     keywords: ["text", "paragraph", "plain"],
     icon: <Type size={16} />,
   },
   {
     type: "heading1",
-    label: "Heading 1",
     keywords: ["h1", "heading", "title"],
     icon: <Heading1 size={16} />,
   },
   {
     type: "heading2",
-    label: "Heading 2",
     keywords: ["h2", "heading", "subtitle"],
     icon: <Heading2 size={16} />,
   },
   {
     type: "heading3",
-    label: "Heading 3",
     keywords: ["h3", "heading"],
     icon: <Heading3 size={16} />,
   },
   {
     type: "bulleted",
-    label: "Bulleted list",
     keywords: ["bullet", "list", "ul"],
     icon: <List size={16} />,
   },
   {
     type: "numbered",
-    label: "Numbered list",
     keywords: ["number", "list", "ol"],
     icon: <ListOrdered size={16} />,
   },
   {
     type: "todo",
-    label: "To-do",
     keywords: ["todo", "task", "checkbox"],
     icon: <SquareCheck size={16} />,
   },
   {
     type: "quote",
-    label: "Quote",
     keywords: ["quote", "blockquote"],
     icon: <Quote size={16} />,
   },
   {
     type: "divider",
-    label: "Divider",
     keywords: ["divider", "hr", "rule", "separator"],
     icon: <Minus size={16} />,
   },
   {
     type: "code",
-    label: "Code",
     keywords: ["code", "snippet", "monospace"],
     icon: <Code size={16} />,
   },
   {
     type: "callout",
-    label: "Callout",
     keywords: ["callout", "info", "note"],
     icon: <Lightbulb size={16} />,
   },
@@ -94,7 +100,7 @@ export function filterBlockTypes(query: string): BlockTypeDef[] {
   if (!q) return BLOCK_TYPE_DEFS;
   return BLOCK_TYPE_DEFS.filter(
     (d) =>
-      d.label.toLowerCase().includes(q) ||
+      blockLabel(d.type).toLowerCase().includes(q) ||
       d.keywords.some((k) => k.startsWith(q)),
   );
 }

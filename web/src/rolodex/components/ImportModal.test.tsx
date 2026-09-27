@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { ImportModal } from "./ImportModal";
 import { api, type ImportRow } from "../api";
+import { RequestError } from "../requestError";
 import { StoreContext, ToastContext } from "../store";
 
 vi.mock("../api");
@@ -139,11 +140,14 @@ describe("importing people", () => {
 
   it("shows what went wrong when the file cannot be read", async () => {
     vi.mocked(api.importParse).mockRejectedValue(
-      new Error("A file is required"),
+      new RequestError(400, "A file is required"),
     );
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     renderImport();
     await chooseFile("empty.csv", "");
-    expect(await screen.findByText("A file is required")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The server did not accept that."),
+    ).toBeInTheDocument();
   });
 });
 

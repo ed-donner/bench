@@ -3,6 +3,8 @@ import { IconGroove } from "../../shared/AppIcons";
 import type { Patch } from "../types";
 import { Knob } from "./Knob";
 import { LedStrip } from "./LedStrip";
+import { LEGEND } from "../legends";
+import { useT } from "../strings";
 
 interface Props {
   patches: Patch[];
@@ -47,6 +49,7 @@ function TempoDial({
   const up = useCallback(() => {
     drag.current = null;
   }, []);
+  const t = useT();
 
   return (
     <div className="tempo">
@@ -59,14 +62,14 @@ function TempoDial({
       </button>
       <div
         className="tempo-read"
-        title="Drag up/down to change tempo"
+        title={t("tempo.drag")}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       >
         <span className="tempo-value">{bpm}</span>
-        <span className="tempo-unit">BPM</span>
+        <span className="tempo-unit">{LEGEND.bpm}</span>
       </div>
       <button
         type="button"
@@ -80,22 +83,23 @@ function TempoDial({
 }
 
 export function Transport(p: Props) {
+  const t = useT();
   return (
     <header className="transport">
       <div className="brand">
         <IconGroove />
-        <span className="brand-name">GROOVEBOX</span>
-        <span className="brand-model">GX-4</span>
+        <span className="brand-name">{LEGEND.brand}</span>
+        <span className="brand-model">{LEGEND.model}</span>
       </div>
 
       <button
         type="button"
         className={`play-btn${p.playing ? " playing" : ""}`}
-        title="Spacebar"
+        title={t("play.key")}
         onClick={p.onPlay}
       >
         <span className="play-glyph">{p.playing ? "■" : "▶"}</span>
-        {p.playing ? "STOP" : "PLAY"}
+        {p.playing ? t("play.stop") : t("play.play")}
       </button>
 
       <TempoDial bpm={p.bpm} onBpm={p.onBpm} />
@@ -110,7 +114,7 @@ export function Transport(p: Props) {
 
       <div className="master-leds">
         <LedStrip current={p.current} />
-        <span className="master-leds-label">STEP</span>
+        <span className="master-leds-label">{LEGEND.step}</span>
       </div>
 
       <div className="patch-bank">
@@ -119,7 +123,11 @@ export function Transport(p: Props) {
             key={patch.name}
             type="button"
             className={`patch-btn${i === p.index ? " active" : ""}`}
-            title={`${patch.name} — ${patch.subtitle} (key ${i + 1})`}
+            title={t("patch.title", {
+              name: patch.name,
+              subtitle: patch.subtitle,
+              key: i + 1,
+            })}
             onClick={() => p.onSelect(i)}
           >
             <span className="patch-slot">{"ABCD"[i]}</span>
@@ -134,9 +142,9 @@ export function Transport(p: Props) {
           className="revert-btn"
           onClick={p.onRevert}
           disabled={!p.edited}
-          title="Restore this patch to its factory settings"
+          title={t("patch.revertTitle")}
         >
-          {p.edited ? "REVERT" : "SAVED"}
+          {p.edited ? t("patch.revert") : t("patch.saved")}
         </button>
       </div>
     </header>

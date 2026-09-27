@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import PersonDetail from "./PersonDetail";
+import { RequestError } from "../requestError";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
 import {
@@ -184,7 +185,10 @@ describe("a person's page", () => {
   });
 
   it("says so when the person cannot be loaded", async () => {
-    vi.mocked(api.getPerson).mockRejectedValue(new Error("not found"));
+    vi.mocked(api.getPerson).mockRejectedValue(
+      new RequestError(404, "Not found"),
+    );
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     render(
       <MemoryRouter initialEntries={["/people/99"]}>
         <StoreContext.Provider
@@ -198,6 +202,10 @@ describe("a person's page", () => {
         </StoreContext.Provider>
       </MemoryRouter>,
     );
-    expect(await screen.findByText(/not found/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Couldn’t load this person. It no longer exists.",
+      ),
+    ).toBeInTheDocument();
   });
 });

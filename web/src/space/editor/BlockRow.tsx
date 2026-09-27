@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { Block } from "../api";
 import ContentEditable from "./ContentEditable";
+import { useT } from "../strings";
 
 interface BlockHandlers {
   onTextInput: (id: string, text: string, caret: number) => void;
@@ -30,17 +31,29 @@ const CLASSES: Record<string, string> = {
   callout: "b-callout-text",
 };
 
-const PLACEHOLDERS: Record<string, string> = {
-  paragraph: "Type “/” for commands",
-  heading1: "Heading 1",
-  heading2: "Heading 2",
-  heading3: "Heading 3",
-  bulleted: "List item",
-  numbered: "List item",
-  todo: "To-do",
-  quote: "Quote",
-  code: "Code",
-  callout: "Callout",
+/** The hint an empty block shows, as the catalog key under placeholder.<key>. */
+const PLACEHOLDERS: Record<
+  string,
+  | "paragraph"
+  | "heading1"
+  | "heading2"
+  | "heading3"
+  | "list"
+  | "todo"
+  | "quote"
+  | "code"
+  | "callout"
+> = {
+  paragraph: "paragraph",
+  heading1: "heading1",
+  heading2: "heading2",
+  heading3: "heading3",
+  bulleted: "list",
+  numbered: "list",
+  todo: "todo",
+  quote: "quote",
+  code: "code",
+  callout: "callout",
 };
 
 export default function BlockRow({
@@ -49,6 +62,7 @@ export default function BlockRow({
   version,
   ...handlers
 }: Props) {
+  const t = useT();
   const {
     attributes,
     listeners,
@@ -66,7 +80,11 @@ export default function BlockRow({
       version={version}
       initialText={text}
       className={`block-text ${CLASSES[block.type] ?? "b-paragraph"}${extraClass}`}
-      placeholder={PLACEHOLDERS[block.type]}
+      placeholder={
+        block.type in PLACEHOLDERS
+          ? t(`placeholder.${PLACEHOLDERS[block.type]}`)
+          : undefined
+      }
       onTextInput={handlers.onTextInput}
       onKeyDown={handlers.onKeyDown}
       onBlur={handlers.onBlur}
@@ -105,7 +123,7 @@ export default function BlockRow({
               type="checkbox"
               className="b-checkbox"
               checked={checked}
-              aria-label={text || "To-do"}
+              aria-label={text || t("placeholder.todo")}
               onChange={(e) =>
                 handlers.onToggleTodo(block.id, e.target.checked)
               }
@@ -142,7 +160,7 @@ export default function BlockRow({
     >
       <button
         className="drag-handle"
-        aria-label="Drag block"
+        aria-label={t("editor.drag")}
         {...attributes}
         {...listeners}
       >

@@ -54,6 +54,15 @@ tempo, a unit mutes, and nothing logs a console error.
 **Driving Groove with a visible browser plays sound out loud.** Stop the transport before you walk
 away.
 
+## Two languages
+
+What the player presses and what a screen reader hears is translated - PLAY/STOP, REVERT/SAVED,
+MUTE, every tooltip, every pad's name (`KICK paso 3`). The printed legends are not, by design:
+BPM, STEP, MASTER FILTER, SWEEP OFF, the knob labels, the GROOVEBOX GX-4 badge, and the unit and
+patch names. The legends that were JSX text live in `web/src/groove/legends.ts`, so the
+literal-text lint rule stays on for every component rather than exempting files. The instrument
+e2e spec runs once per language.
+
 ## Related
 
 - [REQUIREMENTS.md](./REQUIREMENTS.md) - the original product brief

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { filterGainAt } from "../filter";
+import { LEGEND } from "../legends";
 
 const MIN_HZ = 30;
 const MAX_HZ = 18000;
@@ -96,7 +97,7 @@ export function Scope({ analyser, getFilter }: Props) {
   return (
     <div className="scope">
       <canvas ref={canvasRef} className="scope-canvas" />
-      <span className="scope-tag">SPECTRUM · FILTER</span>
+      <span className="scope-tag">{LEGEND.scope}</span>
     </div>
   );
 }

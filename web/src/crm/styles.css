@@ -925,8 +925,11 @@ a.entity-link:hover {
   letter-spacing: -0.02em;
 }
 
+/* Narrower than the hole, so a longer caption wraps inside it instead of running over the ring. */
 .donut-caption {
+  max-width: 108px;
   font-size: 12px;
+  text-align: center;
   color: var(--gray-500);
 }
 

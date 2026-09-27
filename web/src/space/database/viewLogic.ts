@@ -1,4 +1,5 @@
 import { valueText } from "./valueText";
+import { t } from "../strings";
 import type {
   DbRow,
   Filter,
@@ -15,15 +16,15 @@ export interface OperatorDef {
   needsValue: boolean;
 }
 
-/** Operators offered per property type. */
+/** Operators offered per property type, labelled in the page's language when asked for. */
 export function operatorsFor(type: PropertyType | "title"): OperatorDef[] {
   switch (type) {
     case "title":
     case "text":
     case "url":
       return [
-        { op: "contains", label: "contains", needsValue: true },
-        { op: "not_contains", label: "does not contain", needsValue: true },
+        { op: "contains", label: t("op.contains"), needsValue: true },
+        { op: "not_contains", label: t("op.not_contains"), needsValue: true },
       ];
     case "number":
       return [
@@ -33,20 +34,20 @@ export function operatorsFor(type: PropertyType | "title"): OperatorDef[] {
       ];
     case "select":
       return [
-        { op: "is", label: "is", needsValue: true },
-        { op: "is_not", label: "is not", needsValue: true },
+        { op: "is", label: t("op.is"), needsValue: true },
+        { op: "is_not", label: t("op.is_not"), needsValue: true },
       ];
     case "multi_select":
-      return [{ op: "has", label: "contains", needsValue: true }];
+      return [{ op: "has", label: t("op.has"), needsValue: true }];
     case "date":
       return [
-        { op: "before", label: "is before", needsValue: true },
-        { op: "after", label: "is after", needsValue: true },
+        { op: "before", label: t("op.before"), needsValue: true },
+        { op: "after", label: t("op.after"), needsValue: true },
       ];
     case "checkbox":
       return [
-        { op: "checked", label: "is checked", needsValue: false },
-        { op: "unchecked", label: "is unchecked", needsValue: false },
+        { op: "checked", label: t("op.checked"), needsValue: false },
+        { op: "unchecked", label: t("op.unchecked"), needsValue: false },
       ];
   }
 }

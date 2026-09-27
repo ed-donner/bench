@@ -24,6 +24,7 @@ import { filterBlockTypes } from "./blockTypes";
 import BlockRow from "./BlockRow";
 import SlashMenu from "./SlashMenu";
 import { applyReorder } from "./reorder";
+import { useDragText } from "../../shared/dragText";
 
 const LIST_TYPES = new Set(["bulleted", "numbered", "todo"]);
 const EMPTY_ENTER_RESETS = new Set([
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export default function Editor({ pageId, initialBlocks }: Props) {
+  const dragText = useDragText();
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initialBlocks.map((b) => {
       // Typed as an object, but it arrives as JSON and an older block may hold anything.
@@ -472,6 +474,7 @@ export default function Editor({ pageId, initialBlocks }: Props) {
       data-testid="editor-body"
     >
       <DndContext
+        accessibility={dragText}
         sensors={sensors}
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}

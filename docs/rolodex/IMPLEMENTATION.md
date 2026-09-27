@@ -79,6 +79,30 @@ page reads (`useStore`) and the toast stack (`useToast`). Pages fetch their own 
 - A person's page is composed from `components/person/`: header, main column, side column, and the
   quick-add modals. `PersonDetail.tsx` only loads, holds the modal state, and lays the three out.
 
+## Two languages
+
+Text lives in `web/src/rolodex/locales/`, and `strings.ts` holds `t`/`useT` plus `dateLocale()`,
+which every date-fns `format` call passes so month and weekday names follow the page.
+react-calendar takes `intlLocale()` as its `locale`, which also moves the week to start on Monday
+in Spanish.
+
+- **Display-only vocabulary**: check-in statuses, circles and their cadences and blurbs,
+  interaction types and verbs, date types, gift kinds. The stored value is the key - `circle.inner`,
+  `status.overdue` - through `statusLabel`, `circleLabel` and friends in `format.ts`.
+  `CIRCLE_META` is gone: the web copy only ever held labels, and the cadence numbers live on the
+  server.
+- **Connections are worded on the page.** The people endpoint still sends the server's English
+  `description`, and now also `role` (`parent`/`child` for a parent_child link, the kind
+  otherwise) and `label` (the free text for that side). `PersonSide` words it from those. A
+  free-text connection left blank stores nothing, where it used to store the English "Connected
+  to ...".
+- **A failed request shows a translated message chosen by status** (`errorMessage` in
+  `format.ts`); the server's English text goes to the console. `RequestError` sits in its own
+  module so suites that mock `api.ts` still construct real ones. The one refusal a person can
+  reach - a day the month does not have - is caught in `AddDateModal` before it is sent.
+- **The Today charts** take their axis labels from the row keys, not the server's English
+  `label`.
+
 ## The port
 
 Bench's checks are stricter than the original repo's, so the code changed shape on the way in.

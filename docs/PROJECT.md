@@ -13,7 +13,8 @@ external services, no secrets. Data lives in local SQLite files.
 
 A launcher at `/` links to all four, and every page carries the same navigation strip: the Bench
 mark, then Home, CRM, Space, Rolodex and Groove, each with the icon that identifies it inside its
-own app too, and one theme toggle on the right.
+own app too, and on the right an EN/ES language button and one theme toggle. Every app runs in
+English and in Spanish.
 
 ## Detailed app documentation
 
@@ -42,7 +43,10 @@ web/                ONE Vite project, multi-page (MPA)
   space/index.html    -> src/space/main.tsx
   rolodex/index.html  -> src/rolodex/main.tsx
   groove/index.html   -> src/groove/main.tsx
-  src/shared/         the navigation strip and the theme - the only code all five documents share
+  src/shared/         the navigation strip, the theme and the language - the only code all five
+                      documents share
+  src/<app>/locales/  en.json and es.json - every word that app shows (the launcher's and the
+                      strip's are in src/shared/locales/)
 server/             ONE Express app
   src/index.ts        opens the three DBs, listens on :8100
   src/app.ts          mounts routers, serves web/dist with per-prefix SPA fallback
@@ -128,6 +132,21 @@ These are settled. Changing one is a project-level decision, not an implementati
   defines its palette twice - once on `:root`, once under `[data-theme="dark"]` - and sets
   `color-scheme` so native controls follow. Groove is the exception in direction only: it is dark
   by default and defines `[data-theme="light"]`.
+- **One language, chosen once, switched in place.** `web/src/shared/i18n.ts` holds the language
+  the way `theme.ts` holds the theme: stored in `localStorage` under `bench.lang`, the browser's
+  language on a first visit (Spanish if it starts with `es`), `initLang()` before the first
+  render, `<html lang>` set to match. Unlike the theme it is also React state, read through
+  `useSyncExternalStore`: the button re-renders the page where it is, because a reload would
+  throw away an open form or a block being typed. Every word is in `locales/en.json` and
+  `locales/es.json` per app, with flat dotted keys; `makeT` gives each app a `t()` typed by the
+  English catalog, so a missing key is a type error. No i18n library - two languages, `{name}`
+  interpolation and `Intl.PluralRules` plurals did not need one. **User data is never
+  translated**, seed data included: a stored value such as a deal stage (`"Qualified"`) or a
+  circle (`"inner"`) is a key, and only its label changes. Spanish is neutral wording formatted
+  with the `es` locale - `12.345 US$`, `4 mar 2026` - and money stays in dollars because that is
+  what is stored. Anything computed once and kept - a memoised column list, chart rows - has to
+  depend on the language, or it keeps the old one after a switch; `e2e/i18n/switching.spec.ts`
+  switches every app there and back to catch exactly that.
 - **Colour means state, not identity.** In the strip and on the launcher, amber marks the app you
   are in and nothing else; the apps are told apart by their glyph. That is what keeps a fifth app
   from needing a fifth brand colour. Inside an app, its own accents are its own business.
@@ -158,6 +177,11 @@ A new `web/<name>/index.html`, a new `web/src/<name>/`, an entry in `vite.config
 one, is a `server/src/<name>/` with its own database file opened in `server/src/index.ts` and its
 router mounted at `/api/<name>` - and a `no-restricted-imports` entry in `eslint.config.js` so it
 stays separate from its siblings.
+
+Its text goes in `web/src/<name>/locales/en.json` and `es.json` from the start, with a
+`strings.ts` calling `makeT` - the lint rule rejects literal text in its JSX, and the parity test
+picks the new catalogs up by itself. Call `initLang()` beside `initTheme()` in its `main.tsx`,
+and add it to the `App` type in `e2e/i18n/leaks.ts` with a Spanish walk of its screens.
 
 Then the navigation: an icon in `web/src/shared/AppIcons.tsx`, an entry in the `APPS` list in
 `web/src/shared/BenchNav.tsx`, the new key in that file's `AppKey` union, and
