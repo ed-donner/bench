@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router";
 import { ImportModal } from "./ImportModal";
 import { api, type ImportRow } from "../api";
 import { StoreContext, ToastContext } from "../store";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -37,15 +38,17 @@ const refresh = vi.fn().mockResolvedValue(undefined);
 function renderImport() {
   const onClose = vi.fn();
   render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{ people: [], tags: [], loaded: true, refresh }}
-      >
-        <ToastContext.Provider value={vi.fn()}>
-          <ImportModal onClose={onClose} />
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{ people: [], tags: [], loaded: true, refresh }}
+        >
+          <ToastContext.Provider value={vi.fn()}>
+            <ImportModal onClose={onClose} />
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
   return { onClose };
 }

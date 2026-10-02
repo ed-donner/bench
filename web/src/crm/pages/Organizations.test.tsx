@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import Organizations from "./Organizations";
 import { api } from "../api";
-import { contact, deal, org, routes } from "../test/helpers";
+import { renderCrm, contact, deal, org, routes } from "../test/helpers";
 
 vi.mock("../api", async () => {
   const actual = await vi.importActual<typeof import("../api")>("../api");
@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 function show() {
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={["/organizations"]}>
       <Routes>
         <Route path="/organizations" element={<Organizations />} />

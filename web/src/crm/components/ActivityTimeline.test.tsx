@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ActivityTimeline from "./ActivityTimeline";
 import { api } from "../api";
 import { formatDateTime } from "../format";
-import { activity } from "../test/helpers";
+import { renderCrm, activity } from "../test/helpers";
 
 vi.mock("../api", () => ({ api: { patch: vi.fn() } }));
 
@@ -24,7 +24,7 @@ function dayOffset(days: number): string {
 }
 
 const show = (activities = [activity()], onChanged = vi.fn()) => {
-  render(<ActivityTimeline activities={activities} onChanged={onChanged} />);
+  renderCrm(<ActivityTimeline activities={activities} onChanged={onChanged} />);
   return onChanged;
 };
 

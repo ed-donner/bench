@@ -1,9 +1,23 @@
-import { ContactStatus, DealStage } from "../types";
+import {
+  ContactStatus,
+  DealStage,
+  contactStatusLabel,
+  dealStageLabel,
+} from "../types";
+import { useLocale } from "../../shared/useLocale";
 
 export function StatusChip({ status }: { status: ContactStatus }) {
-  return <span className={`chip chip-${status}`}>{status}</span>;
+  const { t } = useLocale();
+  return (
+    <span className={`chip chip-${status}`}>
+      {contactStatusLabel(status, t)}
+    </span>
+  );
 }
 
 export function StageChip({ stage }: { stage: DealStage }) {
-  return <span className={`chip stage-${stage}`}>{stage}</span>;
+  const { t } = useLocale();
+  return (
+    <span className={`chip stage-${stage}`}>{dealStageLabel(stage, t)}</span>
+  );
 }

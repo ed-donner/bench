@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMatch, useNavigate } from "react-router";
 import { Database, Plus, Search } from "lucide-react";
 import { IconSpace } from "../../shared/AppIcons";
+import { useLocale } from "../../shared/useLocale";
 import { api, type TreeNode } from "../api";
 import TreeItem from "./TreeItem";
 import { subtreeContains } from "../tree";
@@ -23,6 +24,7 @@ function loadExpanded(): Set<string> {
 }
 
 export default function Sidebar({ tree, onChange, onSearch }: Props) {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const pageId = useMatch("/p/:pageId")?.params.pageId;
   const [expanded, setExpanded] = useState<Set<string>>(loadExpanded);
@@ -57,16 +59,16 @@ export default function Sidebar({ tree, onChange, onSearch }: Props) {
     <nav className="sidebar">
       <div className="brand">
         <IconSpace size={20} />
-        <span className="brand-name">Personal Space</span>
+        <span className="brand-name">{t("sidebar.brand")}</span>
       </div>
       <div className="sidebar-top">
         <button className="sidebar-action" onClick={onSearch}>
           <Search size={15} />
-          Search
+          {t("sidebar.search")}
           <kbd className="sidebar-kbd">⌘K</kbd>
         </button>
       </div>
-      <div className="tree" role="tree" aria-label="Pages">
+      <div className="tree" role="tree" aria-label={t("sidebar.pagesTree")}>
         {tree.map((node) => (
           <TreeItem
             key={node.id}
@@ -88,14 +90,14 @@ export default function Sidebar({ tree, onChange, onSearch }: Props) {
           onClick={() => void createPage(null)}
         >
           <Plus size={16} />
-          New page
+          {t("sidebar.newPage")}
         </button>
         <button
           className="sidebar-action"
           onClick={() => void createPage(null, "database")}
         >
           <Database size={15} />
-          New database
+          {t("sidebar.newDatabase")}
         </button>
       </div>
     </nav>

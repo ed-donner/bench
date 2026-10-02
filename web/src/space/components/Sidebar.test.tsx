@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import Sidebar from "./Sidebar";
 import { subtreeContains } from "../tree";
 import { api } from "../api";
-import { node, pageData } from "../test/helpers";
+import { node, pageData, renderSpace } from "../test/helpers";
 
 vi.mock("../api", () => ({
   api: {
@@ -30,7 +30,7 @@ function renderSidebar(
   initialPath = "/",
   onSearch = vi.fn(),
 ) {
-  render(
+  renderSpace(
     <MemoryRouter initialEntries={[initialPath]}>
       <Sidebar tree={tree} onChange={onChange} onSearch={onSearch} />
     </MemoryRouter>,

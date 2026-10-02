@@ -7,6 +7,7 @@ import CalendarPage from "./CalendarPage";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
 import { person, timelineEntry, upcoming } from "../test/helpers";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -14,13 +15,15 @@ const maya = person({ id: 1, name: "Maya Chen" });
 
 function renderWithStore(ui: React.ReactElement) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
-      >
-        <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{ people: [maya], tags: [], loaded: true, refresh: vi.fn() }}
+        >
+          <ToastContext.Provider value={vi.fn()}>{ui}</ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 

@@ -23,6 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useLocale } from "../../shared/useLocale";
 import type { DbRow, Property } from "../api";
 import { Chip } from "./cells";
 import { groupRows, type BoardColumn } from "./viewLogic";
@@ -57,14 +58,16 @@ function toChips(value: unknown): string[] {
 function CardBody({
   row,
   cardProperty,
+  untitled,
 }: {
   row: DbRow;
   cardProperty?: Property;
+  untitled: string;
 }) {
   const chips = toChips(cardProperty ? row.values[cardProperty.id] : undefined);
   return (
     <>
-      <div className="board-card-title">{row.title || "Untitled"}</div>
+      <div className="board-card-title">{row.title || untitled}</div>
       {chips.length > 0 && cardProperty && (
         <div className="board-card-chips">
           {chips
@@ -83,10 +86,12 @@ function Card({
   row,
   cardProperty,
   justDragged,
+  untitled,
 }: {
   row: DbRow;
   cardProperty?: Property;
   justDragged: React.RefObject<boolean>;
+  untitled: string;
 }) {
   const navigate = useNavigate();
   const {
@@ -116,7 +121,7 @@ function Card({
           void navigate(`/p/${row.id}`);
       }}
     >
-      <CardBody row={row} cardProperty={cardProperty} />
+      <CardBody row={row} cardProperty={cardProperty} untitled={untitled} />
     </div>
   );
 }
@@ -126,11 +131,15 @@ function Column({
   groupProperty,
   cardProperty,
   justDragged,
+  untitled,
+  t,
 }: {
   column: BoardColumn;
   groupProperty: Property;
   cardProperty?: Property;
   justDragged: React.RefObject<boolean>;
+  untitled: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   const id = columnId(column);
   // The whole column sorts horizontally, but only the handle starts that drag - dragging from
@@ -162,7 +171,9 @@ function Column({
           {column.option ? (
             column.option.name
           ) : (
-            <span className="board-col-none">No {groupProperty.name}</span>
+            <span className="board-col-none">
+              {t("board.noGroup", { property: groupProperty.name })}
+            </span>
           )}
         </span>
         <span className="board-count">{column.rows.length}</span>
@@ -171,7 +182,9 @@ function Column({
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          aria-label={`Reorder ${column.option?.name ?? "ungrouped"} column`}
+          aria-label={t("board.reorderColumn", {
+            name: column.option?.name ?? t("board.ungrouped"),
+          })}
         >
           <GripVertical size={14} />
         </button>
@@ -187,10 +200,11 @@ function Column({
               row={row}
               cardProperty={cardProperty}
               justDragged={justDragged}
+              untitled={untitled}
             />
           ))}
           {column.rows.length === 0 && (
-            <p className="board-col-empty">Drop a row here</p>
+            <p className="board-col-empty">{t("board.dropRow")}</p>
           )}
         </div>
       </SortableContext>
@@ -207,6 +221,8 @@ export default function BoardView({
   onReorder,
   onReorderColumns,
 }: Props) {
+  const { t } = useLocale();
+  const untitled = t("common.untitled");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -348,6 +364,8 @@ export default function BoardView({
               groupProperty={groupProperty}
               cardProperty={cardProperty}
               justDragged={justDragged}
+              untitled={untitled}
+              t={t}
             />
           ))}
         </div>
@@ -355,14 +373,19 @@ export default function BoardView({
       <DragOverlay dropAnimation={{ duration: 180, easing: "ease" }}>
         {draggingRow && (
           <div className="board-card lifted">
-            <CardBody row={draggingRow} cardProperty={cardProperty} />
+            <CardBody
+              row={draggingRow}
+              cardProperty={cardProperty}
+              untitled={untitled}
+            />
           </div>
         )}
         {draggingColumn && (
           <div className="board-col lifted">
             <div className="board-col-head">
               <span className="board-col-name">
-                {draggingColumn.option?.name ?? "No " + groupProperty.name}
+                {draggingColumn.option?.name ??
+                  t("board.noGroup", { property: groupProperty.name })}
               </span>
               <span className="board-count">{draggingColumn.rows.length}</span>
             </div>

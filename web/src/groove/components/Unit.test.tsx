@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Unit } from "./Unit";
 import { clonePatch, PATCHES } from "../patches";
 import { UNIT_PARAMS } from "../params";
 import { DRUM_LANES, STEPS, type UnitId } from "../types";
+import { grooveEn } from "../i18n/en";
+import { resolveSpec } from "../i18n/resolve";
+import { muteBtn, renderWithLocale, unitRegion } from "../i18n/test-utils";
+
+const t = (key: string) => grooveEn[key] ?? key;
 
 type UnitProps = Parameters<typeof Unit>[0];
 
@@ -21,7 +26,7 @@ function renderUnit(id: UnitId, overrides: Partial<UnitProps> = {}) {
     onAudition: vi.fn(),
     ...overrides,
   };
-  const { container, rerender } = render(<Unit {...props} />);
+  const { container, rerender } = renderWithLocale(<Unit {...props} />);
   const show = (next: Partial<UnitProps>) =>
     rerender(<Unit {...props} {...next} />);
   return { ...props, container, show };
@@ -67,12 +72,14 @@ describe("Unit", () => {
 
   it("names the unit for the accessibility tree", () => {
     renderUnit("bass");
-    expect(screen.getByRole("region", { name: "BASS" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: unitRegion("BASS") }),
+    ).toBeInTheDocument();
   });
 
   it("mutes on request and shows it", async () => {
     const { onMute, container, show } = renderUnit("bass");
-    await userEvent.click(screen.getByRole("button", { name: "MUTE" }));
+    await userEvent.click(screen.getByRole("button", { name: muteBtn }));
     expect(onMute).toHaveBeenCalledOnce();
 
     expect(container.querySelector(".unit")).not.toHaveClass("muted");
@@ -97,7 +104,8 @@ describe("Unit", () => {
 
   it("reports a turned knob and reads it out on the panel display", async () => {
     const { container, onParam } = renderUnit("bass");
-    const spec = UNIT_PARAMS.bass.find((s) => s.kind === "knob")!;
+    const raw = UNIT_PARAMS.bass.find((s) => s.kind === "knob")!;
+    const spec = resolveSpec(raw, t);
     const knob = [...container.querySelectorAll(".knob")].find((el) =>
       el.textContent.includes(spec.label),
     )!;

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ParamSpec } from "../types";
+import type { ResolvedParamSpec } from "../i18n/resolve";
 
 export interface Readout {
   value: { label: string; value: string } | null;
-  show: (spec: ParamSpec, v: number) => void;
+  show: (spec: ResolvedParamSpec, v: number) => void;
 }
 
 /** Shows the last touched control on a panel display, then fades back. */
@@ -16,10 +16,10 @@ export function useReadout(holdMs = 1600): Readout {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const show = useCallback(
-    (spec: ParamSpec, v: number) => {
+    (spec: ResolvedParamSpec, v: number) => {
       setValue({
         label: spec.label,
-        value: spec.format ? spec.format(v) : v.toFixed(2),
+        value: spec.format(v),
       });
       window.clearTimeout(timer.current);
       timer.current = window.setTimeout(() => setValue(null), holdMs);

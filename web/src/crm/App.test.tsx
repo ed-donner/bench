@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import App from "./App";
 import { api } from "./api";
-import { deal, routes } from "./test/helpers";
+import { renderCrm, deal, routes } from "./test/helpers";
 
 vi.mock("./api", () => ({ api: { get: vi.fn() }, query: () => "" }));
 
@@ -25,7 +25,7 @@ afterEach(() => {
 });
 
 const show = (path = "/") =>
-  render(
+  renderCrm(
     <MemoryRouter initialEntries={[path]}>
       <App />
     </MemoryRouter>,

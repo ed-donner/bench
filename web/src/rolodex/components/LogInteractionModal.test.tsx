@@ -5,6 +5,7 @@ import { LogInteractionModal } from "./LogInteractionModal";
 import { api } from "../api";
 import { ToastContext } from "../store";
 import { interaction, person } from "../test/helpers";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -15,9 +16,15 @@ function renderLog() {
   const onClose = vi.fn();
   const onSaved = vi.fn();
   render(
-    <ToastContext.Provider value={toast}>
-      <LogInteractionModal person={maya} onClose={onClose} onSaved={onSaved} />
-    </ToastContext.Provider>,
+    withLocale(
+      <ToastContext.Provider value={toast}>
+        <LogInteractionModal
+          person={maya}
+          onClose={onClose}
+          onSaved={onSaved}
+        />
+      </ToastContext.Provider>,
+    ),
   );
   return { onClose, onSaved };
 }

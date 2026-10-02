@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ReactNode, useState } from "react";
+import { useLocale } from "../../shared/useLocale";
 import { IconEdit, IconTrash } from "./Icons";
 
 const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
@@ -32,11 +33,13 @@ export default function DataTable<T>({
   onEdit,
   onDelete,
   rowLabel,
-  emptyMessage = "Nothing here yet.",
+  emptyMessage,
   summary,
   noun = "record",
 }: Props<T>) {
+  const { t } = useLocale();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const empty = emptyMessage ?? t("common.nothingYet");
   // React Compiler cannot memoize what useReactTable() returns, so the rule flags every call site.
   // There is nothing to change here - it is the library's only API, and Bench does not run the
   // compiler. Kept as a disable rather than switching the rule off, so it still reports a
@@ -53,6 +56,7 @@ export default function DataTable<T>({
 
   const hasActions = Boolean(onEdit ?? onDelete);
   const label = (row: T) => (rowLabel ? rowLabel(row) : "");
+  const nounKey = data.length === 1 ? `noun.${noun}` : `noun.${noun}Plural`;
 
   return (
     <div className="table-card">
@@ -114,8 +118,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn"
-                          aria-label={`Edit ${label(row.original)}`}
-                          title="Edit"
+                          aria-label={t("table.editRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("table.edit")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onEdit(row.original);
@@ -128,8 +134,10 @@ export default function DataTable<T>({
                         <button
                           type="button"
                           className="icon-btn icon-btn-danger"
-                          aria-label={`Delete ${label(row.original)}`}
-                          title="Delete"
+                          aria-label={t("table.deleteRow", {
+                            name: label(row.original),
+                          })}
+                          title={t("table.delete")}
                           onClick={(e) => {
                             e.stopPropagation();
                             onDelete(row.original);
@@ -146,12 +154,11 @@ export default function DataTable<T>({
           </tbody>
         </table>
       </div>
-      {data.length === 0 && <div className="empty-state">{emptyMessage}</div>}
+      {data.length === 0 && <div className="empty-state">{empty}</div>}
       {data.length > 0 && (
         <div className="table-foot">
           <span>
-            {data.length} {noun}
-            {data.length === 1 ? "" : "s"}
+            {t("table.footer", { count: data.length, noun: t(nounKey) })}
           </span>
           {summary && <span className="table-summary">{summary}</span>}
         </div>

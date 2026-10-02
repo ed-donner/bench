@@ -29,10 +29,15 @@ function hz(v: number): string {
   return `${(v / 1000).toFixed(decimals)}k`;
 }
 
-export function filterLabel(macro: number): string {
-  if (macro < 0.485) return `LP ${hz(lowpassHz(macro))}`;
-  if (macro > 0.515) return `HP ${hz(highpassHz(macro))}`;
-  return "OPEN";
+type FilterT = (key: string) => string;
+
+export function filterLabel(macro: number, t?: FilterT): string {
+  const open = t?.("groove.filter.open") ?? "OPEN";
+  const lp = t?.("groove.filter.lp") ?? "LP";
+  const hp = t?.("groove.filter.hp") ?? "HP";
+  if (macro < 0.485) return `${lp} ${hz(lowpassHz(macro))}`;
+  if (macro > 0.515) return `${hp} ${hz(highpassHz(macro))}`;
+  return open;
 }
 
 /** Normalised gain of the current filter at a given frequency, for the scope curve. */

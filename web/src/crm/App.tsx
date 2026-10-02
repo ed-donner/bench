@@ -1,5 +1,6 @@
 import { NavLink, Route, Routes } from "react-router";
 import BenchNav from "../shared/BenchNav";
+import { useLocale } from "../shared/useLocale";
 import { IconCrm } from "../shared/AppIcons";
 import {
   IconContacts,
@@ -18,14 +19,16 @@ import DealDetail from "./pages/DealDetail";
 import Pipeline from "./pages/Pipeline";
 
 const NAV = [
-  { to: "/", label: "Dashboard", end: true, Icon: IconDashboard },
-  { to: "/organizations", label: "Organizations", Icon: IconOrganizations },
-  { to: "/contacts", label: "Contacts", Icon: IconContacts },
-  { to: "/deals", label: "Deals", Icon: IconDeals },
-  { to: "/pipeline", label: "Pipeline", Icon: IconPipeline },
-];
+  { to: "/", key: "nav.dashboard", end: true, Icon: IconDashboard },
+  { to: "/organizations", key: "nav.organizations", Icon: IconOrganizations },
+  { to: "/contacts", key: "nav.contacts", Icon: IconContacts },
+  { to: "/deals", key: "nav.deals", Icon: IconDeals },
+  { to: "/pipeline", key: "nav.pipeline", Icon: IconPipeline },
+] as const;
 
 export default function App() {
+  const { t } = useLocale();
+
   return (
     <>
       <BenchNav active="crm" />
@@ -33,13 +36,13 @@ export default function App() {
         <aside className="sidebar">
           <div className="brand">
             <IconCrm size={19} />
-            Personal CRM
+            {t("brand.title")}
           </div>
           <nav>
-            {NAV.map(({ to, label, end, Icon }) => (
-              <NavLink key={to} to={to} end={end} className="nav-link">
+            {NAV.map(({ to, key, Icon }) => (
+              <NavLink key={to} to={to} end={to === "/"} className="nav-link">
                 <Icon size={17} />
-                <span>{label}</span>
+                <span>{t(key)}</span>
               </NavLink>
             ))}
           </nav>

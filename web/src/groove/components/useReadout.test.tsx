@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import { useReadout } from "./useReadout";
-import type { ParamSpec } from "../types";
+import type { ResolvedParamSpec } from "../i18n/resolve";
 
-const spec: ParamSpec = {
+const spec: ResolvedParamSpec = {
   key: "cutoff",
+  labelKey: "groove.param.cutoff",
   label: "CUTOFF",
   kind: "knob",
   min: 0,
@@ -12,15 +13,17 @@ const spec: ParamSpec = {
   format: (v) => `${Math.round(v * 100)}`,
 };
 
-const raw: ParamSpec = {
+const raw: ResolvedParamSpec = {
   key: "raw",
+  labelKey: "groove.param.cutoff",
   label: "RAW",
   kind: "knob",
   min: 0,
   max: 1,
+  format: (v) => v.toFixed(2),
 };
 
-function Panel({ show }: { show: ParamSpec }) {
+function Panel({ show }: { show: ResolvedParamSpec }) {
   const readout = useReadout();
   return (
     <div>

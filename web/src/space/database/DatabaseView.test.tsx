@@ -1,9 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import DatabaseView from "./DatabaseView";
 import { api, type DatabaseData } from "../api";
+import { renderSpace } from "../test/helpers";
 
 vi.mock("../api", () => ({
   api: {
@@ -59,7 +60,7 @@ const dbData = (): DatabaseData => ({
 
 function renderDb() {
   vi.mocked(api.getDatabase).mockResolvedValue(dbData());
-  return render(
+  return renderSpace(
     <MemoryRouter>
       <DatabaseView databaseId="db1" />
     </MemoryRouter>,

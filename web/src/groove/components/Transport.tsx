@@ -1,8 +1,10 @@
 import { useCallback, useRef } from "react";
 import { IconGroove } from "../../shared/AppIcons";
+import { useLocale } from "../../shared/useLocale";
 import type { Patch } from "../types";
 import { Knob } from "./Knob";
 import { LedStrip } from "./LedStrip";
+import { resolveSpec } from "../i18n/resolve";
 
 interface Props {
   patches: Patch[];
@@ -26,6 +28,7 @@ function TempoDial({
   bpm: number;
   onBpm: (v: number) => void;
 }) {
+  const { t } = useLocale();
   const drag = useRef<{ y: number; start: number } | null>(null);
   const down = useCallback(
     (e: React.PointerEvent) => {
@@ -59,14 +62,14 @@ function TempoDial({
       </button>
       <div
         className="tempo-read"
-        title="Drag up/down to change tempo"
+        title={t("groove.transport.tempoDrag")}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       >
         <span className="tempo-value">{bpm}</span>
-        <span className="tempo-unit">BPM</span>
+        <span className="tempo-unit">{t("groove.transport.bpm")}</span>
       </div>
       <button
         type="button"
@@ -80,37 +83,46 @@ function TempoDial({
 }
 
 export function Transport(p: Props) {
+  const { t } = useLocale();
+  const swingSpec = resolveSpec(
+    {
+      key: "swing",
+      labelKey: "groove.transport.swing",
+      kind: "knob",
+      min: 0,
+      max: 1,
+      formatKind: "pct",
+    },
+    t,
+  );
+
   return (
     <header className="transport">
       <div className="brand">
         <IconGroove />
-        <span className="brand-name">GROOVEBOX</span>
+        <span className="brand-name">{t("groove.brand.name")}</span>
         <span className="brand-model">GX-4</span>
       </div>
 
       <button
         type="button"
         className={`play-btn${p.playing ? " playing" : ""}`}
-        title="Spacebar"
+        title={t("groove.transport.spacebar")}
         onClick={p.onPlay}
       >
         <span className="play-glyph">{p.playing ? "■" : "▶"}</span>
-        {p.playing ? "STOP" : "PLAY"}
+        {p.playing ? t("groove.transport.stop") : t("groove.transport.play")}
       </button>
 
       <TempoDial bpm={p.bpm} onBpm={p.onBpm} />
 
       <div className="swing-bank">
-        <Knob
-          spec={{ key: "swing", label: "SWING", kind: "knob", min: 0, max: 1 }}
-          value={p.swing}
-          onChange={p.onSwing}
-        />
+        <Knob spec={swingSpec} value={p.swing} onChange={p.onSwing} />
       </div>
 
       <div className="master-leds">
         <LedStrip current={p.current} />
-        <span className="master-leds-label">STEP</span>
+        <span className="master-leds-label">{t("groove.transport.step")}</span>
       </div>
 
       <div className="patch-bank">
@@ -119,7 +131,11 @@ export function Transport(p: Props) {
             key={patch.name}
             type="button"
             className={`patch-btn${i === p.index ? " active" : ""}`}
-            title={`${patch.name} — ${patch.subtitle} (key ${i + 1})`}
+            title={t("groove.transport.patchTitle", {
+              name: patch.name,
+              subtitle: patch.subtitle,
+              key: i + 1,
+            })}
             onClick={() => p.onSelect(i)}
           >
             <span className="patch-slot">{"ABCD"[i]}</span>
@@ -134,9 +150,11 @@ export function Transport(p: Props) {
           className="revert-btn"
           onClick={p.onRevert}
           disabled={!p.edited}
-          title="Restore this patch to its factory settings"
+          title={t("groove.transport.revertTitle")}
         >
-          {p.edited ? "REVERT" : "SAVED"}
+          {p.edited
+            ? t("groove.transport.revert")
+            : t("groove.transport.saved")}
         </button>
       </div>
     </header>

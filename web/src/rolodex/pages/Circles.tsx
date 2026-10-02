@@ -12,14 +12,14 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { UsersRound } from "lucide-react";
+import { useLocale } from "../../shared/useLocale";
 import { useStore } from "../store";
 import { api } from "../api";
 import type { Circle, PersonComputed } from "../types";
-import { CIRCLE_META } from "../types";
 import { Avatar } from "../components/Avatar";
 import { StatusBadge } from "../components/Chips";
 import { EmptyState } from "../components/Modal";
-import { relativeDays } from "../format";
+import { circleMeta, relativeDays } from "../format";
 import { useToast } from "../store";
 
 const CIRCLE_DOTS: Record<Circle, string> = {
@@ -32,9 +32,11 @@ const CIRCLE_DOTS: Record<Circle, string> = {
 function PersonCard({
   person,
   dragging,
+  t,
 }: {
   person: PersonComputed;
   dragging?: boolean;
+  t: ReturnType<typeof useLocale>["t"];
 }) {
   return (
     <div className={`person-card${dragging ? " dragging" : ""}`}>
@@ -46,15 +48,23 @@ function PersonCard({
         </div>
         <div className="meta">
           {person.last_contacted
-            ? `contacted ${relativeDays(person.last_contacted)}`
-            : "never contacted"}
+            ? t("circles.contacted", {
+                when: relativeDays(t, person.last_contacted),
+              })
+            : t("relative.neverContacted")}
         </div>
       </div>
     </div>
   );
 }
 
-function DraggableCard({ person }: { person: PersonComputed }) {
+function DraggableCard({
+  person,
+  t,
+}: {
+  person: PersonComputed;
+  t: ReturnType<typeof useLocale>["t"];
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: person.id,
     data: { person },
@@ -66,7 +76,7 @@ function DraggableCard({ person }: { person: PersonComputed }) {
       {...listeners}
       style={{ touchAction: "none" }}
     >
-      <PersonCard person={person} dragging={isDragging} />
+      <PersonCard person={person} dragging={isDragging} t={t} />
     </div>
   );
 }
@@ -74,11 +84,13 @@ function DraggableCard({ person }: { person: PersonComputed }) {
 function Column({
   circle,
   people,
+  t,
 }: {
   circle: Circle;
   people: PersonComputed[];
+  t: ReturnType<typeof useLocale>["t"];
 }) {
-  const meta = CIRCLE_META[circle];
+  const meta = circleMeta(t, circle);
   const { setNodeRef, isOver } = useDroppable({ id: `col-${circle}` });
   const overdue = people.filter((p) => p.status === "overdue").length;
 
@@ -102,7 +114,7 @@ function Column({
           <span>{meta.cadenceDescription.toLowerCase()}</span>
           {overdue > 0 && (
             <span style={{ color: "var(--red)", fontWeight: 700 }}>
-              {overdue} overdue
+              {t("circles.overdueCount", { count: overdue })}
             </span>
           )}
         </div>
@@ -110,10 +122,10 @@ function Column({
       <div className="board-cards">
         {people.length === 0 ? (
           <div className="empty" style={{ padding: "18px 8px" }}>
-            Drop someone here
+            {t("circles.dropHere")}
           </div>
         ) : (
-          people.map((p) => <DraggableCard key={p.id} person={p} />)
+          people.map((p) => <DraggableCard key={p.id} person={p} t={t} />)
         )}
       </div>
     </div>
@@ -121,6 +133,7 @@ function Column({
 }
 
 export default function Circles() {
+  const { t } = useLocale();
   const { people, loaded, refresh } = useStore();
   const toast = useToast();
   const [activePerson, setActivePerson] = useState<PersonComputed | null>(null);
@@ -137,7 +150,6 @@ export default function Circles() {
       distant: [],
     };
     for (const p of people) map[p.circle].push(p);
-    // most overdue first within each column — attention where it's needed
     const ORDER: Partial<Record<PersonComputed["status"], number>> = {
       overdue: 0,
       due_soon: 1,
@@ -164,9 +176,13 @@ export default function Circles() {
     if (circle === person.circle) return;
     await api.updatePerson(person.id, { circle });
     await refresh();
-    const { label, cadenceDescription } = CIRCLE_META[circle];
+    const meta = circleMeta(t, circle);
     toast(
-      `${person.name.split(" ")[0]} moved to ${label} — check in ${cadenceDescription.toLowerCase()}`,
+      t("circles.movedToast", {
+        firstName: person.name.split(" ")[0],
+        circle: meta.label,
+        cadence: meta.cadenceDescription.toLowerCase(),
+      }),
     );
   };
 
@@ -184,22 +200,19 @@ export default function Circles() {
             >
               <UsersRound size={19} />
             </span>
-            Circles
+            {t("circles.title")}
           </h1>
-          <p className="page-desc">
-            Drag a card between columns to change someone’s circle — the circle
-            sets how often you want to be in touch.
-          </p>
+          <p className="page-desc">{t("circles.desc")}</p>
         </div>
         <div className="page-actions">
           <Link className="btn" to="/people">
-            Open People table
+            {t("circles.openPeople")}
           </Link>
         </div>
       </div>
 
       {!loaded ? (
-        <div className="card card-pad muted">Loading…</div>
+        <div className="card card-pad muted">{t("circles.loading")}</div>
       ) : (
         <DndContext
           sensors={sensors}
@@ -208,13 +221,13 @@ export default function Circles() {
         >
           <div className="board">
             {(["inner", "close", "wider", "distant"] as Circle[]).map((c) => (
-              <Column key={c} circle={c} people={byCircle[c]} />
+              <Column key={c} circle={c} people={byCircle[c]} t={t} />
             ))}
           </div>
           <DragOverlay>
             {activePerson && (
               <div className="drag-overlay-card" style={{ width: 260 }}>
-                <PersonCard person={activePerson} />
+                <PersonCard person={activePerson} t={t} />
               </div>
             )}
           </DragOverlay>
@@ -225,25 +238,28 @@ export default function Circles() {
         className="row wrap"
         style={{ marginTop: 18, gap: 20, padding: "0 2px" }}
       >
-        {(["inner", "close", "wider", "distant"] as Circle[]).map((c) => (
-          <div key={c} className="row" style={{ gap: 8 }}>
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: CIRCLE_DOTS[c],
-              }}
-            />
-            <strong>{CIRCLE_META[c].label}</strong>
-            <span className="muted small">{CIRCLE_META[c].blurb}</span>
-          </div>
-        ))}
+        {(["inner", "close", "wider", "distant"] as Circle[]).map((c) => {
+          const meta = circleMeta(t, c);
+          return (
+            <div key={c} className="row" style={{ gap: 8 }}>
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  background: CIRCLE_DOTS[c],
+                }}
+              />
+              <strong>{meta.label}</strong>
+              <span className="muted small">{meta.blurb}</span>
+            </div>
+          );
+        })}
       </div>
 
       {loaded && people.length === 0 && (
         <EmptyState icon={<UsersRound />}>
-          No people yet — add someone first.
+          {t("circles.emptyPeople")}
         </EmptyState>
       )}
     </div>

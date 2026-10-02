@@ -7,6 +7,7 @@ import People from "./People";
 import { api } from "../api";
 import { StoreContext, ToastContext } from "../store";
 import { person } from "../test/helpers";
+import { withLocale } from "../test/render";
 
 vi.mock("../api");
 
@@ -32,20 +33,22 @@ const refresh = vi.fn().mockResolvedValue(undefined);
 
 function renderPeople(rows = people) {
   return render(
-    <MemoryRouter>
-      <StoreContext.Provider
-        value={{
-          people: rows,
-          tags: ["design", "university"],
-          loaded: true,
-          refresh,
-        }}
-      >
-        <ToastContext.Provider value={vi.fn()}>
-          <People />
-        </ToastContext.Provider>
-      </StoreContext.Provider>
-    </MemoryRouter>,
+    withLocale(
+      <MemoryRouter>
+        <StoreContext.Provider
+          value={{
+            people: rows,
+            tags: ["design", "university"],
+            loaded: true,
+            refresh,
+          }}
+        >
+          <ToastContext.Provider value={vi.fn()}>
+            <People />
+          </ToastContext.Provider>
+        </StoreContext.Provider>
+      </MemoryRouter>,
+    ),
   );
 }
 

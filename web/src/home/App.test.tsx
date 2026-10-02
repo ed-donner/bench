@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import { LocaleProvider } from "../shared/LocaleProvider";
 import App from "./App";
+
+const empty = { en: {}, hi: {} };
 
 const APPS = [
   ["CRM", "/crm/", "Deals, and the people behind them"],
@@ -9,9 +12,17 @@ const APPS = [
   ["Groove", "/groove/", "A groovebox in the browser"],
 ];
 
+function renderHome() {
+  return render(
+    <LocaleProvider messages={empty}>
+      <App />
+    </LocaleProvider>,
+  );
+}
+
 describe("launcher", () => {
   it("links each app card at its own document root", () => {
-    render(<App />);
+    renderHome();
     for (const [name, href] of APPS) {
       expect(
         screen.getByRole("heading", { name }).closest("a")!,
@@ -20,7 +31,7 @@ describe("launcher", () => {
   });
 
   it("marks itself as the current page in the nav", () => {
-    render(<App />);
+    renderHome();
     expect(
       within(screen.getByRole("navigation", { name: "Primary" })).getByRole(
         "link",
@@ -30,7 +41,7 @@ describe("launcher", () => {
   });
 
   it("names every app and describes what it is", () => {
-    render(<App />);
+    renderHome();
     for (const [name, , tagline] of APPS) {
       expect(screen.getByRole("heading", { name })).toBeInTheDocument();
       expect(screen.getByText(tagline)).toBeInTheDocument();

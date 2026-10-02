@@ -1,5 +1,6 @@
 /** Launcher: one card per app. Plain anchors - each app is its own document. */
 import BenchNav from "../shared/BenchNav";
+import { useLocale } from "../shared/useLocale";
 import {
   IconCrm,
   IconGroove,
@@ -10,9 +11,9 @@ import {
 interface AppCard {
   href: string;
   name: string;
-  tagline: string;
-  detail: string;
-  facts: string[];
+  taglineKey: string;
+  detailKey: string;
+  factKeys: string[];
   Icon: (p: { size?: number }) => React.ReactElement;
 }
 
@@ -20,53 +21,51 @@ const APPS: AppCard[] = [
   {
     href: "/crm/",
     name: "CRM",
-    tagline: "Deals, and the people behind them",
-    detail:
-      "Organizations, contacts and a drag-and-drop pipeline, with a dashboard that adds up what is actually in play.",
-    facts: ["Pipeline", "Dashboard", "Activities"],
+    taglineKey: "home.crm.tagline",
+    detailKey: "home.crm.detail",
+    factKeys: ["home.crm.fact1", "home.crm.fact2", "home.crm.fact3"],
     Icon: IconCrm,
   },
   {
     href: "/space/",
     name: "Space",
-    tagline: "Everything you know, in one place",
-    detail:
-      "Pages and blocks that nest as deep as you like, databases with table, board and list views, and search across the lot.",
-    facts: ["Pages", "Databases", "Search"],
+    taglineKey: "home.space.tagline",
+    detailKey: "home.space.detail",
+    factKeys: ["home.space.fact1", "home.space.fact2", "home.space.fact3"],
     Icon: IconSpace,
   },
   {
     href: "/rolodex/",
     name: "Rolodex",
-    tagline: "The people in your life, kept close",
-    detail:
-      "Who you are due to contact, what is going on with them, birthdays coming up, and a timeline of every conversation.",
-    facts: ["Check-ins", "Circles", "Calendar"],
+    taglineKey: "home.rolodex.tagline",
+    detailKey: "home.rolodex.detail",
+    factKeys: [
+      "home.rolodex.fact1",
+      "home.rolodex.fact2",
+      "home.rolodex.fact3",
+    ],
     Icon: IconRolodex,
   },
   {
     href: "/groove/",
     name: "Groove",
-    tagline: "A groovebox in the browser",
-    detail:
-      "Four synth units, one transport and a master DJ filter. Pure Web Audio — no samples, no plugins, no latency budget.",
-    facts: ["4 units", "16 steps", "Web Audio"],
+    taglineKey: "home.groove.tagline",
+    detailKey: "home.groove.detail",
+    factKeys: ["home.groove.fact1", "home.groove.fact2", "home.groove.fact3"],
     Icon: IconGroove,
   },
 ];
 
 export default function App() {
+  const { t } = useLocale();
   return (
     <>
       <BenchNav active="home" />
       <div className="home">
         <header className="home-header">
-          <p className="home-eyebrow">Local-first · no login · no cloud</p>
+          <p className="home-eyebrow">{t("home.eyebrow")}</p>
           <h1>Bench</h1>
-          <p className="home-lede">
-            Four apps, one server, one machine. Your data lives in SQLite files
-            on this disk and goes nowhere else.
-          </p>
+          <p className="home-lede">{t("home.lede")}</p>
         </header>
 
         <div className="home-grid">
@@ -75,16 +74,16 @@ export default function App() {
               <app.Icon size={104} />
               <div className="home-card-body">
                 <h2>{app.name}</h2>
-                <p className="home-tagline">{app.tagline}</p>
-                <p className="home-detail">{app.detail}</p>
+                <p className="home-tagline">{t(app.taglineKey)}</p>
+                <p className="home-detail">{t(app.detailKey)}</p>
                 <ul className="home-facts">
-                  {app.facts.map((f) => (
-                    <li key={f}>{f}</li>
+                  {app.factKeys.map((key) => (
+                    <li key={key}>{t(key)}</li>
                   ))}
                 </ul>
               </div>
               <span className="home-open">
-                Open
+                {t("home.open")}
                 <svg
                   width="15"
                   height="15"
@@ -107,7 +106,7 @@ export default function App() {
           <span>
             <strong>npm run dev</strong> · API on 8100, Vite on 8101
           </span>
-          <span>SQLite in ./data</span>
+          <span>{t("home.footerData")}</span>
         </footer>
       </div>
     </>

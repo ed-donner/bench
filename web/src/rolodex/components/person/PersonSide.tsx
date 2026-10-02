@@ -15,8 +15,8 @@ import {
   Trash2,
   Users2,
 } from "lucide-react";
+import { useLocale } from "../../../shared/useLocale";
 import { api, type PersonDetail } from "../../api";
-import { CIRCLE_META } from "../../types";
 import {
   currentAge,
   dateTypeLabel,
@@ -25,7 +25,13 @@ import {
 } from "../../dates";
 import { Avatar } from "../Avatar";
 import { EmptyState } from "../Modal";
-import { fmtDate, monthShort, relativeDays, todayISO } from "../../format";
+import {
+  circleMeta,
+  fmtDate,
+  monthShort,
+  relativeDays,
+  todayISO,
+} from "../../format";
 
 type AddWhat = "date" | "reminder" | "gift" | "connection";
 
@@ -49,7 +55,6 @@ function DetailRow({
   );
 }
 
-/** Where the person's page keeps the durable things: who they are, dates, reminders, gifts, links. */
 export default function PersonSide({
   detail,
   after,
@@ -59,13 +64,13 @@ export default function PersonSide({
   after: () => Promise<void>;
   onAdd: (what: AddWhat) => void;
 }) {
+  const { t } = useLocale();
   const { person } = detail;
   const today = todayISO();
   const openReminders = detail.reminders.filter((r) => !r.done);
   const doneReminders = detail.reminders.filter((r) => r.done);
   const giftIdeas = detail.gifts.filter((g) => g.kind === "idea");
 
-  // Gift ideas are worth surfacing only when an occasion for them is actually coming up.
   const soonest = detail.dates
     .map((d) => ({ date: d, occurrence: nextOccurrence(d, today) }))
     .sort((a, b) => a.occurrence.date.localeCompare(b.occurrence.date))
@@ -75,37 +80,37 @@ export default function PersonSide({
     <div className="person-col">
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Details</h2>
+          <h2 className="card-title">{t("person.detailsTitle")}</h2>
         </div>
         <div className="card-body">
           <DetailRow
             icon={<Mail size={14} />}
-            label="Email"
+            label={t("person.email")}
             value={person.email}
           />
           <DetailRow
             icon={<Phone size={14} />}
-            label="Phone"
+            label={t("person.phone")}
             value={person.phone}
           />
           <DetailRow
             icon={<MapPin size={14} />}
-            label="City"
+            label={t("person.city")}
             value={person.city}
           />
           <DetailRow
             icon={<Clock3 size={14} />}
-            label="Time zone"
+            label={t("person.timezone")}
             value={person.timezone}
           />
           <DetailRow
             icon={<Users2 size={14} />}
-            label="Circle"
-            value={CIRCLE_META[person.circle].label}
+            label={t("person.circle")}
+            value={circleMeta(t, person.circle).label}
           />
           <DetailRow
             icon={<ArrowRight size={14} />}
-            label="How we met"
+            label={t("person.howMet")}
             value={[
               person.how_met,
               person.met_where,
@@ -120,16 +125,14 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Cake size={16} /> Important dates
+            <Cake size={16} /> {t("person.datesTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("date")}>
-            <Plus size={13} /> Add date
+            <Plus size={13} /> {t("person.addDate")}
           </button>
         </div>
         {detail.dates.length === 0 ? (
-          <EmptyState icon={<Cake />}>
-            No dates yet — birthdays, anniversaries, the works.
-          </EmptyState>
+          <EmptyState icon={<Cake />}>{t("person.datesEmpty")}</EmptyState>
         ) : (
           <div>
             {detail.dates.map((d) => {
@@ -143,23 +146,27 @@ export default function PersonSide({
                   </div>
                   <div className="body">
                     <div className="strong">
-                      {dateTypeLabel(d.type, d.label)}
+                      {dateTypeLabel(t, d.type, d.label)}
                       {occurrence.milestone && (
                         <span className="badge status-due_soon milestone">
-                          turns {occurrence.ageTurning} — milestone
+                          {t("person.turnsMilestone", {
+                            age: occurrence.ageTurning ?? 0,
+                          })}
                         </span>
                       )}
                     </div>
                     <div className="small muted">
-                      {d.year ? `Born/started ${d.year} · ` : ""}
-                      {age != null ? `${age} now, ` : ""}
-                      next: {fmtDate(occurrence.date)} (
-                      {relativeDays(occurrence.date)})
+                      {d.year ? t("person.bornStarted", { year: d.year }) : ""}
+                      {age != null ? t("person.ageNow", { age }) : ""}
+                      {t("person.nextDate", {
+                        date: fmtDate(occurrence.date),
+                        relative: relativeDays(t, occurrence.date),
+                      })}
                     </div>
                   </div>
                   <button
                     className="icon-btn danger actions"
-                    aria-label="Delete date"
+                    aria-label={t("person.deleteDate")}
                     onClick={() => {
                       void api.deleteDate(d.id).then(after);
                     }}
@@ -176,24 +183,22 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Bell size={16} /> Reminders
+            <Bell size={16} /> {t("person.remindersTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("reminder")}>
-            <Plus size={13} /> Add reminder
+            <Plus size={13} /> {t("person.addReminder")}
           </button>
         </div>
         {openReminders.length === 0 ? (
-          <EmptyState icon={<Bell />}>
-            Nothing to do — set a reminder and it’ll appear on Today too.
-          </EmptyState>
+          <EmptyState icon={<Bell />}>{t("person.remindersEmpty")}</EmptyState>
         ) : (
           <div>
             {openReminders.map((r) => (
               <div key={r.id} className="list-row">
                 <button
                   className="reminder-check"
-                  title="Mark done"
-                  aria-label={`Mark done: ${r.text}`}
+                  title={t("person.markDone")}
+                  aria-label={t("person.markDoneAria", { text: r.text })}
                   onClick={() => {
                     void api.setReminderDone(r.id, true).then(after);
                   }}
@@ -203,12 +208,15 @@ export default function PersonSide({
                   <div
                     className={`small ${r.due_date < today ? "reminder-overdue" : "muted"}`}
                   >
-                    due {fmtDate(r.due_date)} · {relativeDays(r.due_date)}
+                    {t("person.dueOnDate", {
+                      date: fmtDate(r.due_date),
+                      relative: relativeDays(t, r.due_date),
+                    })}
                   </div>
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={t("person.deleteReminder", { text: r.text })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -221,14 +229,16 @@ export default function PersonSide({
         )}
         {doneReminders.length > 0 && (
           <div className="card-body">
-            <div className="small muted section-label">Done</div>
+            <div className="small muted section-label">
+              {t("person.doneSection")}
+            </div>
             {doneReminders.map((r) => (
               <div key={r.id} className="fact-row">
                 <BadgeCheck size={13} className="done-tick" />
                 <span className="reminder-done-text grow">{r.text}</span>
                 <button
                   className="icon-btn danger"
-                  aria-label={`Delete reminder: ${r.text}`}
+                  aria-label={t("person.deleteReminder", { text: r.text })}
                   onClick={() => {
                     void api.deleteReminder(r.id).then(after);
                   }}
@@ -244,28 +254,28 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Gift size={16} /> Gifts
+            <Gift size={16} /> {t("person.giftsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("gift")}>
-            <Plus size={13} /> Add gift
+            <Plus size={13} /> {t("person.addGift")}
           </button>
         </div>
         {soonest && giftIdeas.length > 0 && (
           <div className="gift-surface">
             <div className="strong row">
               <Cake size={14} />{" "}
-              {dateTypeLabel(soonest.date.type, soonest.date.label)}{" "}
-              {relativeDays(soonest.occurrence.date)}
+              {dateTypeLabel(t, soonest.date.type, soonest.date.label)}{" "}
+              {relativeDays(t, soonest.occurrence.date)}
             </div>
             <div className="small gift-ideas">
-              Gift ideas: {giftIdeas.map((g) => g.name).join(" · ")}
+              {t("person.giftIdeas", {
+                names: giftIdeas.map((g) => g.name).join(" · "),
+              })}
             </div>
           </div>
         )}
         {detail.gifts.length === 0 ? (
-          <EmptyState icon={<Gift />}>
-            No gifts recorded — ideas, things given, things received.
-          </EmptyState>
+          <EmptyState icon={<Gift />}>{t("person.giftsEmpty")}</EmptyState>
         ) : (
           <div>
             {[...detail.gifts]
@@ -275,7 +285,7 @@ export default function PersonSide({
                   <div className="body">
                     <div className="row" style={{ gap: 8 }}>
                       <span className={`gift-kind gift-${g.kind}`}>
-                        {g.kind}
+                        {t(`gift.kind.${g.kind}`)}
                       </span>
                       <span className="strong">{g.name}</span>
                     </div>
@@ -287,19 +297,19 @@ export default function PersonSide({
                   {g.kind === "idea" && (
                     <button
                       className="btn btn-sm actions"
-                      title="Mark as given"
+                      title={t("person.markGiven")}
                       onClick={() => {
                         void api
                           .updateGift(g.id, { kind: "given", date: todayISO() })
                           .then(after);
                       }}
                     >
-                      Mark given
+                      {t("person.markGiven")}
                     </button>
                   )}
                   <button
                     className="icon-btn danger actions"
-                    aria-label={`Delete gift: ${g.name}`}
+                    aria-label={t("person.deleteGift", { name: g.name })}
                     onClick={() => {
                       void api.deleteGift(g.id).then(after);
                     }}
@@ -315,15 +325,15 @@ export default function PersonSide({
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">
-            <Link2 size={16} /> Connections
+            <Link2 size={16} /> {t("person.connectionsTitle")}
           </h2>
           <button className="btn btn-sm" onClick={() => onAdd("connection")}>
-            <Plus size={13} /> Add connection
+            <Plus size={13} /> {t("person.addConnection")}
           </button>
         </div>
         {detail.connections.length === 0 ? (
           <EmptyState icon={<Link2 />}>
-            No connections — link partners, family, colleagues.
+            {t("person.connectionsEmpty")}
           </EmptyState>
         ) : (
           <div>
@@ -341,7 +351,9 @@ export default function PersonSide({
                 </div>
                 <button
                   className="icon-btn danger actions"
-                  aria-label={`Delete connection to ${c.other_name}`}
+                  aria-label={t("person.deleteConnection", {
+                    name: c.other_name,
+                  })}
                   onClick={() => {
                     void api.deleteConnection(c.id).then(after);
                   }}
@@ -357,7 +369,7 @@ export default function PersonSide({
       {person.notes && (
         <div className="card card-pad">
           <h2 className="card-title notes-title">
-            <StickyNote size={16} /> Notes
+            <StickyNote size={16} /> {t("person.notesTitle")}
           </h2>
           <p className="muted person-notes">{person.notes}</p>
         </div>

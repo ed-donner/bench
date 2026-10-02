@@ -1,8 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { PATCHES } from "./patches";
+import {
+  drumStep,
+  muteBtn,
+  playStop,
+  renderWithLocale,
+  savedRevert,
+  unitRegion,
+} from "./i18n/test-utils";
 
 /**
  * The engine owns an AudioContext, which jsdom has no implementation of, and the scope draws to a
@@ -57,33 +65,34 @@ const press = async (init: KeyboardEventInit) => {
   });
 };
 
-const unit = (name: string) => screen.getByRole("region", { name });
+const unit = (name: string) =>
+  screen.getByRole("region", { name: unitRegion(name) });
 
 describe("Groove App", () => {
   it("lays out the transport, all four units and the master section", () => {
-    render(<App />);
+    renderWithLocale(<App />);
     for (const name of ["RHYTHM", "BASS", "PADS", "LEAD"]) {
       expect(unit(name)).toBeInTheDocument();
     }
-    expect(screen.getByRole("button", { name: /PLAY/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: playStop })).toBeInTheDocument();
     expect(screen.getByTestId("scope")).toBeInTheDocument();
   });
 
   it("starts and stops the engine from the play button", async () => {
-    render(<App />);
-    await userEvent.click(screen.getByRole("button", { name: /PLAY/ }));
+    renderWithLocale(<App />);
+    await userEvent.click(screen.getByRole("button", { name: playStop }));
 
     expect(engineOf().resume).toHaveBeenCalled();
     expect(engineOf().start).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: /STOP/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: playStop })).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /STOP/ }));
+    await userEvent.click(screen.getByRole("button", { name: playStop }));
     expect(engineOf().stop).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: /PLAY/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: playStop })).toBeInTheDocument();
   });
 
   it("toggles the transport with the spacebar", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     await press({ code: "Space" });
     expect(engineOf().start).toHaveBeenCalledOnce();
 
@@ -92,7 +101,7 @@ describe("Groove App", () => {
   });
 
   it("switches patch with the number keys and the patch buttons", async () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     const active = () =>
       container.querySelector(".patch-btn.active")!.textContent;
 
@@ -106,7 +115,7 @@ describe("Groove App", () => {
   });
 
   it("ignores the keyboard while a text field has focus", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const input = document.createElement("input");
     document.body.append(input);
     input.focus();
@@ -123,25 +132,25 @@ describe("Groove App", () => {
   });
 
   it("edits a step, offers a revert, and restores the factory patch", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const step = within(unit("RHYTHM")).getByRole("button", {
-      name: "KICK step 2",
+      name: drumStep("KICK", 2),
     });
 
-    expect(screen.getByRole("button", { name: "SAVED" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: savedRevert })).toBeDisabled();
     await userEvent.click(step);
 
-    const revert = screen.getByRole("button", { name: "REVERT" });
+    const revert = screen.getByRole("button", { name: savedRevert });
     expect(revert).toBeEnabled();
 
     await userEvent.click(revert);
-    expect(screen.getByRole("button", { name: "SAVED" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: savedRevert })).toBeDisabled();
   });
 
   it("auditions a drum step as it is switched on, but not as it is cleared", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const step = within(unit("RHYTHM")).getByRole("button", {
-      name: "CLAP step 2",
+      name: drumStep("CLAP", 2),
     });
 
     await userEvent.click(step);
@@ -154,9 +163,9 @@ describe("Groove App", () => {
   });
 
   it("auditions a melodic step as it is switched on, but not as it is cleared", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     const pads = within(unit("BASS")).getAllByRole("button", {
-      name: /BASS step/,
+      name: /^BASS (step|स्टेप) \d+$/i,
     });
     const rest = pads.find(
       (pad) => pad.getAttribute("aria-pressed") === "false",
@@ -174,9 +183,9 @@ describe("Groove App", () => {
   });
 
   it("mutes a single unit without touching the others", async () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     const bass = unit("BASS");
-    await userEvent.click(within(bass).getByRole("button", { name: "MUTE" }));
+    await userEvent.click(within(bass).getByRole("button", { name: muteBtn }));
 
     expect(bass).toHaveClass("muted");
     expect(unit("LEAD")).not.toHaveClass("muted");
@@ -184,17 +193,17 @@ describe("Groove App", () => {
   });
 
   it("pushes every change down to the engine", async () => {
-    render(<App />);
+    renderWithLocale(<App />);
     engineOf().applyParams.mockClear();
 
     await userEvent.click(
-      within(unit("PADS")).getByRole("button", { name: "MUTE" }),
+      within(unit("PADS")).getByRole("button", { name: muteBtn }),
     );
     expect(engineOf().applyParams).toHaveBeenCalled();
   });
 
   it("follows the playhead the engine reports", () => {
-    const { container } = render(<App />);
+    const { container } = renderWithLocale(<App />);
     act(() => engineOf().onStep(5));
 
     const lit = container.querySelectorAll(".master-leds .led.on");

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render } from "@testing-library/react";
 import { Scope } from "./Scope";
+import { renderWithLocale } from "../i18n/test-utils";
 
 /**
  * jsdom has no 2D context and lays nothing out, so the canvas is faked. These tests cover the
@@ -75,7 +75,9 @@ const drawOnce = () => frames.pop()!(0);
 
 describe("Scope", () => {
   it("keeps requesting frames and cancels the loop on unmount", () => {
-    const { unmount } = render(<Scope analyser={null} getFilter={filter} />);
+    const { unmount } = renderWithLocale(
+      <Scope analyser={null} getFilter={filter} />,
+    );
     expect(frames).toHaveLength(1);
 
     drawOnce();
@@ -87,7 +89,7 @@ describe("Scope", () => {
 
   it("reads the filter fresh on every frame, so a sweep tracks", () => {
     const getFilter = vi.fn(filter);
-    render(<Scope analyser={null} getFilter={getFilter} />);
+    renderWithLocale(<Scope analyser={null} getFilter={getFilter} />);
 
     drawOnce();
     drawOnce();
@@ -95,7 +97,7 @@ describe("Scope", () => {
   });
 
   it("draws the filter curve without an analyser", () => {
-    render(<Scope analyser={null} getFilter={filter} />);
+    renderWithLocale(<Scope analyser={null} getFilter={filter} />);
     drawOnce();
 
     expect(ctx.clearRect).toHaveBeenCalled();
@@ -105,7 +107,7 @@ describe("Scope", () => {
 
   it("fills the spectrum from the analyser when one is connected", () => {
     const { analyser, getByteFrequencyData } = analyserStub();
-    render(<Scope analyser={analyser} getFilter={filter} />);
+    renderWithLocale(<Scope analyser={analyser} getFilter={filter} />);
     drawOnce();
 
     expect(getByteFrequencyData).toHaveBeenCalledWith(expect.any(Uint8Array));
@@ -114,7 +116,9 @@ describe("Scope", () => {
 
   it("sizes the backing store to the device pixel ratio", () => {
     vi.stubGlobal("devicePixelRatio", 2);
-    const { container } = render(<Scope analyser={null} getFilter={filter} />);
+    const { container } = renderWithLocale(
+      <Scope analyser={null} getFilter={filter} />,
+    );
     drawOnce();
 
     const canvas = container.querySelector("canvas")!;

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import App from "./App";
 import { api } from "./api";
-import { node, pageData } from "./test/helpers";
+import { node, pageData, renderSpace } from "./test/helpers";
 
 vi.mock("./api", () => ({
   api: {
@@ -24,7 +24,7 @@ describe("App", () => {
     vi.mocked(api.getPage).mockResolvedValue(
       pageData({ id: "home", title: "Home", icon: "🏠" }),
     );
-    render(
+    renderSpace(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
@@ -41,7 +41,7 @@ describe("App", () => {
       pageData({ id: "home", title: "Home", icon: "🏠" }),
     );
     const user = userEvent.setup();
-    render(
+    renderSpace(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
